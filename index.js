@@ -424,6 +424,23 @@ app.use("/blogs/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
+  app.post("/favorites", async (req, res) => {
+    try {
+      const {user_id, vacancy_id} = req.body;
+      pool.query(
+        "INSERT INTO favorits (user_id, vacancy_id)  VALUES (?, ?) ",
+        [user_id, vacancy_id],
+        (error, results, fields) => {
+          if (error) throw error;
+          console.log(`Added to favorites`);
+          res.sendStatus(201);
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(500);
+    }
+  });
 app.listen(3000, () => {
   console.log("Server listening on port 3000");
 });
