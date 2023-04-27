@@ -166,6 +166,39 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get("/cities", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM cities", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/experiences", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM experiences", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/educations", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM educations", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 
 app.use("/vacancies/:id", async (req, res) => {
   try {
