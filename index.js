@@ -349,6 +349,24 @@ app.use("/trainings/:id", async (req, res) => {
   }
 });
 
+app.post("/trainings", async (req, res) => {
+    try {
+      const { user_id, company_id, title, slug, about, redirect_link, image, price, payment_type, deadline  } = req.body;
+      pool.query(
+        "INSERT INTO trainings ( user_id, company_id, title, slug, about, redirect_link, image, price, payment_type, deadline,created_at, updated_at)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) ",
+        [ user_id, company_id, title, slug, about, redirect_link, image, price, payment_type, deadline],
+        (error, results, fields) => {
+          if (error) throw error;
+          console.log(`Review added`);
+          res.sendStatus(201);
+        }
+      );
+    } catch (error) {
+      console.log(error);
+      res.sendStatus(500);
+    }
+  });
+
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
 
