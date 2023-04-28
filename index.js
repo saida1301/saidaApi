@@ -477,9 +477,9 @@ app.use("/blogs/:id", async (req, res) => {
 });
 app.post("/favorites", async (req, res) => {
   try {
-    const { user_id, vacancy_id } = req.body;
-    const query = "INSERT INTO favorits (user_id, vacancy_id) VALUES (?, ?)";
-    pool.query(query, [user_id, vacancy_id], (error, results, fields) => {
+    const { email , vacancy_id } = req.body;
+    const query = "INSERT INTO favorits (email, vacancy_id) VALUES (?, ?)";
+    pool.query(query, [email, vacancy_id], (error, results, fields) => {
       if (error) {
         console.error(error);
         res.sendStatus(500);
