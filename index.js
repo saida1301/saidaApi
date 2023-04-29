@@ -154,6 +154,43 @@ app.get("/user/:userId", (req, res) => {
   });
 });
 
+app.post('/change-password', async (req, res) => {
+  const { email, oldPassword, newPassword } = req.body;
+
+  const getUserQuery = `SELECT * FROM users WHERE email = ?`;
+  pool.query(getUserQuery, [email], async (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).send('Error querying database');
+      return;
+    }
+
+    if (results.length === 0) {
+      res.status(401).send('User not found');
+      return;
+    }
+
+    const user = results[0];
+
+    const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+    if (!isOldPasswordCorrect) {
+      res.status(401).send('Incorrect old password');
+      return;
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const updatePasswordQuery = `UPDATE users SET password = ? WHERE email = ?`;
+    pool.query(updatePasswordQuery, [hashedNewPassword, email], (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).send('Error updating password');
+        return;
+      }
+
+      res.status(200).send('Password updated successfully');
+    });
+  });
+});
 
 app.get("/vacancies", async (req, res) => {
   try {
