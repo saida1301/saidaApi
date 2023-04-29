@@ -194,7 +194,7 @@ app.post('/change-password', async (req, res) => {
 
 app.get("/vacancies", async (req, res) => {
   try {
-    pool.query("SELECT * FROM vacancies", (error, results, fields) => {
+    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
@@ -279,7 +279,7 @@ app.use("/vacancies/:id", async (req, res) => {
 
 app.get("/companies", async (req, res) => {
   try {
-    pool.query("SELECT * FROM companies", (error, results, fields) => {
+    pool.query("SELECT * FROM companies ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
