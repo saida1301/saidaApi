@@ -368,7 +368,7 @@ app.use("/categories/:id", async (req, res) => {
 
 app.get("/cv", async (req, res) => {
   try {
-    pool.query("SELECT * FROM cv", (error, results, fields) => {
+    pool.query("SELECT * FROM cv  ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
@@ -413,7 +413,7 @@ app.get("/vacancy/:companyId", (req, res) => {
 
 app.get("/trainings", async (req, res) => {
   try {
-    pool.query("SELECT * FROM trainings", (error, results, fields) => {
+    pool.query("SELECT * FROM trainings  ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
@@ -507,7 +507,7 @@ app.post("/reviews", async (req, res) => {
   });
 app.get("/blogs", async (req, res) => {
   try {
-    pool.query("SELECT * FROM blogs", (error, results, fields) => {
+    pool.query("SELECT * FROM blogs  ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
