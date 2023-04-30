@@ -191,7 +191,7 @@ app.post('/change-password', async (req, res) => {
     });
   });
 });
-app.post('/rating', function(req, res) {
+app.post('/rating', function(req, res) => {
 
   const review_id = req.body.review_id;
   const rating = req.body.rating;
