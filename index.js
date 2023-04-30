@@ -191,7 +191,18 @@ app.post('/change-password', async (req, res) => {
     });
   });
 });
+app.post('/rating', function(req, res) {
 
+  const review_id = req.body.review_id;
+  const rating = req.body.rating;
+
+  const sql = `INSERT INTO rating ( review_id, rating) VALUES (${review_id}, ${rating}) ON DUPLICATE KEY UPDATE rating = ${rating}`;
+  
+  connection.query(sql, function (error, results, fields) {
+    if (error) throw error;
+    res.send('Rating updated successfully!');
+  });
+});
 app.get("/vacancies", async (req, res) => {
   try {
     pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
