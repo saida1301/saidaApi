@@ -195,7 +195,7 @@ app.post("/rating", async (req, res) => {
   try {
     const { review_id, rating } = req.body;
     pool.query(
-      "INSERT INTO rating (review_id, rating) VALUES (?, ?) ON DUPLICATE KEY UPDATE rating = ?",
+      "INSERT INTO rating (review_id, rating,created_at, updated_at) VALUES (?, ?,NOW(), NOW()) ON DUPLICATE KEY UPDATE rating = ?",
       [review_id, rating, rating],
       (error, results, fields) => {
         if (error) {
