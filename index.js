@@ -191,18 +191,29 @@ app.post('/change-password', async (req, res) => {
     });
   });
 });
-app.post('/rating', async (req, res) => {
-
-  const review_id = req.body.review_id;
-  const rating = req.body.rating;
-
-  const sql = `INSERT INTO rating ( review_id, rating) VALUES (${review_id}, ${rating}) ON DUPLICATE KEY UPDATE rating = ${rating}`;
-  
-  connection.query(sql, function (error, results, fields) {
-    if (error) throw error;
-    res.send('Rating updated successfully!');
-  });
+app.post("/rating", async (req, res) => {
+  try {
+    const { review_id, rating } = req.body;
+    pool.query(
+      "INSERT INTO rating (review_id, rating) VALUES (?, ?) ON DUPLICATE KEY UPDATE rating = ?",
+      [review_id, rating, rating],
+      (error, results, fields) => {
+        if (error) {
+          console.log(error);
+          res.sendStatus(500);
+        } else {
+          console.log(`rating added`);
+          res.sendStatus(201);
+        }
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
 });
+
+
 app.get("/vacancies", async (req, res) => {
   try {
     pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
