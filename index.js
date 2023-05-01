@@ -134,25 +134,47 @@ app.post("/signup", (req, res) => {
     }
   );
 });
-app.post('/logout', (req, res) => {
-  const token = req.headers.authorization.split(' ')[1];
 
-  jwt.verify(token, "secret", (err, decoded) => {
-    if (err) {
-      res.status(401).json({ error: 'Invalid token' });
-    } else {
-      const userId = decoded.id;
-
-      pool.query('UPDATE users SET token = null WHERE id = ?', [userId], (err, result) => {
-        if (err) {
-          res.status(500).json({ error: 'Internal server error' });
-        } else {
-          res.status(200).json({ message: 'Logout successful' });
-        }
-      });
-    }
-  });
+function verifyToken(req, res, next) {
+const authHeader = req.headers["authorization"];
+const token = authHeader && authHeader.split(" ")[1];
+if (token == null) return res.sendStatus(403);
+jwt.verify(token, "secret_key", (err, user) => {
+if (err) return res.sendStatus(404);
+req.user = user;
+next();
 });
+}
+
+app.put("/logout", verifyToken, function (req, res) {
+const authHeader = req.headers["authorization"];
+jwt.sign(authHeader, "", { expiresIn: 1 } , (logout, err) => {
+if (logout) {
+res.send({msg : 'You have been Logged Out' });
+} else {
+res.send({msg:'Error'});
+}
+});
+});
+// app.post('/logout', (req, res) => {
+//   const token = req.headers.authorization.split(' ')[1];
+
+//   jwt.verify(token, "secret", (err, decoded) => {
+//     if (err) {
+//       res.status(401).json({ error: 'Invalid token' });
+//     } else {
+//       const userId = decoded.id;
+
+//       pool.query('UPDATE users SET token = null WHERE id = ?', [userId], (err, result) => {
+//         if (err) {
+//           res.status(500).json({ error: 'Internal server error' });
+//         } else {
+//           res.status(200).json({ message: 'Logout successful' });
+//         }
+//       });
+//     }
+//   });
+// });
 
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
