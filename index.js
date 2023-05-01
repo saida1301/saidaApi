@@ -609,6 +609,20 @@ app.get("/favorites/:user_id", (req, res) => {
     return res.json(results);
   });
 });
+app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
+  const { user_id, vacancy_id } = req.params;
+
+  const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND movie_id = ${vacancy_id}`;
+
+  pool.query(sql, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error removing from favorites");
+    }
+
+    return res.status(200).send("Item removed from favorites");
+  });
+});
 
 app.listen(3000, () => {
   console.log("Server listening on port 3000");
