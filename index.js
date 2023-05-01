@@ -142,7 +142,7 @@ app.post('/logout', (req, res) => {
 
       res.status(401).json({ error: 'Invalid token' });
     } else {
-      const userId = decoded.userId; 
+      const userId = decoded.id; 
 
 
       pool.query('UPDATE users SET token = null WHERE id = ?', userId, (err, result) => {
