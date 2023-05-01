@@ -595,10 +595,10 @@ app.post("/favorites", async (req, res) => {
   }
 });
 
-app.get("/favorites/:user_id", (req, res) => {
-  const { user_id } = req.params;
+app.get("/favorites/:userId", (req, res) => {
+  const { userId } = req.params;
 
-  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${user_id})`;
+  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${userId})`;
 
   pool.query(sql, (error, results) => {
     if (error) {
