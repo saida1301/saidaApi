@@ -598,7 +598,7 @@ app.post("/favorites", async (req, res) => {
 app.get("/favorites/:userId", (req, res) => {
   const { user_id } = req.params;
 
-  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorites WHERE user_id = ${userId})`;
+  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorites WHERE user_id = ${user_id})`;
 
   connection.query(sql, (error, results) => {
     if (error) {
