@@ -600,7 +600,7 @@ app.post("/favorites", async (req, res) => {
 });
 
 app.get("/favorites/:userId", (req, res) => {
-  const { userId } = req.params;
+  const { userId } = req.body;
 
   const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${userId})`;
 
@@ -614,7 +614,7 @@ app.get("/favorites/:userId", (req, res) => {
   });
 });
 app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
-  const { user_id, vacancy_id } = req.params;
+  const { user_id, vacancy_id } = req.body;
 
   const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND movie_id = ${vacancy_id}`;
 
