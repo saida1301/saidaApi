@@ -595,6 +595,21 @@ app.post("/favorites", async (req, res) => {
   }
 });
 
+app.get("/favorites/:userId", (req, res) => {
+  const { user_id } = req.params;
+
+  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorites WHERE user_id = ${userId})`;
+
+  connection.query(sql, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error retrieving favorites");
+    }
+
+    return res.json(results);
+  });
+});
+
 app.listen(3000, () => {
   console.log("Server listening on port 3000");
 });
