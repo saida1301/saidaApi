@@ -137,12 +137,12 @@ app.post("/signup", (req, res) => {
 app.post('/logout', (req, res) => {
   const token = req.headers.authorization.split(' ')[1];
 
-  jwt.verify(token, jwtSecret, (err, decoded) => {
+  jwt.verify(token, "secret", (err, decoded) => {
     if (err) {
 
       res.status(401).json({ error: 'Invalid token' });
     } else {
-      const userId = decoded.userId; // Get the user ID from the decoded token
+      const userId = decoded.userId; 
 
 
       pool.query('UPDATE users SET token = null WHERE id = ?', userId, (err, result) => {
@@ -150,7 +150,7 @@ app.post('/logout', (req, res) => {
 
           res.status(500).json({ error: 'Internal server error' });
         } else {
-          // If the update is successful, send a success response
+    
           res.status(200).json({ message: 'Logout successful' });
         }
       });
