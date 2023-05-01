@@ -135,28 +135,32 @@ app.post("/signup", (req, res) => {
   );
 });
 
-
-
-
-app.post('/logout', (req, res) => {
-  const token = req.headers.authorization.split(' ')[1];
-
-  jwt.verify(token, "secret", (err, decoded) => {
-    if (err) {
-      res.status(401).json({ error: 'Invalid token' });
-    } else {
-      const userId = decoded.id;
-
-      pool.query('UPDATE users SET token = null WHERE id = ?', [userId], (err, result) => {
-        if (err) {
-          res.status(500).json({ error: 'Internal server error' });
-        } else {
-          res.status(200).json({ message: 'Logout successful' });
-        }
-      });
-    }
-  });
+app.post("/logout", (req, res) => {
+  res.clearCookie("token");
+  res.json({ message: "Logout successful" });
 });
+
+
+
+// app.post('/logout', (req, res) => {
+//   const token = req.headers.authorization.split(' ')[1];
+
+//   jwt.verify(token, "secret", (err, decoded) => {
+//     if (err) {
+//       res.status(401).json({ error: 'Invalid token' });
+//     } else {
+//       const userId = decoded.id;
+
+//       pool.query('UPDATE users SET token = null WHERE id = ?', [userId], (err, result) => {
+//         if (err) {
+//           res.status(500).json({ error: 'Internal server error' });
+//         } else {
+//           res.status(200).json({ message: 'Logout successful' });
+//         }
+//       });
+//     }
+//   });
+// });
 
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
