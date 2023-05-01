@@ -600,9 +600,9 @@ app.post("/favorites", async (req, res) => {
 });
 
 app.get("/favorites/:userId", (req, res) => {
-  const { user_id } = req.params;
+  const { userId } = req.params;
 
-  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${user_id})`;
+  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${userId})`;
 
   pool.query(sql, (error, results) => {
     if (error) {
@@ -613,6 +613,7 @@ app.get("/favorites/:userId", (req, res) => {
     return res.json(results);
   });
 });
+
 app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
   const { user_id, vacancy_id } = req.body;
 
