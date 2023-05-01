@@ -582,7 +582,7 @@ app.use("/blogs/:id", async (req, res) => {
 });
 app.post("/favorites", async (req, res) => {
   try {
-    const { user_id , vacancy_id } = req.body;
+    const { user_id , vacancy_id } = req.params;
     const query = "INSERT INTO favorits (user_id, vacancy_id) VALUES (?, ?)";
     pool.query(query, [user_id, vacancy_id], (error, results, fields) => {
       if (error) {
@@ -600,7 +600,7 @@ app.post("/favorites", async (req, res) => {
 });
 
 app.get("/favorites/:userId", (req, res) => {
-  const { user_id } = req.body;
+  const { user_id } = req.params;
 
   const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${user_id})`;
 
