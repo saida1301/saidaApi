@@ -12,10 +12,10 @@ const app = express();
 
 const pool = mysql.createPool({
     connectionLimit: 10,
-    host: 'localhost',
-    user: 'recruitment',
-    password: 'recruitmentbuta123',
-    database: 'abdulkadirbudak_com_recruitment',
+  host: "145.14.156.192",
+  user: "u983993164_1is",
+  password: "Buta2023@",
+  database: "u983993164_1is",
     timeout: 100000
   });
   
