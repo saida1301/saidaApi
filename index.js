@@ -600,7 +600,7 @@ app.get("/favorites/:user_id", (req, res) => {
 
   const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${user_id})`;
 
-  connection.query(sql, (error, results) => {
+  pool.query(sql, (error, results) => {
     if (error) {
       console.error(error);
       return res.status(500).send("Error retrieving favorites");
