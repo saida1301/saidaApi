@@ -493,10 +493,10 @@ app.use("/trainings/:id", async (req, res) => {
 
 app.post("/trainings", async (req, res) => {
     try {
-      const {user_id, company_id, title, about, redirect_link, image, price, deadline  } = req.body;
+      const {title, about, redirect_link  } = req.body;
       pool.query(
-        "INSERT INTO trainings (user_id, company_id,title, about, redirect_link, image, price, deadline,created_at, updated_at)  VALUES ( ?, ?, ?, ?, ?, ?, NOW(), NOW()) ",
-        [user_id, company_id,title, about, redirect_link, image, price, deadline],
+        "INSERT INTO trainings (title, about,redirect_link,created_at, updated_at)  VALUES (?, ?, ?, NOW(), NOW()) ",
+        [title, about, redirect_link],
         (error, results, fields) => {
           if (error) throw error;
           console.log(`Training added`);
