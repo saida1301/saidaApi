@@ -493,13 +493,13 @@ app.use("/trainings/:id", async (req, res) => {
 
 app.post("/trainings", async (req, res) => {
     try {
-      const { user_id, company_id, title, slug, about, redirect_link, image, price, payment_type, deadline  } = req.body;
+      const { user_id, company_id, title, about, redirect_link, image, price, deadline  } = req.body;
       pool.query(
-        "INSERT INTO trainings ( user_id, company_id, title, slug, about, redirect_link, image, price, payment_type, deadline,created_at, updated_at)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) ",
-        [ user_id, company_id, title, slug, about, redirect_link, image, price, payment_type, deadline],
+        "INSERT INTO trainings ( user_id, company_id, title, about, redirect_link, image, price, deadline,created_at, updated_at)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()) ",
+        [ user_id, company_id, title, about, redirect_link, image, price, deadline],
         (error, results, fields) => {
           if (error) throw error;
-          console.log(`Review added`);
+          console.log(`Training added`);
           res.sendStatus(201);
         }
       );
