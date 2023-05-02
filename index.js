@@ -502,23 +502,22 @@ app.use("/trainings/:id", async (req, res) => {
   }
 });
 
-app.post("/trainings", async (req, res) => {
-    try {
-      const {user_id, company_id,title, about, redirect_link, image, price, deadline } = req.body;
-      pool.query(
-        "INSERT INTO trainings (user_id, company_id,title, about, redirect_link, image, price,created_at, updated_at)  VALUES (?,?,?,?,?, ?, ?, NOW(), NOW()) ",
-        [user_id, company_id,title, about, redirect_link, image, price],
-        (error, results, fields) => {
-          if (error) throw error;
-          console.log(`Training added`);
-          res.sendStatus(201);
-        }
-      );
-    } catch (error) {
-      console.log(error);
-      res.sendStatus(500);
+
+app.post('/trainings', (req, res) => {
+  const { user_id, company_id, title, about, price, redirect_link, image, deadline } = req.body;
+  const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image,deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?,?,NOW(), NOW())`;
+  const values = [user_id, company_id, title, about, price, redirect_link, image,deadline];
+
+  pool.query(query, values, (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error adding training' });
+    } else {
+      res.status(201).json({ message: 'Training added successfully' });
     }
   });
+});
+
 
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
