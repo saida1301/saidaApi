@@ -505,7 +505,7 @@ app.use("/trainings/:id", async (req, res) => {
 
 app.post('/trainings', (req, res) => {
   const { user_id, company_id, title, about, price, redirect_link, image, deadline } = req.body;
-  const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image,deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?,?,NOW(), NOW())`;
+  const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, imageBinaryData,deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?,?,NOW(), NOW())`;
   const values = [user_id, company_id, title, about, price, redirect_link, image,deadline];
 
   pool.query(query, values, (error, results) => {
