@@ -518,6 +518,21 @@ app.post('/trainings', async (req, res) => {
     }
   });
 });
+app.post('/vacancies', async (req, res) => {
+  const { user_id, company_id,city_id, category_id, experience_id, education_id, position, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline } = req.body;
+  const query = `INSERT INTO vacancies (user_id, company_id,city_id, category_id, experience_id, education_id, position, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?, NOW(), NOW())`;
+  const values = [user_id, company_id,city_id, category_id, experience_id, education_id, position, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline];
+
+  pool.query(query, values, (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error adding vacancie' });
+    } else {
+      res.status(201).json({ message: 'Vacancy added successfully' });
+    }
+  });
+});
+
 
 
 app.get("/vacancie/:categoryId", (req, res) => {
