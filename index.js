@@ -7,8 +7,7 @@ import session from "express-session";
 import bodyParser from "body-parser";
 import passport from "passport";
 import mysql from "mysql";
-import multer from 'multer';
-import path from 'path';
+
 
 const app = express();
 
@@ -45,16 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(passport.initialize());
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'back/assets/images/trainings')
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname)
-  }
-})
 
-const upload = multer({ storage: storage })
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   pool.query(
@@ -514,11 +504,10 @@ app.use("/trainings/:id", async (req, res) => {
 });
 
 
-app.post('/trainings', upload.single('image'), (req, res) => {
-  const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
-  const imagePath = req.file ? path.join('/assets/images/trainings', req.file.filename) : null;
+app.post('/trainings', async (req, res) => {
+  const { user_id, company_id, title, about, price, redirect_link, deadline,image } = req.body;
   const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-  const values = [user_id, company_id, title, about, price, redirect_link, imagePath, deadline];
+  const values = [user_id, company_id, title, about, price, redirect_link, image, deadline];
 
   pool.query(query, values, (error, results) => {
     if (error) {
