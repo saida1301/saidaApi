@@ -253,6 +253,29 @@ app.get("/ratings", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get("/accept", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM acccept_type ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.get("/job", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM job_type ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 
 app.get("/vacancies", async (req, res) => {
   try {
