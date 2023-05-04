@@ -1,18 +1,17 @@
+
+import { createConnection } from "mysql";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import session from "express-session";
 import bodyParser from "body-parser";
-
+import passport from "passport";
 import mysql from "mysql";
 import express from 'express';
 import fileUpload from 'express-fileupload';
 import cors from 'cors';
 import morgan from 'morgan';
 import _ from 'lodash';
-import FormData from 'form-data';
-import multer from "multer";
-import fs from 'fs';
-import axios from 'axios';
+
 const app = express();
 
 const pool = mysql.createPool({
@@ -31,8 +30,7 @@ const pool = mysql.createPool({
     }
   
     console.log('Connected to database with ID ' + connection.threadId);
-  
-    // Release the connection when you're done with it.
+
     connection.release();
   });
 app.use(
@@ -42,7 +40,6 @@ app.use(
     saveUninitialized: true,
   })
 );
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
@@ -51,6 +48,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 // app.use(passport.initialize());
+
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
@@ -88,89 +86,6 @@ app.post("/login", (req, res) => {
     }
   );
 });
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, './public_html/1is/public/back/assets/images/trainings/');
-      },
-    filename: function (req, file, cb) {
-        cb(null, file.originalname);
-    }
-});
-const uploadImg = multer({storage: storage}).single('image');
-
-app.post('/upload-avatar', async (req, res) => {
-    try {
-        if(!req.files) {
-            res.send({
-                status: false,
-                message: 'No file uploaded'
-            });
-        } else {
-
-            let avatar = req.files.avatar;
-            
-            avatar.mv('./uploads/' + avatar.name);
-
-            //send response
-            res.send({
-                status: true,
-                message: 'File is uploaded',
-                data: {
-                    name: avatar.name,
-                    mimetype: avatar.mimetype,
-                    size: avatar.size
-                }
-            });
-        }
-    } catch (err) {
-        res.status(500).send(err);
-    }
-});
-
-app.use(express.static('uploads'));
-
-app.post('/upload', (req, res) => {
-  if (!req.files || Object.keys(req.files).length === 0) {
-    return res.status(400).send('No files were uploaded.');
-  }
-
-  const file = req.files.file;
-
-  const filename = Date.now() + '_' + file.name;
-
- 
-  file.mv(path.join(__dirname, '..', 'back', 'assets', 'images', 'trainings', filename), (err) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).send(err);
-    }
-
-    res.send({ filename });
-  });
-});
-
-
-
-const uploadImage = async (imagePath) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', fs.createReadStream(imagePath));
-
-    const response = await axios.post('http://your-server-url.com/upload', formData, {
-      headers: {
-        ...formData.getHeaders()
-      }
-    });
-
-    console.log(response.data);
-    return response.data.filename; // returns the uploaded file name on the server
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-};
-app.use('/uploads', express.static('./public_html/1is/public/back/assets/images/trainings/'));
 
 app.post("/signup", (req, res) => {
   const { name, email, password } = req.body;
@@ -231,28 +146,6 @@ app.post("/logout", (req, res) => {
   res.json({ message: "Logout successful" });
 });
 
-
-
-// app.post('/logout', (req, res) => {
-//   const token = req.headers.authorization.split(' ')[1];
-
-//   jwt.verify(token, "secret", (err, decoded) => {
-//     if (err) {
-//       res.status(401).json({ error: 'Invalid token' });
-//     } else {
-//       const userId = decoded.id;
-
-//       pool.query('UPDATE users SET token = null WHERE id = ?', [userId], (err, result) => {
-//         if (err) {
-//           res.status(500).json({ error: 'Internal server error' });
-//         } else {
-//           res.status(200).json({ message: 'Logout successful' });
-//         }
-//       });
-//     }
-//   });
-// });
-
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
   const query = "SELECT * FROM users WHERE id = ?";
@@ -310,6 +203,65 @@ app.post('/change-password', async (req, res) => {
     });
   });
 });
+app.post('/upload-avatar', async (req, res) => {
+  try {
+      if(!req.files) {
+          res.send({
+              status: false,
+              message: 'No file uploaded'
+          });
+      } else {
+          let avatar = req.files.avatar;
+          
+          avatar.mv('./uploads/' + avatar.name);
+          res.send({
+              status: true,
+              message: 'File is uploaded',
+              data: {
+                  name: avatar.name,
+                  mimetype: avatar.mimetype,
+                  size: avatar.size
+              }
+          });
+      }
+  } catch (err) {
+      res.status(500).send(err);
+  }
+});
+
+app.post('/upload-photos', async (req, res) => {
+  try {
+      if(!req.files) {
+          res.send({
+              status: false,
+              message: 'No file uploaded'
+          });
+      } else {
+          let data = []; 
+          _.forEach(_.keysIn(req.files.photos), (key) => {
+              let photo = req.files.photos[key];
+              
+              photo.mv('./uploads/' + photo.name);
+
+              data.push({
+                  name: photo.name,
+                  mimetype: photo.mimetype,
+                  size: photo.size
+              });
+          });
+  
+
+          res.send({
+              status: true,
+              message: 'Files are uploaded',
+              data: data
+          });
+      }
+  } catch (err) {
+      res.status(500).send(err);
+  }
+});
+
 app.post("/rating", async (req, res) => {
   try {
     const { review_id, rating } = req.body;
@@ -400,6 +352,7 @@ app.get("/user", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.use(express.static('./uploads/'));
 app.get("/cities", async (req, res) => {
   try {
     pool.query("SELECT * FROM cities", (error, results, fields) => {
@@ -618,11 +571,11 @@ app.use("/trainings/:id", async (req, res) => {
 
 
 app.post('/trainings', async (req, res) => {
-  const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
+  const { user_id, company_id, title, about, price, image, redirect_link, deadline } = req.body;
   const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-  const values = [user_id, company_id, title, about, price, redirect_link, req.file.path, deadline];
+  const values = [user_id, company_id, title, about, price, redirect_link, image, deadline];
 
-  pool.query(query, values, (error, results) => {
+  pool.query(query, values, (error) => {
     if (error) {
       console.error(error);
       res.status(500).json({ message: 'Error adding training' });
