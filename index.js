@@ -10,6 +10,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import _ from 'lodash';
 import FormData from 'form-data';
+import "multer" from "multer";
 import fs from 'fs';
 import axios from 'axios';
 const app = express();
@@ -87,6 +88,17 @@ app.post("/login", (req, res) => {
     }
   );
 });
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, './public_html/1is/public/back/assets/images/trainings/');
+      },
+    filename: function (req, file, cb) {
+        cb(null, file.originalname);
+    }
+});
+const uploadImg = multer({storage: storage}).single('image');
+
 app.post('/upload-avatar', async (req, res) => {
     try {
         if(!req.files) {
@@ -605,9 +617,9 @@ app.use("/trainings/:id", async (req, res) => {
 
 
 app.post('/trainings', async (req, res) => {
-  const { user_id, company_id, title, about, price, redirect_link, deadline,image } = req.body;
+  const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
   const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-  const values = [user_id, company_id, title, about, price, redirect_link, image, deadline];
+  const values = [user_id, company_id, title, about, price, redirect_link, req.file.path, deadline];
 
   pool.query(query, values, (error, results) => {
     if (error) {
