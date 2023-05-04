@@ -115,6 +115,26 @@ app.post('/upload-avatar', async (req, res) => {
 });
 
 app.use(express.static('uploads'));
+
+app.post('/upload', (req, res) => {
+  if (!req.files || Object.keys(req.files).length === 0) {
+    return res.status(400).send('No files were uploaded.');
+  }
+
+  const file = req.files.file;
+
+  const filename = Date.now() + '_' + file.name;
+
+ 
+  file.mv(path.join(__dirname, '..', 'back', 'assets', 'images', 'trainings', filename), (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).send(err);
+    }
+
+    res.send({ filename });
+  });
+});
 app.post("/signup", (req, res) => {
   const { name, email, password } = req.body;
 
