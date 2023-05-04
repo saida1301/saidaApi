@@ -529,8 +529,8 @@ app.use("/trainings/:id", async (req, res) => {
 
 app.post('/trainings', async (req, res) => {
   const { user_id, company_id, title, about, price, redirect_link, deadline,image } = req.body;
-  const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-  const values = [user_id, company_id, title, about, price, redirect_link, image, deadline];
+  const query = `INSERT INTO trainings ( user_id, company_id, title, about, price, redirect_link, deadline,image , created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+  const values = [ user_id, company_id, title, about, price, redirect_link, deadline,image ];
 
   pool.query(query, values, (error, results) => {
     if (error) {
