@@ -9,7 +9,9 @@ import fileUpload from 'express-fileupload';
 import cors from 'cors';
 import morgan from 'morgan';
 import _ from 'lodash';
-
+import FormData from 'form-data';
+import fs from 'fs';
+import axios from 'axios';
 const app = express();
 
 const pool = mysql.createPool({
@@ -135,6 +137,28 @@ app.post('/upload', (req, res) => {
     res.send({ filename });
   });
 });
+
+
+
+const uploadImage = async (imagePath) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', fs.createReadStream(imagePath));
+
+    const response = await axios.post('http://your-server-url.com/upload', formData, {
+      headers: {
+        ...formData.getHeaders()
+      }
+    });
+
+    console.log(response.data);
+    return response.data.filename; // returns the uploaded file name on the server
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
 app.post("/signup", (req, res) => {
   const { name, email, password } = req.body;
 
