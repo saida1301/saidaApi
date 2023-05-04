@@ -10,7 +10,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import _ from 'lodash';
 import FormData from 'form-data';
-import "multer" from "multer";
+import multer from "multer";
 import fs from 'fs';
 import axios from 'axios';
 const app = express();
