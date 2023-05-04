@@ -1,13 +1,14 @@
-import express from "express";
-import { createConnection } from "mysql";
-
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import session from "express-session";
 import bodyParser from "body-parser";
-import passport from "passport";
-import mysql from "mysql";
 
+import mysql from "mysql";
+import express from 'express';
+import fileUpload from 'express-fileupload';
+import cors from 'cors';
+import morgan from 'morgan';
+import _ from 'lodash';
 
 const app = express();
 
@@ -38,11 +39,14 @@ app.use(
     saveUninitialized: true,
   })
 );
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use(fileUpload());
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(morgan('dev'));
 // app.use(passport.initialize());
 
 app.post("/login", (req, res) => {
@@ -81,7 +85,36 @@ app.post("/login", (req, res) => {
     }
   );
 });
+app.post('/upload-avatar', async (req, res) => {
+    try {
+        if(!req.files) {
+            res.send({
+                status: false,
+                message: 'No file uploaded'
+            });
+        } else {
 
+            let avatar = req.files.avatar;
+            
+            avatar.mv('./uploads/' + avatar.name);
+
+            //send response
+            res.send({
+                status: true,
+                message: 'File is uploaded',
+                data: {
+                    name: avatar.name,
+                    mimetype: avatar.mimetype,
+                    size: avatar.size
+                }
+            });
+        }
+    } catch (err) {
+        res.status(500).send(err);
+    }
+});
+
+app.use(express.static('uploads'));
 app.post("/signup", (req, res) => {
   const { name, email, password } = req.body;
 
