@@ -571,7 +571,7 @@ app.use("/trainings/:id", async (req, res) => {
 });
 
 
-app.post('/trainings', uploadImg, async (req, res) => {
+app.post('/trainings', async (req, res) => {
   const { user_id, company_id, title, about, price, image, redirect_link, deadline } = req.body;
   const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
   const values = [user_id, company_id, title, about, price, redirect_link, image, deadline];
