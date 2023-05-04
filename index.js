@@ -1,10 +1,9 @@
 
-import { createConnection } from "mysql";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import session from "express-session";
 import bodyParser from "body-parser";
-import passport from "passport";
+
 import mysql from "mysql";
 import express from 'express';
 import fileUpload from 'express-fileupload';
@@ -570,7 +569,7 @@ app.use("/trainings/:id", async (req, res) => {
 });
 
 
-app.post('/trainings', async (req, res) => {
+app.post('/trainings', uploadImg, async (req, res) => {
   const { user_id, company_id, title, about, price, image, redirect_link, deadline } = req.body;
   const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
   const values = [user_id, company_id, title, about, price, redirect_link, image, deadline];
@@ -725,8 +724,8 @@ app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log("Server listening on port 3000");
+app.listen(5000, () => {
+  console.log("Server listening on port 5000");
 });
 
 export default app;
