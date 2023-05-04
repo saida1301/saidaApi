@@ -170,6 +170,7 @@ const uploadImage = async (imagePath) => {
     return null;
   }
 };
+app.use('/uploads', express.static('./public_html/1is/public/back/assets/images/trainings/'));
 
 app.post("/signup", (req, res) => {
   const { name, email, password } = req.body;
