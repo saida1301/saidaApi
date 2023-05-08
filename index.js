@@ -498,7 +498,7 @@ app.get("/vacancy/:companyId", (req, res) => {
 
 app.get("/trainings", async (req, res) => {
   try {
-    pool.query("SELECT * FROM trainings WHERE status = 1 ORDER BY created_at DESC", (error, results, fields) => {
+    pool.query("SELECT * FROM trainings WHERE status = "1" ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
