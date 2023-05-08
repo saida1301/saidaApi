@@ -7,6 +7,7 @@ import session from "express-session";
 import bodyParser from "body-parser";
 import passport from "passport";
 import mysql from "mysql";
+import multer from 'multer';
 
 
 const app = express();
@@ -44,6 +45,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(passport.initialize());
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'back/assets/images/trainings');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const extension = file.originalname.split('.').pop();
+    cb(null, 'training_' + uniqueSuffix + '.' + extension);
+  }
+});
+
+const uploadImg = multer({storage: storage}).single('image');
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
@@ -530,10 +543,12 @@ app.use("/trainings/:id", async (req, res) => {
 
 
 app.post('/trainings', async (req, res) => {
-  const { user_id, company_id, title, about, price, redirect_link, deadline,image } = req.body;
+  const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
+  const imagePath = req.file.path;
+  
   const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-  const values = [user_id, company_id, title, about, price, redirect_link, image, deadline];
-
+  const values = [user_id, company_id, title, about, price, redirect_link, imagePath, deadline];
+  console.log(imagePath);
   pool.query(query, values, (error, results) => {
     if (error) {
       console.error(error);
@@ -543,6 +558,7 @@ app.post('/trainings', async (req, res) => {
     }
   });
 });
+
 app.post('/vacancies', async (req, res) => {
   const { user_id, company_id,city_id, category_id, experience_id, education_id, position, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type,job_type, deadline } = req.body;
   const query = `INSERT INTO vacancies (user_id, company_id,city_id, category_id, experience_id, education_id, position, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type,job_type, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?, NOW(), NOW())`;
