@@ -345,6 +345,21 @@ app.get("/experiences", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get('/trainings/similar/:title', async (req, res) => {
+  const title = req.params.title;
+  const query = "SELECT * FROM trainings WHERE title LIKE CONCAT('%', ?, '%')";
+  const values = [title];
+
+  pool.query(query, values, (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error getting similar trainings' });
+    } else {
+      res.status(200).json({ trainings: results });
+    }
+  });
+});
+
 app.get("/educations", async (req, res) => {
   try {
     pool.query("SELECT * FROM educations", (error, results, fields) => {
