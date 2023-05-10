@@ -557,7 +557,7 @@ app.use("/trainings/:id", async (req, res) => {
 });
 
 
-app.post('/trainings', async (req, res) => {
+app.post('/trainings',uploadImg, async (req, res) => {
   const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
   const imagePath = req.file.path;
   
