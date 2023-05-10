@@ -11,15 +11,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-      "@azure/storage-blob": "^12.14.0",
+    "@azure/storage-blob": "^12.14.0",
+    "@babel/node": "^7.20.7",
+    "@babel/preset-env": "^7.21.5",
+    "basic-ftp": "^5.0.3",
     "bcrypt": "^5.1.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.2",
+    "connect-multiparty": "^2.2.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "express-fileupload": "^1.4.0",
     "express-session": "^1.17.3",
     "fs": "^0.0.1-security",
+    "ftp": "^0.3.10",
     "jsonwebtoken": "^9.0.0",
     "lodash": "^4.17.21",
     "mime": "^3.0.0",
@@ -28,8 +33,16 @@
     "mysql": "^2.18.1",
     "nodemon": "^2.0.22",
     "passport": "^0.6.0",
-       "axios": "^1.4.0",
-    "form-data": "^4.0.0",
-       "path": "^0.12.7",
+    "path": "^0.12.7",
+    "ssh2": "^1.12.0",
+    "ssh2-sftp-client": "^9.1.0",
+    "url": "^0.11.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "@types/express": "^4.17.17",
+    "@types/jsonwebtoken": "^9.0.2",
+    "@types/mysql": "^2.15.21",
+    "@types/ssh2-sftp-client": "^9.0.0"
   }
 }
