@@ -47,18 +47,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
 // app.use(passport.initialize());
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'back/assets/images/');
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const extension = file.originalname.split('.').pop();
-    cb(null, 'training_' + uniqueSuffix + '.' + extension);
-  }
-});
 
-const uploadImg = multer({storage: storage}).single('image');
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
@@ -564,7 +553,7 @@ const containerClient = blobServiceClient.getContainerClient(containerName);
 
 
 
-const upload = multer({ dest: 'back/assets/images/trainings/' });
+const upload = multer({ dest: 'uploads/' });
 
 // Function to upload image to Azure Blob Storage
 const uploadToBlobStorage = async (file) => {
