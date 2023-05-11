@@ -1,6 +1,6 @@
 import express from "express";
 import { createConnection } from "mysql";
-
+import { BlobServiceClient } from '@azure/storage-blob';
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import session from "express-session";
@@ -47,7 +47,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // app.use(passport.initialize());
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'back/assets/images/trainings');
+    cb(null, 'back/assets/images/');
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -555,23 +555,54 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
+const connectionString = 'DefaultEndpointsProtocol=https;AccountName=csb1003200255163a82;AccountKey=OD8Ua6Ok29I1UlJ/dOzWz661ef1bGit7F2BohM8afEdKJXpMUkpJZAcGtijJdjL7E3aq1lZc+Cse+AStsFpaWg==;EndpointSuffix=core.windows.net';
+const containerName = 'isapiupload';
+const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+const containerClient = blobServiceClient.getContainerClient(containerName);
 
 
-app.post('/trainings',uploadImg, async (req, res) => {
+
+const upload = multer({ dest: 'back/assets/images/trainings/' });
+
+// Function to upload image to Azure Blob Storage
+const uploadToBlobStorage = async (file) => {
+  const fileName = Date.now() + '_' + file.originalname;
+  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
+  await blockBlobClient.uploadFile(file.path);
+  return fileName;
+};
+
+
+app.post('/trainings', upload.single('image'), async (req, res) => {
   const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
-  const imagePath = req.file.path;
-  
-  const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-  const values = [user_id, company_id, title, about, price, redirect_link, imagePath, deadline];
-  console.log(imagePath);
-  pool.query(query, values, (error, results) => {
-    if (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error adding training' });
-    } else {
-      res.status(201).json({ message: 'Training added successfully' });
-    }
-  });
+  const imagePath = req.file ? req.file.path : null;
+
+  try {
+    let imageUrl = null;
+
+  // Check if file was uploaded
+  if (imagePath) {
+    // Upload the image to Azure Blob Storage
+    const uploadedFileName = await uploadToBlobStorage(req.file);
+    imageUrl = `/assets/images/trainings/${uploadedFileName}`;
+  }
+
+    const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const values = [user_id, company_id, title, about, price, redirect_link, imageUrl, deadline];
+
+    // Execute the database query
+    pool.query(query, values, (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error adding training' });
+      } else {
+        res.status(201).json({ message: 'Training added successfully' });
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ message: 'Error uploading image' });
+  }
 });
 
 app.post('/vacancies', async (req, res) => {
