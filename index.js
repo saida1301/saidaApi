@@ -8,7 +8,7 @@ import bodyParser from "body-parser";
 import passport from "passport";
 import mysql from "mysql";
 import multer from 'multer';
-
+import cors from "cors";
 
 const app = express();
 
@@ -44,6 +44,8 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
+
 // app.use(passport.initialize());
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -573,7 +575,7 @@ const uploadToBlobStorage = async (file) => {
 };
 
 
-app.post('/trainings', upload.single('image'), async (req, res) => {
+app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
   const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
   const imagePath = req.file ? req.file.path : null;
 
