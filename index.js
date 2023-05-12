@@ -551,33 +551,17 @@ const containerName = 'isapiupload';
 const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
-const folderName = "trainings"; // Folder name to create
-
-async function createFolder() {
-  const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-  const containerClient = blobServiceClient.getContainerClient(containerName);
-  
-  const blobName = folderName + "/"; // Add the folder name and forward slash as the blob name
-  
-  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
-  const response = await blockBlobClient.upload("", 0); // Upload an empty string as the blob content
-  
-  console.log("Folder created successfully!");
-}
-
-createFolder().catch((error) => {
-  console.error("Error creating folder:", error);
-});
 
 const upload = multer({ dest: 'uploads/' });
 
 // Function to upload image to Azure Blob Storage
 const uploadToBlobStorage = async (file) => {
-  const fileName = Date.now() + '_' + file.originalname;
+  const fileName = 'trainings/' + Date.now() + '_' + file.originalname; // Include 'trainings/' as part of the blob name
   const blockBlobClient = containerClient.getBlockBlobClient(fileName);
   await blockBlobClient.uploadFile(file.path);
   return fileName;
 };
+
 
 
 app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
