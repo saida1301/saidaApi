@@ -551,7 +551,23 @@ const containerName = 'isapiupload';
 const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
+const folderName = "trainings"; // Folder name to create
 
+async function createFolder() {
+  const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+  
+  const blobName = folderName + "/"; // Add the folder name and forward slash as the blob name
+  
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  const response = await blockBlobClient.upload("", 0); // Upload an empty string as the blob content
+  
+  console.log("Folder created successfully!");
+}
+
+createFolder().catch((error) => {
+  console.error("Error creating folder:", error);
+});
 
 const upload = multer({ dest: 'uploads/' });
 
