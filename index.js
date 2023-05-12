@@ -472,7 +472,7 @@ app.use("/categories/:id", async (req, res) => {
 
 app.get("/cv", async (req, res) => {
   try {
-    pool.query("SELECT * FROM cv  ORDER BY created_at DESC", (error, results, fields) => {
+    pool.query("SELECT * FROM cv WHERE status = '1'  ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
@@ -499,6 +499,8 @@ app.use("/cv/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
+
 
 app.get("/vacancy/:companyId", (req, res) => {
   const { companyId } = req.params;
@@ -610,6 +612,8 @@ app.post('/vacancies', async (req, res) => {
     }
   });
 });
+
+
 
 
 
