@@ -600,7 +600,7 @@ app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
 app.get("/training/:userId", (req, res) => {
   const userId = req.params.userId;
 
-  const sql = "SELECT * FROM trainings WHERE user_id = ?"; 
+  const sql = "SELECT * FROM trainings WHERE user_id = ? status = '1'"; 
   const values = [userId];
 
   pool.query(sql, values, (error, results) => {
