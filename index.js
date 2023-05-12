@@ -597,7 +597,7 @@ app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Error uploading image' });
   }
 });
-app.get("/trainings/:userId", (req, res) => {
+app.get("/training/:userId", (req, res) => {
   const userId = req.params.userId;
 
   const sql = "SELECT * FROM trainings WHERE user_id = ?"; 
