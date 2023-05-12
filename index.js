@@ -597,6 +597,22 @@ app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Error uploading image' });
   }
 });
+app.get("/trainings/:userId", (req, res) => {
+  const userId = req.params.userId;
+
+  const sql = "SELECT * FROM trainings WHERE user_id = ?"; 
+  const values = [userId];
+
+  pool.query(sql, values, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error retrieving trainings");
+    }
+
+    return res.json(results);
+  });
+});
+
 
 app.post('/vacancies', async (req, res) => {
   const { user_id, company_id,city_id, category_id, experience_id, education_id, position, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type,job_type, deadline } = req.body;
