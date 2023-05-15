@@ -868,6 +868,81 @@ app.post(
 );
 
 
+app.put('/cv/:cvId', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
+  const cvId = req.params.cvId;
+  const {
+    user_id,
+    category_id,
+    city_id,
+    education_id,
+    experience_id,
+    job_type_id,
+    gender_id,
+    name,
+    surname,
+    father_name,
+    email,
+    position,
+    about_education,
+    salary,
+    birth_date,
+    work_history,
+    skills,
+  } = req.body;
+
+  try {
+    const cvFile = req.files['cv'][0];
+    const imageFile = req.files['image'][0];
+
+    const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
+    const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
+    const portfolio = [
+      {
+        job_name: req.body['portfolio_job_name'],
+        company: req.body['portfolio_company'],
+        link: req.body['portfolio_link']
+      }
+    ];
+
+    const query = `UPDATE cv SET user_id = ?, category_id = ?, city_id = ?, education_id = ?, experience_id = ?, job_type_id = ?, gender_id = ?, name = ?, surname = ?, father_name = ?, email = ?, position = ?, about_education = ?, salary = ?, birth_date = ?, work_history = ?, skills = ?, cv = ?, image = ?, portfolio = ?, updated_at = NOW() WHERE id = ?`;
+
+    const values = [
+      user_id,
+      category_id,
+      city_id,
+      education_id,
+      experience_id,
+      job_type_id,
+      gender_id,
+      name,
+      surname,
+      father_name,
+      email,
+      position,
+      about_education,
+      salary,
+      birth_date,
+      work_history,
+      skills,
+      cvUrl,
+      imageUrl,
+      JSON.stringify({ portfolio }),
+      cvId
+    ];
+
+    pool.query(query, values, (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating CV' });
+      } else {
+        res.status(200).json({ message: 'CV updated successfully', imageUrl });
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading CV:', error);
+    res.status(500).json({ message: 'Error uploading CV' });
+  }
+});
 
 
 
