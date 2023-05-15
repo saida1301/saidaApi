@@ -514,7 +514,6 @@ const storage = diskStorage({
   },
 });
 
-const upload = multer({ storage });
 
 const uploadToBlobStorage = async (file, folderName) => {
   const blobName = folderName + '_' + file.originalname;
