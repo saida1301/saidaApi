@@ -513,16 +513,15 @@ const storage = diskStorage({
     cb(null, uniqueSuffix + "." + extension, filePath);
   },
 });
-
-
-const uploadToBlobStorage = async (file, folderName) => {
-  const blobName = folderName + '_' + file.originalname;
-  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+const uploadToBlobStorage = async (file, folderName = 'trainings') => {
+  const fileName = folderName + '/' + Date.now() + '_' + file.originalname; // Include the folder name as part of the blob name
+  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
   await blockBlobClient.uploadFile(file.path);
 
-  const fileUrl = `https://${containerName}.blob.core.windows.net/${blobName}`;
+  const fileUrl = `https://${containerName}.blob.core.windows.net/${fileName}`;
   return fileUrl;
 };
+
 app.post(
   '/cv',
   upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
@@ -655,13 +654,6 @@ const containerClient = blobServiceClient.getContainerClient(containerName);
 
 const upload = multer({ dest: 'uploads/' });
 
-// Function to upload image to Azure Blob Storage
-const uploadToBlobStorage = async (file) => {
-  const fileName = 'trainings/' + Date.now() + '_' + file.originalname; // Include 'trainings/' as part of the blob name
-  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
-  await blockBlobClient.uploadFile(file.path);
-  return fileName;
-};
 
 
 
