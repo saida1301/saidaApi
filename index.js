@@ -327,6 +327,23 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.delete('/vacancies/:id', async (req, res) => {
+  const vacancyId = req.params.id;
+
+  try {
+    const query = 'DELETE FROM vacancies WHERE id = ?';
+    const result = await pool.query(query, [vacancyId]);
+
+    if (result.affectedRows > 0) {
+      res.status(200).json({ message: 'Vacancy removed successfully' });
+    } else {
+      res.status(404).json({ message: 'Vacancy not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error removing vacancy' });
+  }
+});
 app.get("/favancie", async (req, res) => {
   try {
     pool.query("SELECT * FROM favorits", (error, results, fields) => {
