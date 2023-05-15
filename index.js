@@ -577,7 +577,7 @@ app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
   if (imagePath) {
     // Upload the image to Azure Blob Storage
     const uploadedFileName = await uploadToBlobStorage(req.file);
-    imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
+    imageUrl = `back/assets/images/${uploadedFileName}`;
   }
  const slugTitle = title.toLowerCase().replace(/\s+/g, "_").replace(/ə/g, "e");
     const query = `INSERT INTO trainings (user_id, company_id, title,slug, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
