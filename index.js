@@ -499,8 +499,108 @@ app.use("/cv/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
+const storage = diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + uuidv4();
+    const extension = file.originalname.split(".").pop();
+    let filePath = "";
+    if (file.fieldname === "image") {
+      filePath = "back/assets/images/cv_photo/" + uniqueSuffix + "." + extension;
+    } else if (file.fieldname === "cv") {
+      filePath = "back/assets/images/cvs/" + uniqueSuffix + "." + extension;
+    }
+    cb(null, uniqueSuffix + "." + extension, filePath);
+  },
+});
 
+const upload = multer({ storage });
 
+const uploadToBlobStorage = async (file, folderName) => {
+  const blobName = folderName + '_' + file.originalname;
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName);
+  await blockBlobClient.uploadFile(file.path);
+
+  const fileUrl = `https://${containerName}.blob.core.windows.net/${blobName}`;
+  return fileUrl;
+};
+app.post(
+  '/cv',
+  upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
+  async (req, res) => {
+    const {
+      user_id,
+      category_id,
+      city_id,
+      education_id,
+      experience_id,
+      job_type_id,
+      gender_id,
+      name,
+      surname,
+      father_name,
+      email,
+      position,
+      about_education,
+      salary,
+      birth_date,
+      work_history,
+      skills,
+    } = req.body;
+
+    try {
+      const cvFile = req.files['cv'][0];
+      const imageFile = req.files['image'][0];
+
+      const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
+      const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
+      const portfolio = [
+        {
+          job_name: req.body['portfolio_job_name'],
+          company: req.body['portfolio_company'],
+          link: req.body['portfolio_link']
+        }
+      ];
+      const query =
+        'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+
+      const values = [
+        user_id,
+        category_id,
+        city_id,
+        education_id,
+        experience_id,
+        job_type_id,
+        gender_id,
+        name,
+        surname,
+        father_name,
+        email,
+        position,
+        about_education,
+        salary,
+        birth_date,
+        work_history,
+        skills,
+        cvUrl,
+        imageUrl,
+        JSON.stringify({ portfolio }),
+      ];
+
+      pool.query(query, values, (error, results) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ message: 'Error adding CV' });
+        } else {
+          res.status(201).json({ message: 'CV added successfully', imageUrl });
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading CV:', error);
+      res.status(500).json({ message: 'Error uploading CV' });
+    }
+  }
+);
 
 app.get("/vacancy/:companyId", (req, res) => {
   const { companyId } = req.params;
