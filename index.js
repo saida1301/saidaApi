@@ -859,7 +859,7 @@ app.post(
 app.get('/cv/:id', (req, res) => {
   const { id } = req.params;
 
-  pool.query('SELECT * FROM cv WHERE id = ? status = '1'', [id], (error, results) => {
+  pool.query('SELECT * FROM cv WHERE id = ?', [id], (error, results) => {
     if (error) {
       console.error(error);
       res.status(500).json({ message: 'Error retrieving CV information' });
