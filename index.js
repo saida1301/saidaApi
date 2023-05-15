@@ -1,37 +1,34 @@
+import { BlobServiceClient } from "@azure/storage-blob";
+import multer, { diskStorage } from "multer";
+import { v4 as uuidv4 } from "uuid";
 import express from "express";
-import { createConnection } from "mysql";
-import { BlobServiceClient } from '@azure/storage-blob';
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import session from "express-session";
 import bodyParser from "body-parser";
-import passport from "passport";
 import mysql from "mysql";
-import multer from 'multer';
 import cors from "cors";
 
 const app = express();
 
 const pool = mysql.createPool({
-    connectionLimit: 10,
+  connectionLimit: 10,
   host: "145.14.156.192",
   user: "u983993164_1is",
   password: "Buta2023@",
   database: "u983993164_1is",
-    timeout: 100000
-  });
-  
-  pool.getConnection((err, connection) => {
-    if (err) {
-      console.error('Error connecting to database: ' + err.stack);
-      return;
-    }
-  
-    console.log('Connected to database with ID ' + connection.threadId);
-  
-    // Release the connection when you're done with it.
-    connection.release();
-  });
+  timeout: 100000,
+});
+
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error("Error connecting to database: " + err.stack);
+    return;
+  }
+
+  console.log("Connected to database with ID " + connection.threadId);
+
+  // Release the connection when you're done with it.
+  connection.release();
+});
 app.use(
   session({
     secret: "secret",
@@ -45,6 +42,44 @@ app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
+
+const connectionString =
+  "DefaultEndpointsProtocol=https;AccountName=ismobile;AccountKey=0vW600nc8IHVC3tPsRoHCBh6Zx/zHvRDx2H/wnmsl+w7WGq9c8plB5ws6E9qI6ZP2m05xwm/wrC8+AStRLo2FA==;EndpointSuffix=core.windows.net";
+const blobServiceClient =
+  BlobServiceClient.fromConnectionString(connectionString);
+
+const containerName = "mobileapp";
+const containerClient = blobServiceClient.getContainerClient(containerName);
+
+// Configure multer for file uploads
+const storage = diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + uuidv4();
+    const extension = file.originalname.split(".").pop();
+    let filePath = "";
+    if (file.fieldname === "image") {
+      filePath = "back/assets/images/cv_photo/" + uniqueSuffix + "." + extension;
+    } else if (file.fieldname === "cv") {
+      filePath = "back/assets/images/cvs/" + uniqueSuffix + "." + extension;
+    }
+    cb(null, uniqueSuffix + "." + extension, filePath);
+  },
+});
+
+const upload = multer({ storage });
+
+const uploadToBlobStorage = async (file, folderName = 'trainings') => {
+  const fileName = folderName + '/' + Date.now() + '_' + file.originalname; // Include the folder name as part of the blob name
+  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
+  await blockBlobClient.uploadFile(file.path);
+
+  const fileUrl = `https://${containerName}.blob.core.windows.net/${fileName}`;
+  return fileUrl;
+};
+
+
+
 
 // app.use(passport.initialize());
 
@@ -548,21 +583,16 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-const connectionString = 'DefaultEndpointsProtocol=https;AccountName=csb1003200255163a82;AccountKey=OD8Ua6Ok29I1UlJ/dOzWz661ef1bGit7F2BohM8afEdKJXpMUkpJZAcGtijJdjL7E3aq1lZc+Cse+AStsFpaWg==;EndpointSuffix=core.windows.net';
-const containerName = 'isapiupload';
-const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
-const containerClient = blobServiceClient.getContainerClient(containerName);
 
 
-const upload = multer({ dest: 'uploads/' });
 
 // Function to upload image to Azure Blob Storage
-const uploadToBlobStorage = async (file) => {
-  const fileName = 'trainings/' + Date.now() + '_' + file.originalname; // Include 'trainings/' as part of the blob name
-  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
-  await blockBlobClient.uploadFile(file.path);
-  return fileName;
-};
+// const uploadToBlobStorage = async (file) => {
+//   const fileName = 'trainings/' + Date.now() + '_' + file.originalname; // Include 'trainings/' as part of the blob name
+//   const blockBlobClient = containerClient.getBlockBlobClient(fileName);
+//   await blockBlobClient.uploadFile(file.path);
+//   return fileName;
+// };
 
 
 
@@ -758,8 +788,89 @@ app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log("Server listening on port 3000");
-});
 
-export default app;
+app.post(
+  '/cv',
+  upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
+  async (req, res) => {
+    const {
+      user_id,
+      category_id,
+      city_id,
+      education_id,
+      experience_id,
+      job_type_id,
+      gender_id,
+      name,
+      surname,
+      father_name,
+      email,
+      position,
+      about_education,
+      salary,
+      birth_date,
+      work_history,
+      skills,
+    } = req.body;
+
+    try {
+      const cvFile = req.files['cv'][0];
+      const imageFile = req.files['image'][0];
+
+      const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
+      const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
+      const portfolio = [
+        {
+          job_name: req.body['portfolio_job_name'],
+          company: req.body['portfolio_company'],
+          link: req.body['portfolio_link']
+        }
+      ];
+      const query =
+        'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+
+      const values = [
+        user_id,
+        category_id,
+        city_id,
+        education_id,
+        experience_id,
+        job_type_id,
+        gender_id,
+        name,
+        surname,
+        father_name,
+        email,
+        position,
+        about_education,
+        salary,
+        birth_date,
+        work_history,
+        skills,
+        cvUrl,
+        imageUrl,
+        JSON.stringify({ portfolio }),
+      ];
+
+      pool.query(query, values, (error, results) => {
+        if (error) {
+          console.error(error);
+          res.status(500).json({ message: 'Error adding CV' });
+        } else {
+          res.status(201).json({ message: 'CV added successfully', imageUrl });
+        }
+      });
+    } catch (error) {
+      console.error('Error uploading CV:', error);
+      res.status(500).json({ message: 'Error uploading CV' });
+    }
+  }
+);
+
+
+
+
+
+app.listen(8000, () => {
+  console.log(`Server is running on port 8000`);
+});
