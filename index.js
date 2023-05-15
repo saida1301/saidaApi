@@ -505,35 +505,6 @@ app.use("/categories/:id", async (req, res) => {
   }
 });
 
-app.get("/cv", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM cv WHERE status = '1'  ORDER BY created_at DESC", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-
-app.use("/cv/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    pool.query(
-      "SELECT * FROM cv WHERE id = ?",
-      [id],
-      (error, results, fields) => {
-        if (error) throw error;
-        res.json(results);
-      }
-    );
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
 
 
 
@@ -868,10 +839,29 @@ app.post(
 );
 
 
-app.put('/cv/:cvId', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
-  const cvId = req.params.cvId;
+app.get('/cv/:id', (req, res) => {
+  const { id } = req.params;
+
+  pool.query('SELECT * FROM cv WHERE id = ? status = '1'', [id], (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error retrieving CV information' });
+    } else {
+      if (results.length > 0) {
+        const cv = results[0];
+        res.status(200).json(cv);
+      } else {
+        res.status(404).json({ message: 'CV not found' });
+      }
+    }
+  });
+});
+
+
+app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
+  const { id } = req.params;
+
   const {
-    user_id,
     category_id,
     city_id,
     education_id,
@@ -889,7 +879,7 @@ app.put('/cv/:cvId', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image'
     work_history,
     skills,
   } = req.body;
-
+  console.log(category_id, city_id)
   try {
     const cvFile = req.files['cv'][0];
     const imageFile = req.files['image'][0];
@@ -904,10 +894,9 @@ app.put('/cv/:cvId', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image'
       }
     ];
 
-    const query = `UPDATE cv SET user_id = ?, category_id = ?, city_id = ?, education_id = ?, experience_id = ?, job_type_id = ?, gender_id = ?, name = ?, surname = ?, father_name = ?, email = ?, position = ?, about_education = ?, salary = ?, birth_date = ?, work_history = ?, skills = ?, cv = ?, image = ?, portfolio = ?, updated_at = NOW() WHERE id = ?`;
+    const query = `UPDATE cv SET category_id = ?, city_id = ?, education_id = ?, experience_id = ?, job_type_id = ?, gender_id = ?, name = ?, surname = ?, father_name = ?, email = ?, position = ?, about_education = ?, salary = ?, birth_date = ?, work_history = ?, skills = ?, cv = ?, image = ?, portfolio = ?, updated_at = NOW() WHERE id = ?`;
 
     const values = [
-      user_id,
       category_id,
       city_id,
       education_id,
@@ -927,7 +916,7 @@ app.put('/cv/:cvId', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image'
       cvUrl,
       imageUrl,
       JSON.stringify({ portfolio }),
-      cvId
+      id
     ];
 
     pool.query(query, values, (error, results) => {
