@@ -579,9 +579,9 @@ app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
     const uploadedFileName = await uploadToBlobStorage(req.file);
     imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
   }
-
-    const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-    const values = [user_id, company_id, title, about, price, redirect_link, imageUrl, deadline];
+ const slugTitle = title.toLowerCase().replace(/\s+/g, "_").replace(/ə/g, "e");
+    const query = `INSERT INTO trainings (user_id, company_id, title,slug, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const values = [user_id, company_id, title,slugTitle, about, price, redirect_link, imageUrl, deadline];
 
     // Execute the database query
     pool.query(query, values, (error, results) => {
