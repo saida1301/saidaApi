@@ -548,8 +548,8 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-const connectionString = 'DefaultEndpointsProtocol=https;AccountName=csb1003200255163a82;AccountKey=OD8Ua6Ok29I1UlJ/dOzWz661ef1bGit7F2BohM8afEdKJXpMUkpJZAcGtijJdjL7E3aq1lZc+Cse+AStsFpaWg==;EndpointSuffix=core.windows.net';
-const containerName = 'isapiupload';
+const connectionString = "DefaultEndpointsProtocol=https;AccountName=ismobile;AccountKey=0vW600nc8IHVC3tPsRoHCBh6Zx/zHvRDx2H/wnmsl+w7WGq9c8plB5ws6E9qI6ZP2m05xwm/wrC8+AStRLo2FA==;EndpointSuffix=core.windows.net";
+const containerName = 'mobileapp';
 const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
