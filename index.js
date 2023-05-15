@@ -499,106 +499,8 @@ app.use("/cv/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-const storage = diskStorage({
-  destination: "uploads/",
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + uuidv4();
-    const extension = file.originalname.split(".").pop();
-    let filePath = "";
-    if (file.fieldname === "image") {
-      filePath = "back/assets/images/cv_photo/" + uniqueSuffix + "." + extension;
-    } else if (file.fieldname === "cv") {
-      filePath = "back/assets/images/cvs/" + uniqueSuffix + "." + extension;
-    }
-    cb(null, uniqueSuffix + "." + extension, filePath);
-  },
-});
-const uploadToBlobStorage = async (file, folderName = 'trainings') => {
-  const fileName = folderName + '/' + Date.now() + '_' + file.originalname; // Include the folder name as part of the blob name
-  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
-  await blockBlobClient.uploadFile(file.path);
 
-  const fileUrl = `https://${containerName}.blob.core.windows.net/${fileName}`;
-  return fileUrl;
-};
 
-app.post(
-  '/cv',
-  upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
-  async (req, res) => {
-    const {
-      user_id,
-      category_id,
-      city_id,
-      education_id,
-      experience_id,
-      job_type_id,
-      gender_id,
-      name,
-      surname,
-      father_name,
-      email,
-      position,
-      about_education,
-      salary,
-      birth_date,
-      work_history,
-      skills,
-    } = req.body;
-
-    try {
-      const cvFile = req.files['cv'][0];
-      const imageFile = req.files['image'][0];
-
-      const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
-      const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
-      const portfolio = [
-        {
-          job_name: req.body['portfolio_job_name'],
-          company: req.body['portfolio_company'],
-          link: req.body['portfolio_link']
-        }
-      ];
-      const query =
-        'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
-
-      const values = [
-        user_id,
-        category_id,
-        city_id,
-        education_id,
-        experience_id,
-        job_type_id,
-        gender_id,
-        name,
-        surname,
-        father_name,
-        email,
-        position,
-        about_education,
-        salary,
-        birth_date,
-        work_history,
-        skills,
-        cvUrl,
-        imageUrl,
-        JSON.stringify({ portfolio }),
-      ];
-
-      pool.query(query, values, (error, results) => {
-        if (error) {
-          console.error(error);
-          res.status(500).json({ message: 'Error adding CV' });
-        } else {
-          res.status(201).json({ message: 'CV added successfully', imageUrl });
-        }
-      });
-    } catch (error) {
-      console.error('Error uploading CV:', error);
-      res.status(500).json({ message: 'Error uploading CV' });
-    }
-  }
-);
 
 app.get("/vacancy/:companyId", (req, res) => {
   const { companyId } = req.params;
@@ -646,14 +548,21 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-const connectionString = "DefaultEndpointsProtocol=https;AccountName=ismobile;AccountKey=0vW600nc8IHVC3tPsRoHCBh6Zx/zHvRDx2H/wnmsl+w7WGq9c8plB5ws6E9qI6ZP2m05xwm/wrC8+AStRLo2FA==;EndpointSuffix=core.windows.net";
-const containerName = 'mobileapp';
+const connectionString = 'DefaultEndpointsProtocol=https;AccountName=csb1003200255163a82;AccountKey=OD8Ua6Ok29I1UlJ/dOzWz661ef1bGit7F2BohM8afEdKJXpMUkpJZAcGtijJdjL7E3aq1lZc+Cse+AStsFpaWg==;EndpointSuffix=core.windows.net';
+const containerName = 'isapiupload';
 const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
 
 const upload = multer({ dest: 'uploads/' });
 
+// Function to upload image to Azure Blob Storage
+const uploadToBlobStorage = async (file) => {
+  const fileName = 'trainings/' + Date.now() + '_' + file.originalname; // Include 'trainings/' as part of the blob name
+  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
+  await blockBlobClient.uploadFile(file.path);
+  return fileName;
+};
 
 
 
@@ -668,11 +577,11 @@ app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
   if (imagePath) {
     // Upload the image to Azure Blob Storage
     const uploadedFileName = await uploadToBlobStorage(req.file);
-    imageUrl = `back/assets/images/${uploadedFileName}`;
+    imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
   }
- const slugTitle = title.toLowerCase().replace(/\s+/g, "_").replace(/ə/g, "e");
-    const query = `INSERT INTO trainings (user_id, company_id, title,slug, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-    const values = [user_id, company_id, title,slugTitle, about, price, redirect_link, imageUrl, deadline];
+
+    const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const values = [user_id, company_id, title, about, price, redirect_link, imageUrl, deadline];
 
     // Execute the database query
     pool.query(query, values, (error, results) => {
