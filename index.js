@@ -303,6 +303,17 @@ app.get("/accept", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get("/gender", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM gender ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 
 app.get("/job", async (req, res) => {
   try {
