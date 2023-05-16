@@ -338,6 +338,17 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get("/cv", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM cv ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 app.delete('/vacancies/:id', async (req, res) => {
   const vacancyId = req.params.id;
 
