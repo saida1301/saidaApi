@@ -746,6 +746,25 @@ app.post("/favorites", async (req, res) => {
   }
 });
 
+app.post("/favorite", async (req, res) => {
+  try {
+    const { user_id , cv_id } = req.params;
+    const query = "INSERT INTO favorits (user_id, cv_id) VALUES (?, ?)";
+    pool.query(query, [user_id, cv_id], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.sendStatus(500);
+      } else {
+        console.log(`Added to favorites`);
+        res.sendStatus(201);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
 app.get("/favorites/:userId", (req, res) => {
   const { userId } = req.params;
 
