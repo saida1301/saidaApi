@@ -810,7 +810,7 @@ app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
 
 
 app.post(
-  '/cv',
+  '/cv', cors(),
   upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
   async (req, res) => {
     const {
