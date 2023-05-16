@@ -814,6 +814,7 @@ app.post(
       surname,
       father_name,
       email,
+      contact_phone,
       position,
       about_education,
       salary,
@@ -832,11 +833,15 @@ app.post(
         {
           job_name: req.body['portfolio_job_name'],
           company: req.body['portfolio_company'],
-          link: req.body['portfolio_link']
-        }
+          link: req.body['portfolio_link'],
+        },
       ];
+
+      // Create slug from lowercase name and surname combination
+      const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
+
       const query =
-        'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+        'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
       const values = [
         user_id,
@@ -850,6 +855,7 @@ app.post(
         surname,
         father_name,
         email,
+        contact_phone,
         position,
         about_education,
         salary,
@@ -859,6 +865,7 @@ app.post(
         cvUrl,
         imageUrl,
         JSON.stringify({ portfolio }),
+        slug,
       ];
 
       pool.query(query, values, (error, results) => {
