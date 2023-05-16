@@ -729,7 +729,7 @@ app.use("/blogs/:id", async (req, res) => {
 });
 app.post("/favorites", async (req, res) => {
   try {
-    const { user_id , vacancy_id } = req.params;
+    const { user_id , vacancy_id } = req.body;
     const query = "INSERT INTO favorits (user_id, vacancy_id) VALUES (?, ?)";
     pool.query(query, [user_id, vacancy_id], (error, results, fields) => {
       if (error) {
@@ -748,7 +748,8 @@ app.post("/favorites", async (req, res) => {
 
 app.post("/favorite", async (req, res) => {
   try {
-    const { user_id , cv_id } = req.params;
+    const { user_id, cv_id } = req.body;
+
     const query = "INSERT INTO favorits (user_id, cv_id) VALUES (?, ?)";
     pool.query(query, [user_id, cv_id], (error, results, fields) => {
       if (error) {
@@ -764,6 +765,7 @@ app.post("/favorite", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 app.get("/favorites/:userId", (req, res) => {
   const { userId } = req.params;
