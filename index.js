@@ -6,7 +6,7 @@ import session from "express-session";
 import bodyParser from "body-parser";
 import mysql from "mysql";
 import cors from "cors";
-
+import nodemailer from "nodemailer";
 const app = express();
 
 const pool = mysql.createPool({
@@ -180,7 +180,46 @@ app.post("/logout", (req, res) => {
   res.json({ message: "Logout successful" });
 });
 
+app.post('/contact', async (req, res) => {
+  try {
+    const { name, surname, email, phone, message } = req.body;
 
+    const query = `
+      INSERT INTO contact (name, surname, email, phone, message, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, NOW(), NOW())
+    `;
+
+    pool.query(query, [name, surname, email, phone, message]);
+
+    let transport = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'humbeteliyevaseide2001@gmail.com',
+        pass: 'nwudhimwttuqdzxv'
+      }
+    });
+
+    const mailOptions = {
+      from:req.body.email,
+      to: 'humbesaida@gmail.com',
+      subject: 'New Message from Contact Form',
+      text: `Name: ${name}\nSurname: ${surname}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
+    };
+
+    transport.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error('Error sending email:', error);
+        res.status(500).json({ error: 'An error occurred while sending the email.' });
+      } else {
+        console.log('Email sent:', info.response);
+        res.status(200).json({ message: 'Contact message saved and email sent successfully.' });
+      }
+    });
+  } catch (err) {
+    console.error('Error saving contact message:', err);
+    res.status(500).json({ error: 'An error occurred while saving the contact message.' });
+  }
+});
 
 // app.post('/logout', (req, res) => {
 //   const token = req.headers.authorization.split(' ')[1];
