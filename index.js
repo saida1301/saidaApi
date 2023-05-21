@@ -698,7 +698,7 @@ app.post('/vacancies', async (req, res) => {
   try {
     const vacancyData = req.body;
     const query = 'INSERT INTO vacancies SET ?';
-    await db.query(query, vacancyData);
+    await pool.query(query, vacancyData);
 
     res.status(201).json({ message: 'Vacancy added successfully' });
   } catch (error) {
