@@ -564,6 +564,20 @@ app.get("/categories", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.post('/companies', async (req, res) => {
+  try {
+    const companyData = req.body;
+
+   
+    const query = 'INSERT INTO companies SET ?';
+    await pool.query(query, companyData);
+
+    res.status(201).json({ message: 'Company added successfully' });
+  } catch (error) {
+    console.error('Error adding company:', error);
+    res.status(500).json({ error: 'Failed to add company' });
+  }
+});
 
 app.use("/categories/:id", async (req, res) => {
   try {
