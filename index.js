@@ -289,7 +289,18 @@ app.post('/trainings/:id/view', (req, res) => {
     }
   });
 });
+app.post('/cv/:id/view', (req, res) => {
+  const cvId = req.params.id;
 
+  pool.query('UPDATE cv SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+    if (error) {
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
+});
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
   const query = "SELECT * FROM users WHERE id = ?";
