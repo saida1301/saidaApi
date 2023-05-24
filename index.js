@@ -241,6 +241,18 @@ app.post('/contact', async (req, res) => {
 //     }
 //   });
 // });
+app.post('/vacancies/:id/view', (req, res) => {
+  const vacancyId = req.params.id;
+
+  pool.query('UPDATE vacancies SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+    if (error) {
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
+});
 
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
