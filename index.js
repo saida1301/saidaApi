@@ -253,6 +253,42 @@ app.post('/vacancies/:id/view', (req, res) => {
     }
   });
 });
+app.post('/blogs/:id/view', (req, res) => {
+  const blogId = req.params.id;
+
+  pool.query('UPDATE blogs SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+    if (error) {
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
+});
+app.post('/companies/:id/view', (req, res) => {
+  const companyId = req.params.id;
+
+  pool.query('UPDATE companies SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+    if (error) {
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
+});
+app.post('/trainings/:id/view', (req, res) => {
+  const telimId = req.params.id;
+
+  pool.query('UPDATE trainings SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+    if (error) {
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
+});
 
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
