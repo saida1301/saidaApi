@@ -25,10 +25,7 @@ pool.getConnection((err, connection) => {
     console.error("Error connecting to database: " + err.stack);
     return;
   }
-
   console.log("Connected to database with ID " + connection.threadId);
-
-  // Release the connection when you're done with it.
   connection.release();
 });
 app.use(
@@ -46,14 +43,14 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
 const connectionString =
-  "DefaultEndpointsProtocol=https;AccountName=ismobile;AccountKey=0vW600nc8IHVC3tPsRoHCBh6Zx/zHvRDx2H/wnmsl+w7WGq9c8plB5ws6E9qI6ZP2m05xwm/wrC8+AStRLo2FA==;EndpointSuffix=core.windows.net";
+ "DefaultEndpointsProtocol=https;AccountName=ismobile;AccountKey=0vW600nc8IHVC3tPsRoHCBh6Zx/zHvRDx2H/wnmsl+w7WGq9c8plB5ws6E9qI6ZP2m05xwm/wrC8+AStRLo2FA==;EndpointSuffix=core.windows.net";
 const blobServiceClient =
   BlobServiceClient.fromConnectionString(connectionString);
 
 const containerName = "mobileapp";
 const containerClient = blobServiceClient.getContainerClient(containerName);
 
-// Configure multer for file uploads
+
 const storage = diskStorage({
   destination: "uploads/",
   filename: (req, file, cb) => {
@@ -81,12 +78,6 @@ const uploadToBlobStorage = async (file, folderName = "trainings") => {
   return fileUrl;
 };
 
-
-
-
-
-
-// app.use(passport.initialize());
 
 
 app.post("/login", (req, res) => {
@@ -225,86 +216,6 @@ app.post('/contact', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while saving the contact message.' });
   }
 });
-
-// app.post('/logout', (req, res) => {
-//   const token = req.headers.authorization.split(' ')[1];
-
-//   jwt.verify(token, "secret", (err, decoded) => {
-//     if (err) {
-//       res.status(401).json({ error: 'Invalid token' });
-//     } else {
-//       const userId = decoded.id;
-
-//       pool.query('UPDATE users SET token = null WHERE id = ?', [userId], (err, result) => {
-//         if (err) {
-//           res.status(500).json({ error: 'Internal server error' });
-//         } else {
-//           res.status(200).json({ message: 'Logout successful' });
-//         }
-//       });
-//     }
-//   });
-// });
-app.post('/vacancies/:id/view', (req, res) => {
-  const vacancyId = req.params.id;
-
-  pool.query('UPDATE vacancies SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
-    if (error) {
-      console.error('Failed to increment view count:', error);
-      res.sendStatus(500);
-    } else {
-      res.sendStatus(200);
-    }
-  });
-});
-app.post('/blogs/:id/view', (req, res) => {
-  const blogId = req.params.id;
-
-  pool.query('UPDATE blogs SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
-    if (error) {
-      console.error('Failed to increment view count:', error);
-      res.sendStatus(500);
-    } else {
-      res.sendStatus(200);
-    }
-  });
-});
-app.post('/companies/:id/view', (req, res) => {
-  const companyId = req.params.id;
-
-  pool.query('UPDATE companies SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
-    if (error) {
-      console.error('Failed to increment view count:', error);
-      res.sendStatus(500);
-    } else {
-      res.sendStatus(200);
-    }
-  });
-});
-app.post('/trainings/:id/view', (req, res) => {
-  const telimId = req.params.id;
-
-  pool.query('UPDATE trainings SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
-    if (error) {
-      console.error('Failed to increment view count:', error);
-      res.sendStatus(500);
-    } else {
-      res.sendStatus(200);
-    }
-  });
-});
-app.post('/cv/:id/view', (req, res) => {
-  const cvId = req.params.id;
-
-  pool.query('UPDATE cv SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
-    if (error) {
-      console.error('Failed to increment view count:', error);
-      res.sendStatus(500);
-    } else {
-      res.sendStatus(200);
-    }
-  });
-});
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
   const query = "SELECT * FROM users WHERE id = ?";
@@ -323,6 +234,17 @@ app.get("/user/:userId", (req, res) => {
     const user = results[0];
     res.send(user);
   });
+});
+app.get("/user", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM users", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
 });
 
 app.post('/change-password', async (req, res) => {
@@ -362,103 +284,22 @@ app.post('/change-password', async (req, res) => {
     });
   });
 });
-app.post("/reviews", async (req, res) => {
-  try {
-    const { user_id, company_id, message, rating } = req.body;
 
-    // Retrieve the logged-in user's full name from the `users` table based on the `user_id`
-    const getUserQuery = "SELECT name AS fullname FROM users WHERE id = ?";
-    pool.query(getUserQuery, [user_id], (error, results, fields) => {
-      if (error) throw error;
+app.post('/vacancies/:id/view', (req, res) => {
+  const vacancyId = req.params.id;
 
-      // Check if user exists and retrieve the full name
-      if (results.length === 0) {
-        throw new Error("User not found");
-      }
-      const fullname = results[0].fullname;
-
-      if (!rating) {
-        throw new Error("Rating is required");
-      }
-
-      pool.query(
-        "INSERT INTO review (user_id, fullname, company_id, message, rating, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
-        [user_id, fullname, company_id, message, rating],
-        (error, results, fields) => {
-          if (error) throw error;
-          console.log("Review added");
-          res.sendStatus(201);
-        }
-      );
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
+  pool.query('UPDATE vacancies SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+    if (error) {
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
 });
-
-
-
-app.get("/ratings", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM review WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-app.get("/accept", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM accept_type ORDER BY created_at DESC", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-app.get("/gender", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM gender ORDER BY created_at DESC", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-
-app.get("/job", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM job_type ORDER BY created_at DESC", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-
 app.get("/vacancies", async (req, res) => {
   try {
     pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-app.get("/cv", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM cv ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
@@ -472,7 +313,7 @@ app.put('/vacancies/:id', async (req, res) => {
 
   try {
     const query = 'UPDATE vacancies SET status = 0 WHERE id = ?';
-    const result = await pool.query(query, [vacancyId]);
+    const result = pool.query(query, [vacancyId]);
 
     if (result.affectedRows > 0) {
       res.status(200).json({ message: 'Vacancy status updated successfully' });
@@ -484,78 +325,6 @@ app.put('/vacancies/:id', async (req, res) => {
     res.status(500).json({ message: 'Error updating vacancy status' });
   }
 });
-
-app.get("/favancie", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM favorits", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-app.get("/user", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM users", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-app.get("/cities", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM cities", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-app.get("/experiences", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM experiences", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-app.get('/trainings/similar/:title', async (req, res) => {
-  const title = req.params.title;
-  const query = "SELECT * FROM trainings WHERE title LIKE CONCAT('%', ?, '%')";
-  const values = [title];
-
-  pool.query(query, values, (error, results) => {
-    if (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error getting similar trainings' });
-    } else {
-      res.status(200).json({ trainings: results });
-    }
-  });
-});
-
-app.get("/educations", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM educations", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-
 app.use("/vacancies/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -572,6 +341,87 @@ app.use("/vacancies/:id", async (req, res) => {
     console.log(error);
     res.sendStatus(500);
   }
+});
+app.post('/vacancies', async (req, res) => {
+  try {
+    const vacancyData = req.body;
+    const position = vacancyData.position;
+    const slug = position.toLowerCase().replace(/\s+/g, '-');
+    vacancyData.slug = slug;
+    const query = 'INSERT INTO vacancies SET ?';
+    await pool.query(query, vacancyData);
+    res.status(201).json({ message: 'Vacancy added successfully' });
+  } catch (error) {
+    console.error('Error adding vacancy:', error);
+    res.status(500).json({ error: 'Failed to add vacancy' });
+  }
+});
+app.get("/vacancie/:categoryId", (req, res) => {
+  const { categoryId } = req.params;
+
+  const sql = `SELECT * FROM vacancies WHERE category_id IN (SELECT id FROM categories WHERE id = ${categoryId})`;
+
+  pool.query(sql, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error retrieving favorites");
+    }
+
+    return res.json(results);
+  });
+});
+app.post('/blogs/:id/view', (req, res) => {
+  const blogId = req.params.id;
+
+  pool.query('UPDATE blogs SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+    if (error) {
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
+});
+app.get("/blogs", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM blogs  ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.use("/blogs/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    pool.query(
+      "SELECT * FROM blogs WHERE id = ?",
+      [id],
+      (error, results, fields) => {
+        if (error) throw error;
+        res.json(results);
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.post('/companies/:id/view', (req, res) => {
+  const companyId = req.params.id;
+
+  pool.query('UPDATE companies SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+    if (error) {
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
 });
 
 app.get("/companies", async (req, res) => {
@@ -597,48 +447,6 @@ app.use("/companies/:id", async (req, res) => {
         res.json(results);
       }
     );
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-
-app.get("/sectors", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM sectors", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-
-app.use("/sectors/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    pool.query(
-      "SELECT * FROM sectors WHERE id = ?",
-      [id],
-      (error, results, fields) => {
-        if (error) throw error;
-        res.json(results);
-      }
-    );
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-
-app.get("/categories", async (req, res) => {
-  try {
-    pool.query("SELECT * FROM categories", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
@@ -708,43 +516,32 @@ app.post('/companies', cors(), upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Error uploading image' });
   }
 });
+app.post('/trainings/:id/view', (req, res) => {
+  const telimId = req.params.id;
 
-app.use("/categories/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    pool.query(
-      "SELECT * FROM categories WHERE id = ?",
-      [id],
-      (error, results, fields) => {
-        if (error) throw error;
-        res.json(results);
-      }
-    );
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-
-
-
-
-app.get("/vacancy/:companyId", (req, res) => {
-  const { companyId } = req.params;
-
-  const sql = `SELECT * FROM vacancies WHERE company_id IN (SELECT id FROM companies WHERE id = ${companyId})`;
-
-  pool.query(sql, (error, results) => {
+  pool.query('UPDATE trainings SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
     if (error) {
-      console.error(error);
-      return res.status(500).send("Error retrieving favorites");
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
     }
-
-    return res.json(results);
   });
 });
+app.get('/trainings/similar/:title', async (req, res) => {
+  const title = req.params.title;
+  const query = "SELECT * FROM trainings WHERE title LIKE CONCAT('%', ?, '%')";
+  const values = [title];
 
+  pool.query(query, values, (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Error getting similar trainings' });
+    } else {
+      res.status(200).json({ trainings: results });
+    }
+  });
+});
 app.get("/trainings", async (req, res) => {
   try {
     pool.query("SELECT * FROM trainings WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
@@ -756,9 +553,6 @@ app.get("/trainings", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
-
-
 app.use("/trainings/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -776,19 +570,6 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
-
-
-// Function to upload image to Azure Blob Storage
-// const uploadToBlobStorage = async (file) => {
-//   const fileName = 'trainings/' + Date.now() + '_' + file.originalname; // Include 'trainings/' as part of the blob name
-//   const blockBlobClient = containerClient.getBlockBlobClient(fileName);
-//   await blockBlobClient.uploadFile(file.path);
-//   return fileName;
-// };
-
-
-
 app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
   const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
   const imagePath = req.file ? req.file.path : null;
@@ -835,77 +616,22 @@ app.get("/training/:userId", (req, res) => {
     return res.json(results);
   });
 });
+app.post('/cv/:id/view', (req, res) => {
+  const cvId = req.params.id;
 
-
-
-app.post('/vacancies', async (req, res) => {
-  try {
-    const vacancyData = req.body;
-    const position = vacancyData.position;
-    const slug = position.toLowerCase().replace(/\s+/g, '-');
-    vacancyData.slug = slug;
-    const query = 'INSERT INTO vacancies SET ?';
-    await pool.query(query, vacancyData);
-    res.status(201).json({ message: 'Vacancy added successfully' });
-  } catch (error) {
-    console.error('Error adding vacancy:', error);
-    res.status(500).json({ error: 'Failed to add vacancy' });
-  }
-});
-
-
-
-
-
-app.get("/vacancie/:categoryId", (req, res) => {
-  const { categoryId } = req.params;
-
-  const sql = `SELECT * FROM vacancies WHERE category_id IN (SELECT id FROM categories WHERE id = ${categoryId})`;
-
-  pool.query(sql, (error, results) => {
+  pool.query('UPDATE cv SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
     if (error) {
-      console.error(error);
-      return res.status(500).send("Error retrieving favorites");
-    }
-
-    return res.json(results);
-  });
-});
-
-app.get("/reviews/:companyId", async (req, res) => {
-  try {
-    const { companyId } = req.params;
-    pool.query("SELECT * FROM review WHERE company_id = ?", [companyId], (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-
-
-app.post("/reviews", async (req, res) => {
-    try {
-      const { fullname, company_id, message  } = req.body;
-      pool.query(
-        "INSERT INTO review (fullname, company_id, message, created_at, updated_at)  VALUES (?, ?, ?, NOW(), NOW()) ",
-        [fullname, company_id, message],
-        (error, results, fields) => {
-          if (error) throw error;
-          console.log(`Review added`);
-          res.sendStatus(201);
-        }
-      );
-    } catch (error) {
-      console.log(error);
+      console.error('Failed to increment view count:', error);
       res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
     }
   });
-app.get("/blogs", async (req, res) => {
+});
+
+app.get("/cv", async (req, res) => {
   try {
-    pool.query("SELECT * FROM blogs  ORDER BY created_at DESC", (error, results, fields) => {
+    pool.query("SELECT * FROM cv ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
@@ -914,95 +640,6 @@ app.get("/blogs", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
-app.use("/blogs/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    pool.query(
-      "SELECT * FROM blogs WHERE id = ?",
-      [id],
-      (error, results, fields) => {
-        if (error) throw error;
-        res.json(results);
-      }
-    );
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-app.post("/favorites", async (req, res) => {
-  try {
-    const { user_id , vacancy_id } = req.body;
-    const query = "INSERT INTO favorits (user_id, vacancy_id) VALUES (?, ?)";
-    pool.query(query, [user_id, vacancy_id], (error, results, fields) => {
-      if (error) {
-        console.error(error);
-        res.sendStatus(500);
-      } else {
-        console.log(`Added to favorites`);
-        res.sendStatus(201);
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
-  }
-});
-
-app.post("/favorite", async (req, res) => {
-  try {
-    const { user_id, cv_id } = req.body;
-
-    const query = "INSERT INTO favorits (user_id, cv_id) VALUES (?, ?)";
-    pool.query(query, [user_id, cv_id], (error, results, fields) => {
-      if (error) {
-        console.error(error);
-        res.sendStatus(500);
-      } else {
-        console.log(`Added to favorites`);
-        res.sendStatus(201);
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
-  }
-});
-
-
-app.get("/favorites/:userId", (req, res) => {
-  const { userId } = req.params;
-
-  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${userId})`;
-
-  pool.query(sql, (error, results) => {
-    if (error) {
-      console.error(error);
-      return res.status(500).send("Error retrieving favorites");
-    }
-
-    return res.json(results);
-  });
-});
-
-app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
-  const { user_id, vacancy_id } = req.body;
-
-  const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND movie_id = ${vacancy_id}`;
-
-  pool.query(sql, (error, results) => {
-    if (error) {
-      console.error(error);
-      return res.status(500).send("Error removing from favorites");
-    }
-
-    return res.status(200).send("Item removed from favorites");
-  });
-});
-
-
 app.post(
   '/cv', cors(),
   upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
@@ -1088,7 +725,6 @@ app.post(
   }
 );
 
-
 app.get('/cv/:id', (req, res) => {
   const { id } = req.params;
 
@@ -1106,8 +742,6 @@ app.get('/cv/:id', (req, res) => {
     }
   });
 });
-
-
 app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
   const { id } = req.params;
 
@@ -1182,8 +816,296 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
     res.status(500).json({ message: 'Error uploading CV' });
   }
 });
+app.post("/reviews", async (req, res) => {
+  try {
+    const { user_id, company_id, message, rating } = req.body;
+
+    // Retrieve the logged-in user's full name from the `users` table based on the `user_id`
+    const getUserQuery = "SELECT name AS fullname FROM users WHERE id = ?";
+    pool.query(getUserQuery, [user_id], (error, results, fields) => {
+      if (error) throw error;
+
+      // Check if user exists and retrieve the full name
+      if (results.length === 0) {
+        throw new Error("User not found");
+      }
+      const fullname = results[0].fullname;
+
+      if (!rating) {
+        throw new Error("Rating is required");
+      }
+
+      pool.query(
+        "INSERT INTO review (user_id, fullname, company_id, message, rating, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
+        [user_id, fullname, company_id, message, rating],
+        (error, results, fields) => {
+          if (error) throw error;
+          console.log("Review added");
+          res.sendStatus(201);
+        }
+      );
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/ratings", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM review WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/reviews/:companyId", async (req, res) => {
+  try {
+    const { companyId } = req.params;
+    pool.query("SELECT * FROM review WHERE company_id = ?", [companyId], (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.post("/reviews", async (req, res) => {
+  try {
+    const { fullname, company_id, message  } = req.body;
+    pool.query(
+      "INSERT INTO review (fullname, company_id, message, created_at, updated_at)  VALUES (?, ?, ?, NOW(), NOW()) ",
+      [fullname, company_id, message],
+      (error, results, fields) => {
+        if (error) throw error;
+        console.log(`Review added`);
+        res.sendStatus(201);
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/accept", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM accept_type ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/gender", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM gender ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.get("/job", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM job_type ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.get("/favancie", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM favorits", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/cities", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM cities", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/experiences", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM experiences", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/educations", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM educations", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.get("/sectors", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM sectors", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.use("/sectors/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    pool.query(
+      "SELECT * FROM sectors WHERE id = ?",
+      [id],
+      (error, results, fields) => {
+        if (error) throw error;
+        res.json(results);
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.get("/categories", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM categories", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 
 
+app.use("/categories/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    pool.query(
+      "SELECT * FROM categories WHERE id = ?",
+      [id],
+      (error, results, fields) => {
+        if (error) throw error;
+        res.json(results);
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+
+// Function to upload image to Azure Blob Storage
+// const uploadToBlobStorage = async (file) => {
+//   const fileName = 'trainings/' + Date.now() + '_' + file.originalname; // Include 'trainings/' as part of the blob name
+//   const blockBlobClient = containerClient.getBlockBlobClient(fileName);
+//   await blockBlobClient.uploadFile(file.path);
+//   return fileName;
+// };
+app.post("/favorites", async (req, res) => {
+  try {
+    const { user_id , vacancy_id } = req.body;
+    const query = "INSERT INTO favorits (user_id, vacancy_id) VALUES (?, ?)";
+    pool.query(query, [user_id, vacancy_id], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.sendStatus(500);
+      } else {
+        console.log(`Added to favorites`);
+        res.sendStatus(201);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
+app.post("/favorite", async (req, res) => {
+  try {
+    const { user_id, cv_id } = req.body;
+
+    const query = "INSERT INTO favorits (user_id, cv_id) VALUES (?, ?)";
+    pool.query(query, [user_id, cv_id], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.sendStatus(500);
+      } else {
+        console.log(`Added to favorites`);
+        res.sendStatus(201);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
+
+app.get("/favorites/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${userId})`;
+
+  pool.query(sql, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error retrieving favorites");
+    }
+
+    return res.json(results);
+  });
+});
+
+app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
+  const { user_id, vacancy_id } = req.body;
+
+  const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND movie_id = ${vacancy_id}`;
+
+  pool.query(sql, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error removing from favorites");
+    }
+
+    return res.status(200).send("Item removed from favorites");
+  });
+});
 
 app.listen(8000, () => {
   console.log(`Server is running on port 8000`);
