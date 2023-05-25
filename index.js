@@ -772,9 +772,11 @@ app.get("/training/:userId", (req, res) => {
 app.post('/vacancies', async (req, res) => {
   try {
     const vacancyData = req.body;
+    const position = vacancyData.position;
+    const slug = position.toLowerCase().replace(/\s+/g, '-');
+    vacancyData.slug = slug;
     const query = 'INSERT INTO vacancies SET ?';
     await pool.query(query, vacancyData);
-
     res.status(201).json({ message: 'Vacancy added successfully' });
   } catch (error) {
     console.error('Error adding vacancy:', error);
