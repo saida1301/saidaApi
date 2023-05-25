@@ -70,15 +70,18 @@ const storage = diskStorage({
 });
 
 const upload = multer({ storage });
-
-const uploadToBlobStorage = async (file, folderName = 'trainings') => {
-  const fileName = folderName + '/' + Date.now() + '_' + file.originalname; // Include the folder name as part of the blob name
+const uploadToBlobStorage = async (file, folderName = "trainings") => {
+  const folder = "company"; // Specify the folder name
+  const folderPath = folder + "/"; // Add a trailing slash to indicate a folder
+  const fileName = folderPath + Date.now() + "_" + file.originalname; // Include the folder path as part of the blob name
   const blockBlobClient = containerClient.getBlockBlobClient(fileName);
   await blockBlobClient.uploadFile(file.path);
 
   const fileUrl = `https://${containerName}.blob.core.windows.net/${fileName}`;
   return fileUrl;
 };
+
+
 
 
 
@@ -359,20 +362,16 @@ app.post('/change-password', async (req, res) => {
     });
   });
 });
-app.post("/rating", async (req, res) => {
+app.post("/reviews", async (req, res) => {
   try {
-    const { review_id, rating } = req.body;
+    const {user_id, fullname, company_id, message, rating  } = req.body;
     pool.query(
-      "INSERT INTO rating (review_id, rating,created_at, updated_at) VALUES (?, ?,NOW(), NOW()) ON DUPLICATE KEY UPDATE rating = ?",
-      [review_id, rating, rating],
+      "INSERT INTO review (user_id,fullname, company_id, message, rating, created_at, updated_at)  VALUES (?, ?, ?,?,?, NOW(), NOW()) ",
+      [fullname, company_id, message, rating, user_id],
       (error, results, fields) => {
-        if (error) {
-          console.log(error);
-          res.sendStatus(500);
-        } else {
-          console.log(`rating added`);
-          res.sendStatus(201);
-        }
+        if (error) throw error;
+        console.log(`Review added`);
+        res.sendStatus(201);
       }
     );
   } catch (error) {
@@ -626,18 +625,68 @@ app.get("/categories", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/companies', async (req, res) => {
+app.post('/companies', cors(), upload.single('image'), async (req, res) => {
   try {
-    const companyData = req.body;
+    const {
+      user_id,
+      sector_id,
+      average,
+      name,
+      about,
+      address,
+      website,
+      map,
+      hr,
+      instagram,
+      linkedin,
+      facebook,
+      twitter,
+    } = req.body;
 
-   
-    const query = 'INSERT INTO companies SET ?';
-    await pool.query(query, companyData);
+    const imagePath = req.file ? req.file.path : null;
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    req.body.slug = slug;
 
-    res.status(201).json({ message: 'Company added successfully' });
+    let imageUrl = null;
+
+    // Check if file was uploaded
+    if (imagePath) {
+      // Upload the image to Azure Blob Storage
+      const uploadedFileName = await uploadToBlobStorage(req.file);
+      imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
+    }
+
+    const query = `INSERT INTO companies (user_id, sector_id, average, about, name, address, image, website, map, hr, instagram, linkedin, facebook, twitter, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const values = [
+      user_id,
+      sector_id,
+      average,
+      about,
+      name,
+      address,
+      imageUrl,
+      website,
+      map,
+      hr,
+      instagram,
+      linkedin,
+      facebook,
+      twitter,
+      slug,
+    ];
+
+    // Execute the database query
+    pool.query(query, values, (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error adding company' });
+      } else {
+        res.status(201).json({ message: 'Company added successfully' });
+      }
+    });
   } catch (error) {
-    console.error('Error adding company:', error);
-    res.status(500).json({ error: 'Failed to add company' });
+    console.error('Error uploading image:', error);
+    res.status(500).json({ message: 'Error uploading image' });
   }
 });
 
