@@ -364,21 +364,39 @@ app.post('/change-password', async (req, res) => {
 });
 app.post("/reviews", async (req, res) => {
   try {
-    const { user_id, fullname, company_id, message, rating } = req.body;
-    pool.query(
-      "INSERT INTO review (user_id, fullname, company_id, message, rating, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
-      [user_id, fullname, company_id, message, rating],
-      (error, results, fields) => {
-        if (error) throw error;
-        console.log("Review added");
-        res.sendStatus(201);
+    const { user_id, company_id, message, rating } = req.body;
+
+    // Retrieve the logged-in user's full name from the `users` table based on the `user_id`
+    const getUserQuery = "SELECT name AS fullname FROM users WHERE id = ?";
+    pool.query(getUserQuery, [user_id], (error, results, fields) => {
+      if (error) throw error;
+
+      // Check if user exists and retrieve the full name
+      if (results.length === 0) {
+        throw new Error("User not found");
       }
-    );
+      const fullname = results[0].fullname;
+
+      if (!rating) {
+        throw new Error("Rating is required");
+      }
+
+      pool.query(
+        "INSERT INTO review (user_id, fullname, company_id, message, rating, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
+        [user_id, fullname, company_id, message, rating],
+        (error, results, fields) => {
+          if (error) throw error;
+          console.log("Review added");
+          res.sendStatus(201);
+        }
+      );
+    });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
+
 
 
 app.get("/ratings", async (req, res) => {
