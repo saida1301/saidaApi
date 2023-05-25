@@ -5,7 +5,7 @@ import express from "express";
 import session from "express-session";
 import bodyParser from "body-parser";
 import mysql from "mysql";
-import "jwt" from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import cors from "cors";
 import nodemailer from "nodemailer";
