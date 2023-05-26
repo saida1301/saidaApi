@@ -928,6 +928,28 @@ app.get("/accept", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get("/rating/:company_id", async (req, res) => {
+  try {
+    const { company_id } = req.params;
+
+    const getRatingsQuery = "SELECT COUNT(*) AS count, rating FROM review WHERE company_id = ? AND rating IS NOT NULL GROUP BY rating";
+    pool.query(getRatingsQuery, [company_id], (error, results, fields) => {
+      if (error) throw error;
+
+      // Format the ratings data
+      const ratingsData = results.map((result) => ({
+        rating: result.rating,
+        count: result.count,
+      }));
+
+      console.log("Ratings Data:", ratingsData);
+      res.json(ratingsData);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 app.get("/gender", async (req, res) => {
   try {
     pool.query("SELECT * FROM gender ORDER BY created_at DESC", (error, results, fields) => {
