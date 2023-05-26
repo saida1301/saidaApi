@@ -900,23 +900,6 @@ app.get("/reviews/:companyId", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post("/reviews", async (req, res) => {
-  try {
-    const { fullname, company_id, message  } = req.body;
-    pool.query(
-      "INSERT INTO review (fullname, company_id, message, created_at, updated_at)  VALUES (?, ?, ?, NOW(), NOW()) ",
-      [fullname, company_id, message],
-      (error, results, fields) => {
-        if (error) throw error;
-        console.log(`Review added`);
-        res.sendStatus(201);
-      }
-    );
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
 app.get("/rating/:company_id", async (req, res) => {
   try {
     const { company_id } = req.params;
