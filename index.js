@@ -850,6 +850,33 @@ app.post("/reviews", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get("/ratings/:company_id", async (req, res) => {
+  try {
+    const { company_id } = req.params;
+
+    const getRatingsQuery = "SELECT COUNT(*) AS total_ratings FROM review";
+    pool.query(getRatingsQuery, (error, results, fields) => {
+      if (error) throw error;
+      const totalRatings = results[0].total_ratings;
+
+      const getCompanyRatingsQuery = "SELECT COUNT(*) AS company_ratings FROM review WHERE company_id = ? AND rating IS NOT NULL AND status = '1'";
+      pool.query(getCompanyRatingsQuery, [company_id], (error, results, fields) => {
+        if (error) throw error;
+        const companyRatings = results[0].company_ratings;
+
+        console.log("Total Ratings:", totalRatings);
+        console.log("Company Ratings:", companyRatings);
+
+        const percentage = ((companyRatings / totalRatings) * 100).toFixed(0);
+        console.log("Percentage:", percentage);
+        res.json({ percentage });
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 app.get("/ratings", async (req, res) => {
   try {
     pool.query("SELECT * FROM review WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
