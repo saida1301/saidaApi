@@ -900,6 +900,24 @@ app.get("/reviews/:companyId", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get("/average-rating/:company_id", async (req, res) => {
+  try {
+    const { company_id } = req.params;
+
+    const getAverageRatingQuery = "SELECT AVG(rating) AS average_rating FROM review WHERE company_id = ? AND rating IS NOT NULL AND status = '1'";
+    pool.query(getAverageRatingQuery, [company_id], (error, results, fields) => {
+      if (error) throw error;
+      const averageRating = results[0].average_rating;
+
+      console.log("Average Rating:", averageRating);
+
+      res.json({ averageRating });
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 app.get("/rating/:company_id", async (req, res) => {
   try {
     const { company_id } = req.params;
