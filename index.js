@@ -574,6 +574,7 @@ app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
   const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
   const imagePath = req.file ? req.file.path : null;
   const slug = title.toLowerCase().replace(/\s+/g, '-');
+      req.body.slug = slug;
   try {
     let imageUrl = null;
 
@@ -584,7 +585,7 @@ app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
     imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
   }
 
-    const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, slug, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, slug, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?, NOW(), NOW())`;
     const values = [user_id, company_id, title, about, price, redirect_link, imageUrl, deadline,slug];
 
     // Execute the database query
