@@ -570,23 +570,24 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
+app.post('/trainings', cors(), upload.single('image'), async (req, res) => {
   const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
   const imagePath = req.file ? req.file.path : null;
   const slug = title.toLowerCase().replace(/\s+/g, '-');
-      req.body.slug = slug;
+  req.body.slug = slug; // Update the slug in the request body
+
   try {
     let imageUrl = null;
 
-  // Check if file was uploaded
-  if (imagePath) {
-    // Upload the image to Azure Blob Storage
-    const uploadedFileName = await uploadToBlobStorage(req.file);
-    imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
-  }
+    // Check if file was uploaded
+    if (imagePath) {
+      // Upload the image to Azure Blob Storage
+      const uploadedFileName = await uploadToBlobStorage(req.file);
+      imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
+    }
 
-    const query = `INSERT INTO trainings (user_id, company_id, title, about, price, redirect_link, image, slug, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?,?, NOW(), NOW())`;
-    const values = [user_id, company_id, title,slug, about, price, redirect_link, imageUrl, deadline,];
+    const query = `INSERT INTO trainings (user_id, company_id, title, slug, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const values = [user_id, company_id, title, slug, about, price, redirect_link, imageUrl, deadline];
 
     // Execute the database query
     pool.query(query, values, (error, results) => {
@@ -602,6 +603,7 @@ app.post('/trainings',cors(), upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Error uploading image' });
   }
 });
+
 app.get("/training/:userId", (req, res) => {
   const userId = req.params.userId;
 
