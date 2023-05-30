@@ -633,7 +633,7 @@ app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
         facebook = ?, 
         twitter = ?, 
         slug = ?, 
-        status = 0, 
+        status = 1, 
         updated_at = NOW() 
       WHERE 
         id = ?
