@@ -342,64 +342,18 @@ app.use("/vacancies/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/vacanci', cors(), async (req, res) => {
+app.post('/vacanci', async (req, res) => {
   try {
-    const {
-      user_id,
-      company_id,
-      city_id,
-      category_id,
-      job_type_id,
-      experience_id,
-      education_id,
-      position,
-      salary_type,
-      min_salary,
-      max_salary,
-      min_age,
-      max_age,
-      requirement,
-      description,
-      contact_name,
-      accept_type,
-      deadline
-    } = req.body;
-
-
-    const query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, salary_type, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline,  created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-    const values = [
-      user_id,
-      company_id,
-      city_id,
-      category_id,
-      job_type_id,
-      experience_id,
-      education_id,
-      position,
-      salary_type,
-      min_salary,
-      max_salary,
-      min_age,
-      max_age,
-      requirement,
-      description,
-      contact_name,
-      accept_type,
-      deadline,
-    ];
-
-    // Execute the database query
-    pool.query(query, values, (error, results) => {
-      if (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error adding company' });
-      } else {
-        res.status(201).json({ message: 'Company added successfully' });
-      }
-    });
+    const vacancyData = req.body;
+    const position = vacancyData.position;
+    const slug = position.toLowerCase().replace(/\s+/g, '-');
+    vacancyData.slug = slug;
+    const query = 'INSERT INTO vacancies SET ?';
+    await pool.query(query, vacancyData);
+    res.status(201).json({ message: 'Vacancy added successfully' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Error adding company' });
+    console.error('Error adding vacancy:', error);
+    res.status(500).json({ error: 'Failed to add vacancy' });
   }
 });
 
