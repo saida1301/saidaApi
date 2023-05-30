@@ -388,7 +388,7 @@ app.post('/vacanci', cors(), async (req, res) => {
       contact_name,
       accept_type,
       deadline,
-      slug,
+      slug
     ];
 
     // Execute the database query
