@@ -308,6 +308,21 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get("/vacancy/:userId", (req, res) => {
+  const userId = req.params.userId;
+
+  const sql = "SELECT * FROM vacancies WHERE user_id = ? AND status = '1'"; 
+  const values = [userId];
+
+  pool.query(sql, values, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error retrieving companies");
+    }
+
+    return res.json(results);
+  });
+});
 app.put('/vacancie/:id', async (req, res) => {
   const vacancyId = req.params.id;
 
