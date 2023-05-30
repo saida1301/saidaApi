@@ -672,7 +672,21 @@ app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
   }
 });
 
+app.get("/compan6y/:userId", (req, res) => {
+  const userId = req.params.userId;
 
+  const sql = "SELECT * FROM companies WHERE user_id = ? AND status = '1'"; 
+  const values = [userId];
+
+  pool.query(sql, values, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error retrieving companies");
+    }
+
+    return res.json(results);
+  });
+});
 app.post('/trainings/:id/view', (req, res) => {
   const telimId = req.params.id;
 
