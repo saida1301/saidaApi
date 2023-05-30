@@ -365,10 +365,8 @@ app.post('/vacanci', cors(), async (req, res) => {
       deadline
     } = req.body;
 
-    const slug = position.toLowerCase().replace(/\s+/g, '-');
-    req.body.slug = slug;
 
-    const query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, salary_type, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, salary_type, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline,  created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,  ?, ?, ?, NOW(), NOW())`;
     const values = [
       user_id,
       company_id,
@@ -388,7 +386,6 @@ app.post('/vacanci', cors(), async (req, res) => {
       contact_name,
       accept_type,
       deadline,
-      slug
     ];
 
     // Execute the database query
