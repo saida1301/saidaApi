@@ -308,7 +308,7 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.put('/vacancies/:id', async (req, res) => {
+app.put('/vacancie/:id', async (req, res) => {
   const vacancyId = req.params.id;
 
   try {
@@ -342,7 +342,7 @@ app.use("/vacancies/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/vacancies', async (req, res) => {
+app.post('/vacanci', async (req, res) => {
   try {
     const vacancyData = req.body;
     const position = vacancyData.position;
