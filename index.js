@@ -583,6 +583,96 @@ app.put('/companie/:id', cors(), upload.single('image'), async (req, res) => {
   }
 });
 
+app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
+  try {
+    const companyId = req.params.id;
+    const {
+      user_id,
+      sector_id,
+      average,
+      name,
+      about,
+      address,
+      website,
+      map,
+      hr,
+      instagram,
+      linkedin,
+      facebook,
+      twitter,
+    } = req.body;
+
+    const imagePath = req.file ? req.file.path : null;
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    req.body.slug = slug;
+
+    let imageUrl = null;
+
+    // Check if file was uploaded
+    if (imagePath) {
+      // Upload the image to Azure Blob Storage
+      const uploadedFileName = await uploadToBlobStorage(req.file);
+      imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
+    }
+
+    const query = `
+      UPDATE companies 
+      SET 
+        user_id = ?, 
+        sector_id = ?, 
+        average = ?, 
+        about = ?, 
+        name = ?, 
+        address = ?, 
+        image = ?, 
+        website = ?, 
+        map = ?, 
+        hr = ?, 
+        instagram = ?, 
+        linkedin = ?, 
+        facebook = ?, 
+        twitter = ?, 
+        slug = ?, 
+        status = 0, 
+        updated_at = NOW() 
+      WHERE 
+        id = ?
+    `;
+    const values = [
+      user_id,
+      sector_id,
+      average,
+      about,
+      name,
+      address,
+      imageUrl,
+      website,
+      map,
+      hr,
+      instagram,
+      linkedin,
+      facebook,
+      twitter,
+      slug,
+      companyId,
+    ];
+
+    // Execute the database query
+    pool.query(query, values, (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error updating company' });
+      } else {
+        res.status(200).json({ message: 'Company updated successfully' });
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ message: 'Error uploading image' });
+  }
+});
+
+
 app.post('/trainings/:id/view', (req, res) => {
   const telimId = req.params.id;
 
