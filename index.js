@@ -672,7 +672,7 @@ app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
   }
 });
 
-app.get("/compan6y/:userId", (req, res) => {
+app.get("/company/:userId", (req, res) => {
   const userId = req.params.userId;
 
   const sql = "SELECT * FROM companies WHERE user_id = ? AND status = '1'"; 
