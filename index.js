@@ -1010,7 +1010,6 @@ app.post("/reviews", async (req, res) => {
   try {
     const { user_id, company_id, message, rating } = req.body;
 
-    // Retrieve the logged-in user's full name from the `users` table based on the `user_id`
     const getUserQuery = "SELECT name AS fullname FROM users WHERE id = ?";
     pool.query(getUserQuery, [user_id], (error, results, fields) => {
       if (error) throw error;
