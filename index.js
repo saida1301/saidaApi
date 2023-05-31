@@ -1098,15 +1098,20 @@ app.get("/ratings", async (req, res) => {
 app.get("/reviews/:companyId", async (req, res) => {
   try {
     const { companyId } = req.params;
-    pool.query("SELECT * FROM review WHERE company_id = ?", [companyId], (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
+    pool.query(
+      "SELECT review.*, users.image, users.name FROM review INNER JOIN users ON review.user_id = users.id WHERE review.company_id = ?",
+      [companyId],
+      (error, results, fields) => {
+        if (error) throw error;
+        res.json(results);
+      }
+    );
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
+
 app.get("/average-rating/:company_id", async (req, res) => {
   try {
     const { company_id } = req.params;
