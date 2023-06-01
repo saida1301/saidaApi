@@ -1057,7 +1057,7 @@ app.post("/reviews", async (req, res) => {
 app.get("/review-users/:companyId", async (req, res) => {
   try {
     const { companyId } = req.params;
-    const getUserCountQuery = "SELECT COUNT(DISTINCT user_id) AS user_count FROM review WHERE company_id = ?";
+    const getUserCountQuery = "SELECT COUNT(user_id) AS user_count FROM review WHERE company_id = ?";
     
     pool.query(getUserCountQuery, [companyId], (error, results, fields) => {
       if (error) throw error;
