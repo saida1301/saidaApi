@@ -1070,12 +1070,11 @@ app.get("/review-users/:companyId", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
 app.get("/ratings/:company_id", async (req, res) => {
   try {
     const { company_id } = req.params;
 
-    const getRatingsQuery = "SELECT COUNT(*) AS total_ratings FROM review";
+    const getRatingsQuery = "SELECT COUNT(*) AS total_ratings FROM review WHERE status = '1'";
     pool.query(getRatingsQuery, (error, results, fields) => {
       if (error) throw error;
       const totalRatings = results[0].total_ratings;
