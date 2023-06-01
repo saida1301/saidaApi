@@ -757,7 +757,7 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/training', cors(), upload.single('image'), async (req, res) => {
+app.post('/training',upload.single('image'), async (req, res) => {
   const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
   const imagePath = req.file ? req.file.path : null;
   const slug = title.toLowerCase().replace(/\s+/g, '-');
