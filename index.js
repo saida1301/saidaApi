@@ -1402,9 +1402,9 @@ app.post("/favorite", async (req, res) => {
 app.get("/favorites/:userId", (req, res) => {
   const { userId } = req.params;
 
-  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ${userId})`;
+  const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ?)`;
 
-  pool.query(sql, (error, results) => {
+  pool.query(sql, [userId], (error, results) => {
     if (error) {
       console.error(error);
       return res.status(500).send("Error retrieving favorites");
@@ -1413,6 +1413,7 @@ app.get("/favorites/:userId", (req, res) => {
     return res.json(results);
   });
 });
+
 
 app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
   const { user_id, vacancy_id } = req.body;
