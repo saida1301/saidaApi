@@ -468,7 +468,7 @@ app.use("/companies/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/companies', cors(), upload.single('image'), async (req, res) => {
+app.post('/companiy', cors(), upload.single('image'), async (req, res) => {
   try {
     const {
       user_id,
@@ -496,7 +496,7 @@ app.post('/companies', cors(), upload.single('image'), async (req, res) => {
     if (imagePath) {
       // Upload the image to Azure Blob Storage
       const uploadedFileName = await uploadToBlobStorage(req.file);
-      imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
+      imageUrl = `back/assets/images/companies/${uploadedFileName}`;
     }
 
     const query = `INSERT INTO companies (user_id, sector_id, average, about, name, address, image, website, map, hr, instagram, linkedin, facebook, twitter, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
