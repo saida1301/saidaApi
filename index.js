@@ -357,20 +357,66 @@ app.use("/vacancies/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/vacanci', async (req, res) => {
+app.post('/vacanci', cors(), async (req, res) => {
   try {
-    const vacancyData = req.body;
-    const position = vacancyData.position;
+    const {
+      user_id,
+      company_id,
+      city_id,
+      category_id,
+      job_type_id,
+      experience_id,
+      education_id,
+      position,
+      min_salary,
+      max_salary,
+      min_age,
+      max_age,
+      salary_type,
+      requirement,
+      description,
+      contact_name,
+      accept_type,
+      contact_info,
+      deadline,
+    } = req.body;
+
     const slug = position.toLowerCase().replace(/\s+/g, '-');
-    vacancyData.slug = slug;
-    const query = 'INSERT INTO vacancies SET ?';
-    await pool.query(query, vacancyData);
+    req.body.slug = slug;
+
+    const query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, slug, min_salary, max_salary, min_age, max_age, salary_type, requirement, description, contact_name, accept_type, contact_info, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const values = [
+      user_id,
+      company_id,
+      city_id,
+      category_id,
+      job_type_id,
+      experience_id,
+      education_id,
+      position,
+      slug,
+      min_salary,
+      max_salary,
+      min_age,
+      max_age,
+      salary_type,
+      requirement,
+      description,
+      contact_name,
+      accept_type,
+      contact_info,
+      deadline,
+    ];
+
+    // Execute the database query
+    await pool.query(query, values);
     res.status(201).json({ message: 'Vacancy added successfully' });
   } catch (error) {
     console.error('Error adding vacancy:', error);
     res.status(500).json({ error: 'Failed to add vacancy' });
   }
 });
+
 
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
