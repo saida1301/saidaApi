@@ -1434,6 +1434,39 @@ app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
     return res.status(200).send("Item removed from favorites");
   });
 });
+app.post('/apply', (req, res) => {
+  const { userId, vacancyId, cvId } = req.body;
+
+  const selectQuery = 'SELECT name, email, surname, contact_phone, cv FROM cv WHERE user_id = ? AND id = ?';
+
+  pool.query(selectQuery, [userId, cvId], (selectError, selectResults) => {
+    if (selectError) {
+      console.error('Error retrieving user information from cv:', selectError);
+      res.status(500).json({ message: 'Error applying for the vacancy' });
+      return;
+    }
+
+    if (selectResults.length === 0) {
+      console.error('CV not found for the given user ID and CV ID');
+      res.status(400).json({ message: 'CV not found' });
+      return;
+    }
+
+    const user = selectResults[0];
+
+    const insertQuery = 'INSERT INTO candidates (user_id, vacancy_id, name, mail, surname, phone, cv) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    const values = [userId, vacancyId, user.name, user.email, user.surname, user.contact_phone, user.cv];
+
+    pool.query(insertQuery, values, (insertError, insertResults) => {
+      if (insertError) {
+        console.error('Error inserting application:', insertError);
+        res.status(500).json({ message: 'Error applying for the vacancy' });
+      } else {
+        res.status(200).json({ message: 'Application submitted successfully' });
+      }
+    });
+  });
+});
 
 app.listen(8000, () => {
   console.log(`Server is running on port 8000`);
