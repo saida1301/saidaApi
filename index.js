@@ -924,10 +924,15 @@ app.post(
       const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
 
       const portfolio = [];
-      const numberOfPortfolios = 2; // Define the total number of portfolios dynamically
+      const numberOfPortfolios = Object.keys(req.body).reduce((count, key) => {
+        if (key.startsWith('portfolio_job_name_')) {
+          const index = parseInt(key.split('_')[3], 10); // Extract the index from the field name
+          return Math.max(count, index + 1); // Get the maximum index
+        }
+        return count;
+      }, 0);
 
-      // Assuming you have form fields with names like 'portfolio_job_name_1', 'portfolio_company_1', 'portfolio_link_1', and so on
-      for (let i = 1; i <= numberOfPortfolios; i++) {
+      for (let i = 0; i < numberOfPortfolios; i++) {
         const portfolioObj = {
           job_name: req.body[`portfolio_job_name_${i}`],
           company: req.body[`portfolio_company_${i}`],
@@ -937,7 +942,6 @@ app.post(
         portfolio.push(portfolioObj);
       }
 
-      // Create slug from lowercase name and surname combination
       const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
       const query =
