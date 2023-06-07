@@ -922,13 +922,19 @@ app.post(
 
       const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
       const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
-      const portfolio = [
-        {
-          job_name: req.body['portfolio_job_name'],
-          company: req.body['portfolio_company'],
-          link: req.body['portfolio_link'],
-        },
-      ];
+
+      const portfolio = [];
+
+      // Assuming you have form fields with names like 'portfolio_job_name_1', 'portfolio_company_1', 'portfolio_link_1', and so on
+      for (let i = 1; i <= numberOfPortfolios; i++) {
+        const portfolioObj = {
+          job_name: req.body[`portfolio_job_name_${i}`],
+          company: req.body[`portfolio_company_${i}`],
+          link: req.body[`portfolio_link_${i}`],
+        };
+
+        portfolio.push(portfolioObj);
+      }
 
       // Create slug from lowercase name and surname combination
       const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
@@ -975,6 +981,7 @@ app.post(
     }
   }
 );
+
 
 app.get('/cv/:id', (req, res) => {
   const { id } = req.params;
