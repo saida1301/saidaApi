@@ -892,7 +892,7 @@ app.get("/cv/:userId", (req, res) => {
   });
 });
 app.post(
-  '/cv', cors(),
+  '/civi', cors(),
   upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
   async (req, res) => {
     const {
