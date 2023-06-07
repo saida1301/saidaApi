@@ -985,23 +985,6 @@ app.post(
 
 
 
-app.get('/cv/:id', (req, res) => {
-  const { id } = req.params;
-
-  pool.query('SELECT * FROM cv WHERE id = ?', [id], (error, results) => {
-    if (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Error retrieving CV information' });
-    } else {
-      if (results.length > 0) {
-        const cv = results[0];
-        res.status(200).json(cv);
-      } else {
-        res.status(404).json({ message: 'CV not found' });
-      }
-    }
-  });
-});
 app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
   const { id } = req.params;
 
@@ -1023,20 +1006,33 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
     work_history,
     skills,
   } = req.body;
-  console.log(category_id, city_id)
+
+  const portfolio = [];
+  const numberOfPortfolios = 2; // Define the total number of portfolios dynamically
+
+  // Assuming you have form fields with names like 'portfolio_job_name_1', 'portfolio_company_1', 'portfolio_link_1', and so on
+  for (let i = 1; i <= numberOfPortfolios; i++) {
+    const jobName = req.body[`portfolio_job_name_${i}`];
+    const company = req.body[`portfolio_company_${i}`];
+    const link = req.body[`portfolio_link_${i}`];
+
+    // Check if the portfolio object has valid data
+    if (jobName && company && link) {
+      const portfolioObj = {
+        job_name: jobName,
+        company,
+        link,
+      };
+      portfolio.push(portfolioObj);
+    }
+  }
+
   try {
     const cvFile = req.files['cv'][0];
     const imageFile = req.files['image'][0];
 
     const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
     const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
-    const portfolio = [
-      {
-        job_name: req.body['portfolio_job_name'],
-        company: req.body['portfolio_company'],
-        link: req.body['portfolio_link']
-      }
-    ];
 
     const query = `UPDATE cv SET category_id = ?, city_id = ?, education_id = ?, experience_id = ?, job_type_id = ?, gender_id = ?, name = ?, surname = ?, father_name = ?, email = ?, position = ?, about_education = ?, salary = ?, birth_date = ?, work_history = ?, skills = ?, cv = ?, image = ?, portfolio = ?, updated_at = NOW() WHERE id = ?`;
 
@@ -1060,7 +1056,7 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
       cvUrl,
       imageUrl,
       JSON.stringify({ portfolio }),
-      id
+      id,
     ];
 
     pool.query(query, values, (error, results) => {
