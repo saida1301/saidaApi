@@ -933,16 +933,22 @@ app.post(
       }, 0);
 
       for (let i = 0; i < numberOfPortfolios; i++) {
-        const portfolioObj = {
-          job_name: req.body[`portfolio_job_name_${i}`],
-          company: req.body[`portfolio_company_${i}`],
-          link: req.body[`portfolio_link_${i}`],
-        };
+        const jobName = req.body[`portfolio_job_name_${i}`];
+        const company = req.body[`portfolio_company_${i}`];
+        const link = req.body[`portfolio_link_${i}`];
 
-        portfolio.push(portfolioObj);
+        if (jobName && company && link) {
+          const portfolioObj = {
+            job_name: jobName,
+            company: company,
+            link: link,
+          };
+
+          portfolio.push(portfolioObj);
+        }
       }
 
-      const serializedPortfolio = portfolio.map((portfolioObj) => JSON.stringify(portfolioObj));
+      const serializedPortfolio = JSON.stringify({ portfolio });
 
       const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
@@ -970,7 +976,7 @@ app.post(
         skills,
         cvUrl,
         imageUrl,
-        JSON.stringify({ portfolio: serializedPortfolio }),
+        serializedPortfolio,
         slug,
       ];
 
@@ -988,6 +994,7 @@ app.post(
     }
   }
 );
+
 
 
 
