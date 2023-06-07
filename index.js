@@ -924,6 +924,7 @@ app.post(
       const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
 
       const portfolio = [];
+      const numberOfPortfolios = 2; // Define the total number of portfolios dynamically
 
       // Assuming you have form fields with names like 'portfolio_job_name_1', 'portfolio_company_1', 'portfolio_link_1', and so on
       for (let i = 1; i <= numberOfPortfolios; i++) {
@@ -981,6 +982,7 @@ app.post(
     }
   }
 );
+
 
 
 app.get('/cv/:id', (req, res) => {
