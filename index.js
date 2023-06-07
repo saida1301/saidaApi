@@ -942,6 +942,8 @@ app.post(
         portfolio.push(portfolioObj);
       }
 
+      const serializedPortfolio = portfolio.map((portfolioObj) => JSON.stringify(portfolioObj));
+
       const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
       const query =
@@ -968,7 +970,7 @@ app.post(
         skills,
         cvUrl,
         imageUrl,
-        JSON.stringify({ portfolio }),
+        JSON.stringify({ portfolio: serializedPortfolio }),
         slug,
       ];
 
@@ -986,6 +988,7 @@ app.post(
     }
   }
 );
+
 
 
 
