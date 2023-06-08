@@ -1001,6 +1001,30 @@ app.post(
           console.error(error);
           res.status(500).json({ message: 'Error adding CV' });
         } else {
+          // Send email to user
+          const transporter = nodemailer.createTransport({
+            service: 'Gmail',
+            auth: {
+              user: 'your-email@example.com',
+              pass: 'your-password'
+            }
+          });
+
+           const mailOptions = {
+      from:req.body.email,
+      to: 'humbesaida@gmail.com',
+      subject: 'New Message from Contact Form',
+      text: `Name: ${name}\nSurname: ${surname}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
+    };
+
+          transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+              console.error('Error sending email:', error);
+            } else {
+              console.log('Email sent:', info.response);
+            }
+          });
+
           res.status(201).json({ message: 'CV added successfully', imageUrl });
         }
       });
@@ -1010,7 +1034,6 @@ app.post(
     }
   }
 );
-
 
 
 
