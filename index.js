@@ -1547,10 +1547,9 @@ app.post('/apply', (req, res) => {
     });
   });
 });
-app.post('/candidates',cors(), upload.single('cv'),  async (req, res) => {
+app.post('/candidates', cors(), upload.single('cv'), async (req, res) => {
   try {
-
-    const cvFile = req.files['cv'][0];
+    const cvFile = req.file; // Use req.file instead of req.files['cv'][0]
     const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
     const { vacancyId, name, email, surname, phone } = req.body;
 
@@ -1572,6 +1571,7 @@ app.post('/candidates',cors(), upload.single('cv'),  async (req, res) => {
     res.status(500).json({ message: 'Error applying for the vacancy' });
   }
 });
+
 
 app.listen(8000, () => {
   console.log(`Server is running on port 8000`);
