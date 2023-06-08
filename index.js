@@ -1118,6 +1118,30 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
         console.error(error);
         res.status(500).json({ message: 'Error updating CV' });
       } else {
+        // Send email to user
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: 'humbeteliyevaseide2001@gmail.com',
+            pass: 'nwudhimwttuqdzxv'
+          }
+        });
+
+        const mailOptions = {
+          from: req.body.email,
+          to: 'humbesaida@gmail.com',
+          subject: 'CV Updated Successfully',
+          text: 'Your CV has been updated successfully. Thank you!',
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error('Error sending email:', error);
+          } else {
+            console.log('Email sent:', info.response);
+          }
+        });
+
         res.status(200).json({ message: 'CV updated successfully', imageUrl });
       }
     });
@@ -1126,6 +1150,7 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
     res.status(500).json({ message: 'Error uploading CV' });
   }
 });
+
 app.post("/reviews", async (req, res) => {
   try {
     const { user_id, company_id, message, rating } = req.body;
