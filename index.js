@@ -1547,12 +1547,13 @@ app.post('/apply', (req, res) => {
     });
   });
 });
-
 app.post('/candidates', async (req, res) => {
   try {
     const cvFile = req.files['cv'][0];
     const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
     const { vacancyId, name, email, surname, phone } = req.body;
+
+    // Rest of your code here...
 
     const insertQuery = 'INSERT INTO candidates (vacancy_id, name, mail, surname, phone, cv) VALUES (?, ?, ?, ?, ?, ?)';
     const values = [vacancyId, name, email, surname, phone, cvUrl];
@@ -1570,8 +1571,6 @@ app.post('/candidates', async (req, res) => {
     res.status(500).json({ message: 'Error applying for the vacancy' });
   }
 });
-
-
 
 app.listen(8000, () => {
   console.log(`Server is running on port 8000`);
