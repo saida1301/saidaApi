@@ -163,7 +163,7 @@ app.post('/signup', (req, res) => {
                 return;
               }
 
-              const verificationLink = `https://example.com/verify?token=${verificationToken}`;
+              const verificationLink = `https://1is.butagrup.az/verify?token=${verificationToken}`;
               
               // Send the verification email
               const transporter = nodemailer.createTransport({
