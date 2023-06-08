@@ -1548,6 +1548,31 @@ app.post('/apply', (req, res) => {
   });
 });
 
+app.post('/candidates', async (req, res) => {
+  try {
+    const cvFile = req.files['cv'][0];
+    const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
+    const { vacancyId, name, email, surname, phone } = req.body;
+
+    const insertQuery = 'INSERT INTO candidates (vacancy_id, name, email, surname, phone, cv) VALUES (?, ?, ?, ?, ?, ?)';
+    const values = [vacancyId, name, email, surname, phone, cvUrl];
+
+    pool.query(insertQuery, values, (insertError, insertResults) => {
+      if (insertError) {
+        console.error('Error inserting application:', insertError);
+        res.status(500).json({ message: 'Error applying for the vacancy' });
+      } else {
+        res.status(200).json({ message: 'Application submitted successfully' });
+      }
+    });
+  } catch (error) {
+    console.error('Error applying for the vacancy:', error);
+    res.status(500).json({ message: 'Error applying for the vacancy' });
+  }
+});
+
+
+
 app.listen(8000, () => {
   console.log(`Server is running on port 8000`);
 });
