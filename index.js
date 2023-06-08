@@ -1004,18 +1004,18 @@ app.post(
           // Send email to user
           const transporter = nodemailer.createTransport({
             service: 'gmail',
-      auth: {
-        user: 'humbeteliyevaseide2001@gmail.com',
-        pass: 'nwudhimwttuqdzxv'
-      }
+            auth: {
+              user: 'humbeteliyevaseide2001@gmail.com',
+              pass: 'nwudhimwttuqdzxv'
+            }
           });
 
-           const mailOptions = {
-      from:req.body.email,
-      to: 'humbesaida@gmail.com',
-      subject: 'New Message from Contact Form',
-      text: `Name: ${name}\nSurname: ${surname}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
-    };
+          const mailOptions = {
+            from: req.body.email,
+            to: 'humbesaida@gmail.com',
+            subject: 'CV Added Successfully',
+            text: 'Your CV has been added successfully. Thank you!',
+          };
 
           transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
@@ -1034,6 +1034,7 @@ app.post(
     }
   }
 );
+
 
 
 
