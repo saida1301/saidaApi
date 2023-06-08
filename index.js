@@ -1554,7 +1554,7 @@ app.post('/candidates', async (req, res) => {
     const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
     const { vacancyId, name, email, surname, phone } = req.body;
 
-    const insertQuery = 'INSERT INTO candidates (vacancy_id, name, email, surname, phone, cv) VALUES (?, ?, ?, ?, ?, ?)';
+    const insertQuery = 'INSERT INTO candidates (vacancy_id, name, mail, surname, phone, cv) VALUES (?, ?, ?, ?, ?, ?)';
     const values = [vacancyId, name, email, surname, phone, cvUrl];
 
     pool.query(insertQuery, values, (insertError, insertResults) => {
