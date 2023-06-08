@@ -1003,11 +1003,11 @@ app.post(
         } else {
           // Send email to user
           const transporter = nodemailer.createTransport({
-            service: 'Gmail',
-            auth: {
-              user: 'your-email@example.com',
-              pass: 'your-password'
-            }
+            service: 'gmail',
+      auth: {
+        user: 'humbeteliyevaseide2001@gmail.com',
+        pass: 'nwudhimwttuqdzxv'
+      }
           });
 
            const mailOptions = {
