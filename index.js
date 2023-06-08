@@ -154,7 +154,7 @@ app.post('/signup', (req, res) => {
           const verificationToken = crypto.randomBytes(20).toString('hex');
 
           pool.query(
-            'INSERT INTO users (name, email, password, email_verification_code) VALUES (?, ?, ?, ?)',
+            'INSERT INTO users (name, email, password, email_verification_code,created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())',
             [name, email, hash, verificationToken],
             (err, results) => {
               if (err) {
