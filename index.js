@@ -118,78 +118,52 @@ app.post("/login", (req, res) => {
   );
 });
 
-app.post('/signup', (req, res) => {
+app.post("/signup", (req, res) => {
   const { name, email, password } = req.body;
 
   pool.query(
-    'SELECT * FROM users WHERE email = ?',
+    "SELECT * FROM users WHERE email = ?",
     [email],
     (err, results) => {
       if (err) {
         console.log(err);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: "Internal server error" });
         return;
       }
 
       if (results.length > 0) {
-        res.status(400).json({ message: 'Email already in use' });
+        res.status(400).json({ message: "Email already in use" });
         return;
       }
 
       bcrypt.genSalt(10, (err, salt) => {
         if (err) {
           console.log(err);
-          res.status(500).json({ message: 'Internal server error' });
+          res.status(500).json({ message: "Internal server error" });
           return;
         }
 
         bcrypt.hash(password, salt, (err, hash) => {
           if (err) {
             console.log(err);
-            res.status(500).json({ message: 'Internal server error' });
+            res.status(500).json({ message: "Internal server error" });
             return;
           }
 
-          // Generate verification token
-          const verificationToken = crypto.randomBytes(20).toString('hex');
-
           pool.query(
-            'INSERT INTO users (name, email, password, email_verification_code,created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())',
-            [name, email, hash, verificationToken],
+            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+            [name, email, hash],
             (err, results) => {
               if (err) {
                 console.log(err);
-                res.status(500).json({ message: 'Internal server error' });
+                res.status(500).json({ message: "Internal server error" });
                 return;
               }
 
-              const verificationLink = `https://1is.butagrup.az/verify?token=${verificationToken}`;
-              
-              // Send the verification email
-              const transporter = nodemailer.createTransport({
-            service: 'gmail',
-            auth: {
-              user: 'humbeteliyevaseide2001@gmail.com',
-              pass: 'nwudhimwttuqdzxv'
-            }
-          });
-
-              const mailOptions = {
-                from: req.body.email,
-                to: email,
-                subject: 'Email Verification',
-                text: `Dear ${name},\n\nPlease click the following link to verify your email address:\n\n${verificationLink}\n\nThank you,\nYour Application Team`,
-              };
-
-              transporter.sendMail(mailOptions, (error, info) => {
-                if (error) {
-                  console.error('Error sending email:', error);
-                  res.status(500).json({ message: 'An error occurred while sending the verification email.' });
-                } else {
-                  console.log('Email sent:', info.response);
-                  res.json({ message: 'User registered successfully' });
-                }
+              const token = jwt.sign({ id: results.insertId }, "secret", {
+                expiresIn: "1h",
               });
+              res.json({ token });
             }
           );
         });
