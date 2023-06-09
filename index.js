@@ -1572,6 +1572,19 @@ app.post('/candidates', cors(), upload.single('cv'), async (req, res) => {
   }
 });
 
+app.get('/candidates/:user_id', (req, res) => {
+  const userId = req.params.user_id;
+
+  const selectQuery = 'SELECT * FROM candidates WHERE user_id = ?';
+  pool.query(selectQuery, [userId], (selectError, selectResults) => {
+    if (selectError) {
+      console.error('Error retrieving candidates:', selectError);
+      res.status(500).json({ message: 'Error retrieving candidates' });
+    } else {
+      res.status(200).json(selectResults);
+    }
+  });
+});
 
 app.listen(8000, () => {
   console.log(`Server is running on port 8000`);
