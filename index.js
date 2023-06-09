@@ -1558,10 +1558,10 @@ app.post('/apply', (req, res) => {
     });
   });
 });
-app.post('/candidates', cors(), upload.single('cv'), async (req, res) => {
+app.post('/candidates', cors(), upload.single('image'), async (req, res) => {
   try {
   const cvFile = req.file;// Use req.file instead of req.files['cv'][0]
-    const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
+    const cvUrl = await uploadToBlobStorage(cvFile, 'image');
     const { vacancyId, name, email, surname, phone } = req.body;
 
     // Rest of your code here...
