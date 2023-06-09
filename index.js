@@ -498,6 +498,17 @@ app.get("/companies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.get("/candidates", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM candidates ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 app.use("/companies/:id", async (req, res) => {
   try {
     const { id } = req.params;
