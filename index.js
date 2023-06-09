@@ -1558,16 +1558,15 @@ app.post('/apply', (req, res) => {
     });
   });
 });
-app.post('/candidates', cors(), upload.single('image'), async (req, res) => {
+app.post('/candidates', cors(), async (req, res) => {
   try {
   const cvFile = req.file;// Use req.file instead of req.files['cv'][0]
-    const cvUrl = await uploadToBlobStorage(cvFile, 'image');
     const { vacancyId, name, email, surname, phone } = req.body;
 
     // Rest of your code here...
 
     const insertQuery = 'INSERT INTO candidates (vacancy_id, name, mail, surname, phone, cv) VALUES (?, ?, ?, ?, ?, ?)';
-    const values = [vacancyId, name, email, surname, phone, cvUrl];
+    const values = [vacancyId, name, email, surname, phone, cvFile];
 
     pool.query(insertQuery, values, (insertError, insertResults) => {
       if (insertError) {
