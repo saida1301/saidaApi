@@ -298,17 +298,40 @@ app.post('/vacancies/:id/view', (req, res) => {
     }
   });
 });
+
+function getVacanciesByCategories(selectedCategories) {
+  return new Promise((resolve, reject) => {
+    // Create the SQL query
+    const query = `
+      SELECT * FROM vacancies
+      WHERE category_id IN (${selectedCategories.join(',')})
+    `;
+
+    // Execute the query
+    pool.query(query, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+}
+
 app.get("/vacancies", async (req, res) => {
   try {
-    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
+    const { selectedCategories } = req.query;
+
+    // Assuming you have a function to retrieve vacancies from the database
+    const vacancies = await getVacanciesByCategories(selectedCategories);
+    
+    res.json(vacancies);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
+
 app.get("/vacancy/:userId", (req, res) => {
   const userId = req.params.userId;
 
