@@ -301,10 +301,15 @@ app.post('/vacancies/:id/view', (req, res) => {
 
 function getVacanciesByCategories(selectedCategories) {
   return new Promise((resolve, reject) => {
+    // Convert selectedCategories to an array
+    const categoriesArray = Array.isArray(selectedCategories)
+      ? selectedCategories
+      : [selectedCategories];
+
     // Create the SQL query
     const query = `
       SELECT * FROM vacancies
-      WHERE category_id IN (${selectedCategories.join(',')})
+      WHERE category_id IN (${categoriesArray.join(',')})
     `;
 
     // Execute the query
@@ -320,17 +325,18 @@ function getVacanciesByCategories(selectedCategories) {
 
 app.get("/vacancies", async (req, res) => {
   try {
-    const { selectedCategories } = req.query;
+    const selectedCategories = req.query.selectedCategories;
 
     // Assuming you have a function to retrieve vacancies from the database
     const vacancies = await getVacanciesByCategories(selectedCategories);
-    
+
     res.json(vacancies);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
+
 
 app.get("/vacancy/:userId", (req, res) => {
   const userId = req.params.userId;
