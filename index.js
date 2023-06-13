@@ -150,9 +150,11 @@ app.post("/signup", (req, res) => {
             return;
           }
 
+          const catIdsString = Array.isArray(cat_id) ? cat_id.join(",") : cat_id;
+
           pool.query(
-            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-            [name, email, hash],
+            "INSERT INTO users (name, email, password, cat_id) VALUES (?, ?, ?, ?)",
+            [name, email, hash, catIdsString],
             (err, results) => {
               if (err) {
                 console.log(err);
@@ -160,33 +162,10 @@ app.post("/signup", (req, res) => {
                 return;
               }
 
-              const userId = results.insertId;
-
-              if (Array.isArray(cat_id) && cat_id.length > 0) {
-                // Insert selected cat_id values into a separate user_categories table
-                const values = cat_id.map((id) => [userId, id]);
-                pool.query(
-                  "INSERT INTO user_categories (user_id, cat_id) VALUES ?",
-                  [values],
-                  (err, results) => {
-                    if (err) {
-                      console.log(err);
-                      res.status(500).json({ message: "Internal server error" });
-                      return;
-                    }
-
-                    const token = jwt.sign({ id: userId }, "secret", {
-                      expiresIn: "1h",
-                    });
-                    res.json({ token });
-                  }
-                );
-              } else {
-                const token = jwt.sign({ id: userId }, "secret", {
-                  expiresIn: "1h",
-                });
-                res.json({ token });
-              }
+              const token = jwt.sign({ id: results.insertId }, "secret", {
+                expiresIn: "1h",
+              });
+              res.json({ token });
             }
           );
         });
@@ -194,6 +173,7 @@ app.post("/signup", (req, res) => {
     }
   );
 });
+
 
 app.post("/logout", (req, res) => {
   res.clearCookie("token");
