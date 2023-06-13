@@ -151,7 +151,7 @@ app.post("/signup", (req, res) => {
           }
 
           const catIdsArray = Array.isArray(cat_id) ? cat_id : [cat_id];
-          const categoryIds = catIdsArray.map(Number); // Convert strings to numbers
+          const categoryIds = catIdsArray.map(); // Convert strings to numbers
 
           pool.query(
             "INSERT INTO users (name, email, password, cat_id) VALUES (?, ?, ?, ?)",
