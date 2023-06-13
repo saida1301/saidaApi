@@ -150,7 +150,8 @@ app.post("/signup", (req, res) => {
             return;
           }
 
-          const catIdsArray = Array.isArray(cat_id) ? cat_id.map(String) : [String(cat_id)];
+          const catIdsArray = Array.isArray(cat_id) ? cat_id : [cat_id];
+          const categoryIds = catIdsArray.map(Number); // Convert strings to numbers
 
           pool.query(
             "INSERT INTO users (name, email, password, cat_id) VALUES (?, ?, ?, ?)",
@@ -165,7 +166,7 @@ app.post("/signup", (req, res) => {
               const token = jwt.sign({ id: results.insertId }, "secret", {
                 expiresIn: "1h",
               });
-              res.json({ token });
+              res.json({ token, categoryIds }); // Include categoryIds in the response
             }
           );
         });
@@ -173,6 +174,7 @@ app.post("/signup", (req, res) => {
     }
   );
 });
+
 
 
 
