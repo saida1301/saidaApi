@@ -151,10 +151,11 @@ app.post("/signup", (req, res) => {
           }
 
           const catIdsArray = Array.isArray(cat_id) ? cat_id : [cat_id];
+          const catIdsJSON = JSON.stringify(catIdsArray);
 
           pool.query(
             "INSERT INTO users (name, email, password, cat_id) VALUES (?, ?, ?, ?)",
-            [name, email, hash, JSON.stringify(catIdsArray)],
+            [name, email, hash, catIdsJSON],
             (err, results) => {
               if (err) {
                 console.log(err);
@@ -173,6 +174,7 @@ app.post("/signup", (req, res) => {
     }
   );
 });
+
 
 
 
