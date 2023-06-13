@@ -291,22 +291,24 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
-function getVacanciesByCategories(userId, selectedCategories) {
+function getVacanciesByCategories(userId, categoryIds) {
   return new Promise((resolve, reject) => {
-    // Convert selectedCategories to an array
-    const categoriesArray = Array.isArray(selectedCategories)
-      ? selectedCategories
-      : [selectedCategories];
+    // Convert categoryIds to an array if it's not already
+    const categoryIdsArray = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
 
-    // Create the SQL query
+    // Create the SQL query with placeholders for the category IDs
+    const placeholders = categoryIdsArray.map(() => '?').join(',');
     const query = `
       SELECT * FROM vacancies
-      WHERE category_id IN (${categoriesArray.join(',')})
-      AND user_id = ${userId}
+      WHERE category_id IN (${placeholders})
+      AND user_id = ?
     `;
 
+    // Prepare the values for the query
+    const queryValues = [...categoryIdsArray, userId];
+
     // Execute the query
-    pool.query(query, (error, results) => {
+    pool.query(query, queryValues, (error, results) => {
       if (error) {
         reject(error);
       } else {
@@ -315,11 +317,11 @@ function getVacanciesByCategories(userId, selectedCategories) {
     });
   });
 }
+
 app.get("/vacancy", async (req, res) => {
   try {
     const userId = req.user.id;
     const selectedCategories = req.query.selectedCategories;
-
 
     const vacancies = await getVacanciesByCategories(userId, selectedCategories);
 
@@ -329,6 +331,7 @@ app.get("/vacancy", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 app.post('/vacancies/:id/view', (req, res) => {
