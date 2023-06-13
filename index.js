@@ -294,6 +294,46 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
+function getVacanciesByCategories(userId, selectedCategories) {
+  return new Promise((resolve, reject) => {
+    // Convert selectedCategories to an array
+    const categoriesArray = Array.isArray(selectedCategories)
+      ? selectedCategories
+      : [selectedCategories];
+
+    // Create the SQL query
+    const query = `
+      SELECT * FROM vacancies
+      WHERE category_id IN (${categoriesArray.join(',')})
+      AND user_id = ${userId}
+    `;
+
+    // Execute the query
+    pool.query(query, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+}
+app.get("/vacancy", async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const selectedCategories = req.query.selectedCategories;
+
+
+    const vacancies = await getVacanciesByCategories(userId, selectedCategories);
+
+    res.json(vacancies);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+
 app.post('/vacancies/:id/view', (req, res) => {
   const vacancyId = req.params.id;
 
