@@ -293,10 +293,10 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
-function getVacanciesByCategories(userId, categoryIds) {
+function getVacanciesByCategories(userId, catIdsArray ) {
   return new Promise((resolve, reject) => {
     // Convert categoryIds to an array if it's not already
-    const categoryIdsArray = Array.isArray(categoryIds) ? categoryIds : [categoryIds];
+    const categoryIdsArray = Array.isArray(catIdsArray) ? catIdsArray  : [catIdsArray ];
 
     // Create the SQL query with placeholders for the category IDs
     const placeholders = categoryIdsArray.map(() => '?').join(',');
