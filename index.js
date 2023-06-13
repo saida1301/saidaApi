@@ -128,7 +128,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/signup", (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, cat_id } = req.body;
 
   pool.query(
     "SELECT * FROM users WHERE email = ?",
@@ -160,8 +160,8 @@ app.post("/signup", (req, res) => {
           }
 
           pool.query(
-            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-            [name, email, hash],
+            "INSERT INTO users (name, email, password, cat_id) VALUES (?, ?, ?)",
+            [name, email, hash, cat_id],
             (err, results) => {
               if (err) {
                 console.log(err);
