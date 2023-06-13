@@ -150,11 +150,11 @@ app.post("/signup", (req, res) => {
             return;
           }
 
-          const catIdsString = Array.isArray(cat_id) ? cat_id.join(",") : cat_id;
+          const catIdsArray = Array.isArray(cat_id) ? cat_id : [cat_id];
 
           pool.query(
             "INSERT INTO users (name, email, password, cat_id) VALUES (?, ?, ?, ?)",
-            [name, email, hash, catIdsString],
+            [name, email, hash, JSON.stringify(catIdsArray)],
             (err, results) => {
               if (err) {
                 console.log(err);
@@ -173,6 +173,7 @@ app.post("/signup", (req, res) => {
     }
   );
 });
+
 
 
 app.post("/logout", (req, res) => {
