@@ -118,7 +118,7 @@ app.post("/login", (req, res) => {
   );
 });
 app.post('/signup', async (req, res) => {
-  const { name, email, password, category_id } = req.body;
+  const { name, email, password, cat_id } = req.body;
 
   try {
     const userExists = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
@@ -130,7 +130,7 @@ app.post('/signup', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const createUserQuery = 'INSERT INTO users (name, email, password, category_id) VALUES (?, ?, ?, ?)';
+    const createUserQuery = 'INSERT INTO users (name, email, password, cat_id) VALUES (?, ?, ?, ?)';
     const createdUser = await pool.query(createUserQuery, [name, email, hashedPassword, category_id]);
 
     const userId = createdUser.insertId;
