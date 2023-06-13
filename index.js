@@ -6,6 +6,14 @@ import session from "express-session";
 import bodyParser from "body-parser";
 import mysql from "mysql";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryimport { BlobServiceClient } from "@azure/storage-blob";
+import multer, { diskStorage } from "multer";
+import { v4 as uuidv4 } from "uuid";
+import express from "express";
+import session from "express-session";
+import bodyParser from "body-parser";
+import mysql from "mysql";
+import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import crypto from 'crypto';
 import cors from "cors";
@@ -117,40 +125,60 @@ app.post("/login", (req, res) => {
     }
   );
 });
-app.post('/signup', async (req, res) => {
-  const { name, email, password, cat_id } = req.body;
 
-  try {
-    const userExists = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+app.post("/signup", (req, res) => {
+  const { name, email, password } = req.body;
 
-    if (userExists.length > 0) {
-      res.status(400).json({ message: 'Email already in use' });
-      return;
+  pool.query(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
+    (err, results) => {
+      if (err) {
+        console.log(err);
+        res.status(500).json({ message: "Internal server error" });
+        return;
+      }
+
+      if (results.length > 0) {
+        res.status(400).json({ message: "Email already in use" });
+        return;
+      }
+
+      bcrypt.genSalt(10, (err, salt) => {
+        if (err) {
+          console.log(err);
+          res.status(500).json({ message: "Internal server error" });
+          return;
+        }
+
+        bcrypt.hash(password, salt, (err, hash) => {
+          if (err) {
+            console.log(err);
+            res.status(500).json({ message: "Internal server error" });
+            return;
+          }
+
+          pool.query(
+            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+            [name, email, hash],
+            (err, results) => {
+              if (err) {
+                console.log(err);
+                res.status(500).json({ message: "Internal server error" });
+                return;
+              }
+
+              const token = jwt.sign({ id: results.insertId }, "secret", {
+                expiresIn: "1h",
+              });
+              res.json({ token });
+            }
+          );
+        });
+      });
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const createUserQuery = 'INSERT INTO users (name, email, password, cat_id) VALUES (?, ?, ?, ?)';
-    const createdUser = await pool.query(createUserQuery, [name, email, hashedPassword, category_id]);
-
-    const userId = createdUser.insertId;
-
-    const getVacanciesByCategoriesQuery = `
-      SELECT * FROM vacancies
-      WHERE category_id = ?
-      AND user_id = ?
-    `;
-    const vacancies = await pool.query(getVacanciesByCategoriesQuery, [category_id, userId]);
-
-    const token = jwt.sign({ id: userId }, 'secret', { expiresIn: '1h' });
-
-    res.json({ token, vacancies });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: 'Internal server error' });
-  }
+  );
 });
-
 
 app.post("/logout", (req, res) => {
   res.clearCookie("token");
@@ -266,6 +294,44 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
+function getVacanciesByCategories(userId, selectedCategories) {
+  return new Promise((resolve, reject) => {
+    // Convert selectedCategories to an array
+    const categoriesArray = Array.isArray(selectedCategories)
+      ? selectedCategories
+      : [selectedCategories];
+
+    // Create the SQL query
+    const query = `
+      SELECT * FROM vacancies
+      WHERE category_id IN (${categoriesArray.join(',')})
+      AND user_id = ${userId}
+    `;
+
+    // Execute the query
+    pool.query(query, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+}
+app.get("/vacancy", async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const selectedCategories = req.query.selectedCategories;
+
+
+    const vacancies = await getVacanciesByCategories(userId, selectedCategories);
+
+    res.json(vacancies);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 
 
 app.post('/vacancies/:id/view', (req, res) => {
@@ -1581,4 +1647,3 @@ app.get('/candidates/:user_id', (req, res) => {
 app.listen(8000, () => {
   console.log(`Server is running on port 8000`);
 });
-
