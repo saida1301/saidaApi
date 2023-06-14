@@ -256,7 +256,17 @@ app.get("/user", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
+app.get("/stories", async (req, res) => {
+  try {
+    pool.query("SELECT * FROM stories WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 app.post('/change-password', async (req, res) => {
   const { email, oldPassword, newPassword } = req.body;
 
