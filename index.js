@@ -1007,7 +1007,7 @@ app.post(
       const imageFile = req.files['image'][0];
 
       const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
-      const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
+      const imageUrl = await uploadToBlobStorage(imageFile, 'image');
 
       const portfolio = [];
       const numberOfPortfolios = Object.keys(req.body).reduce((count, key) => {
