@@ -119,7 +119,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/signup", (req, res) => {
-  const { name, email, password, cat_id } = req.body;
+  const { name, surname, email, password, cat_id } = req.body;
 
   pool.query(
     "SELECT * FROM users WHERE email = ?",
@@ -127,46 +127,41 @@ app.post("/signup", (req, res) => {
     (err, results) => {
       if (err) {
         console.log(err);
-        res.status(500).json({ message: "Internal server error" });
-        return;
+        return res.status(500).json({ message: "Internal server error" });
       }
 
       if (results.length > 0) {
-        res.status(400).json({ message: "Email already in use" });
-        return;
+        return res.status(400).json({ message: "Email already in use" });
       }
 
       bcrypt.genSalt(10, (err, salt) => {
         if (err) {
           console.log(err);
-          res.status(500).json({ message: "Internal server error" });
-          return;
+          return res.status(500).json({ message: "Internal server error" });
         }
 
         bcrypt.hash(password, salt, (err, hash) => {
           if (err) {
             console.log(err);
-            res.status(500).json({ message: "Internal server error" });
-            return;
+            return res.status(500).json({ message: "Internal server error" });
           }
 
           const catIdsArray = Array.isArray(cat_id) ? cat_id : [cat_id];
           const catIdsJSON = JSON.stringify(catIdsArray);
 
           pool.query(
-            "INSERT INTO users (name, email, password, cat_id) VALUES (?, ?, ?, ?)",
-            [name, email, hash, catIdsJSON],
+            "INSERT INTO users (name, surname, email, password, cat_id) VALUES (?, ?, ?, ?, ?)",
+            [name, surname, email, hash, catIdsJSON],
             (err, results) => {
               if (err) {
                 console.log(err);
-                res.status(500).json({ message: "Internal server error" });
-                return;
+                return res.status(500).json({ message: "Internal server error" });
               }
 
               const token = jwt.sign({ id: results.insertId }, "secret", {
                 expiresIn: "1h",
               });
-              res.json({ token, cat_id: catIdsArray }); // Include cat_id in the response
+              return res.json({ token, cat_id: catIdsArray }); // Include cat_id in the response
             }
           );
         });
@@ -174,6 +169,7 @@ app.post("/signup", (req, res) => {
     }
   );
 });
+
 
 
 
