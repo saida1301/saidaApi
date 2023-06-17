@@ -977,8 +977,134 @@ app.get("/cv/:userId", (req, res) => {
     return res.json(results);
   });
 });
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
+  const {
+    user_id,
+    category_id,
+    city_id,
+    education_id,
+    experience_id,
+    job_type_id,
+    gender_id,
+    name,
+    surname,
+    father_name,
+    email,
+    contact_phone,
+    position,
+    about_education,
+    salary,
+    birth_date,
+    work_history,
+    skills,
+  } = req.body;
+
+  try {
+    const cvFile = req.files['cv'][0];
+    const imageFile = req.files['image'][0];
+
+    // Upload files to storage service (implement uploadToBlobStorage function accordingly)
+    const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
+    const imageUrl = await uploadToBlobStorage(imageFile, 'image');
+
+    // Additional logic for portfolios
+    const portfolio = [];
+    const numberOfPortfolios = Object.keys(req.body).reduce((count, key) => {
+      if (key.startsWith('portfolio_job_name_')) {
+        const index = parseInt(key.split('_')[3], 10); // Extract the index from the field name
+        return Math.max(count, index + 1); // Get the maximum index
+      }
+      return count;
+    }, 0);
+
+    for (let i = 0; i < numberOfPortfolios; i++) {
+      const jobName = req.body[`portfolio_job_name_${i}`];
+      const company = req.body[`portfolio_company_${i}`];
+      const link = req.body[`portfolio_link_${i}`];
+
+      if (jobName && company && link) {
+        const portfolioObj = {
+          job_name: jobName,
+          company: company,
+          link: link,
+        };
+
+        portfolio.push(portfolioObj);
+      }
+    }
+
+    const serializedPortfolio = JSON.stringify({ portfolio });
+
+    // Generate slug
+    const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
+
+    // Perform database insertion (adjust your database query and connection accordingly)
+    const query =
+      'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+
+    const values = [
+      user_id,
+      category_id,
+      city_id,
+      education_id,
+      experience_id,
+      job_type_id,
+      gender_id,
+      name,
+      surname,
+      father_name,
+      email,
+      contact_phone,
+      position,
+      about_education,
+      salary,
+      birth_date,
+      work_history,
+      skills,
+      cvUrl,
+      imageUrl,
+      serializedPortfolio,
+      slug,
+    ];
+
+    // Execute the query (replace with your database execution logic)
+    pool.query(query, values, (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error adding CV' });
+      } else {
+        // Send email to user
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: 'humbeteliyevaseide2001@gmail.com',
+            pass: 'nwudhimwttuqdzxv',
+          },
+        });
+
+        const mailOptions = {
+          from: req.body.email,
+          to: 'humbesaida@gmail.com',
+          subject: 'CV Added Successfully',
+          text: 'Your CV has been added successfully. Thank you!',
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error('Error sending email:', error);
+          } else {
+            console.log('Email sent:', info.response);
+          }
+        });
+
+        res.status(201).json({ message: 'CV added successfully', imageUrl });
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading CV:', error);
+    res.status(500).json({ message: 'Error uploading CV' });
+  }
+});
 
 
 
