@@ -30,7 +30,7 @@ pool.getConnection((err, connection) => {
   connection.release();
 });
 
-const uuidv4 = uuid.v4();
+
 const connectionString =
  "DefaultEndpointsProtocol=https;AccountName=ismobile;AccountKey=0vW600nc8IHVC3tPsRoHCBh6Zx/zHvRDx2H/wnmsl+w7WGq9c8plB5ws6E9qI6ZP2m05xwm/wrC8+AStRLo2FA==;EndpointSuffix=core.windows.net";
 const blobServiceClient =
@@ -43,7 +43,7 @@ const containerClient = blobServiceClient.getContainerClient(containerName);
 const storage = diskStorage({
   destination: 'uploads/',
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + uuidv4;
+    const uniqueSuffix = Date.now() + '-' + uuidv4();
     const extension = file.originalname.split('.').pop();
     let filePath = '';
     if (file.fieldname === 'image') {
