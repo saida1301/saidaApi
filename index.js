@@ -1,6 +1,6 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import multer, { diskStorage } from "multer";
-import { v4 as uuidv4 } from "uuid";
+import uuid from 'uuid';
 import express from "express";
 import session from "express-session";
 import bodyParser from "body-parser";
@@ -30,7 +30,7 @@ pool.getConnection((err, connection) => {
   connection.release();
 });
 
-
+const uuidv4 = uuid.v4();
 const connectionString =
  "DefaultEndpointsProtocol=https;AccountName=ismobile;AccountKey=0vW600nc8IHVC3tPsRoHCBh6Zx/zHvRDx2H/wnmsl+w7WGq9c8plB5ws6E9qI6ZP2m05xwm/wrC8+AStRLo2FA==;EndpointSuffix=core.windows.net";
 const blobServiceClient =
@@ -43,7 +43,7 @@ const containerClient = blobServiceClient.getContainerClient(containerName);
 const storage = diskStorage({
   destination: 'uploads/',
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + uuidv4();
+    const uniqueSuffix = Date.now() + '-' + uuidv4;
     const extension = file.originalname.split('.').pop();
     let filePath = '';
     if (file.fieldname === 'image') {
@@ -1000,12 +1000,13 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
   } = req.body;
 
   try {
-    const cvFile = req.files['cv'][0];
-    const imageFile = req.files['image'][0];
+    const cvFile = req.files ? req.files['cv'][0] : null;
+    const imageFile = req.files ? req.files['image'][0] : null;
+
 
     // Upload files to storage service (implement uploadToBlobStorage function accordingly)
-    const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
-    const imageUrl = await uploadToBlobStorage(imageFile, 'image');
+    const cvUrl = cvFile ? await uploadToBlobStorage(cvFile, 'cv') : null;
+    const imageUrl = imageFile ? await uploadToBlobStorage(imageFile, 'image') : null;
 
     // Additional logic for portfolios
     const portfolio = [];
@@ -1040,7 +1041,9 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
 
     // Perform database insertion (adjust your database query and connection accordingly)
     const query =
-      'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+    'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+  
+  
 
     const values = [
       user_id,
@@ -1105,6 +1108,7 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
     res.status(500).json({ message: 'Error uploading CV' });
   }
 });
+
 
 
 
