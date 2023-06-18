@@ -1,6 +1,6 @@
 import { BlobServiceClient } from "@azure/storage-blob";
 import multer, { diskStorage } from "multer";
-import uuid from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 import express from "express";
 import session from "express-session";
 import bodyParser from "body-parser";
