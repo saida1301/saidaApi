@@ -118,7 +118,7 @@ app.post("/login", (req, res) => {
   );
 });
 
-app.post("/signup", (req, res) => {
+app.post("/signup",cors(), (req, res) => {
   const { name, surname, email, password, cat_id } = req.body;
 
   pool.query(
