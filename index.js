@@ -301,37 +301,38 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
-function getVacanciesByCategories(userId, selectedCategories) {
-  return new Promise((resolve, reject) => {
-    const placeholders = selectedCategories.map(() => '?').join(',');
-    const query = `
-      SELECT * FROM vacancies
-      WHERE category_id IN (${placeholders})
-      AND user_id = ?
-    `;
-    const queryValues = [...selectedCategories, userId];
-    pool.query(query, queryValues, (error, results) => {
-      if (error) {
-        reject(error);
+app.post('/vacancy', (req, res) => {
+  const userId = req.body.userId;
+
+  // Construct the SQL query to retrieve the cat_id for the provided user ID
+  const userQuery = `SELECT cat_id FROM users WHERE id = '${userId}'`;
+
+  // Execute the user query
+  pool.query(userQuery, (error, userResults) => {
+    if (error) {
+      console.error('Error retrieving user cat_id:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    } else {
+      if (userResults.length > 0) {
+        const userCat = JSON.parse(userResults[0].cat_id);
+
+        // Construct the SQL query with JOIN
+        const query = `SELECT * FROM vacancies WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})`;
+
+        // Execute the vacancies query
+        pool.query(query, (error, results) => {
+          if (error) {
+            console.error('Error retrieving vacancies:', error);
+            res.status(500).json({ error: 'Internal server error' });
+          } else {
+            res.json(results);
+          }
+        });
       } else {
-        resolve(results);
+        res.status(404).json({ message: 'User not found' });
       }
-    });
+    }
   });
-}
-
-app.get("/vacancy", async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const selectedCategories = req.query.selectedCategories.split(",");
-
-    const vacancies = await getVacanciesByCategories(userId, selectedCategories);
-
-    res.json(vacancies);
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
 });
 
 app.get("/vacancy/new", async (req, res) => {
