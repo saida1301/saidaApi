@@ -301,7 +301,7 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
-app.post('/vacancy', (req, res) => {
+app.post('/vacancy', cors(), (req, res) => {
   const userId = req.body.userId;
 
   // Construct the SQL query to retrieve the cat_id for the provided user ID
