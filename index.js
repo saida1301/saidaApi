@@ -301,23 +301,15 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
-function getVacanciesByCategories(userId, catIdsArray ) {
+function getVacanciesByCategories(userId, selectedCategories) {
   return new Promise((resolve, reject) => {
-    // Convert categoryIds to an array if it's not already
-    const categoryIdsArray = Array.isArray(catIdsArray) ? catIdsArray  : [catIdsArray ];
-
-    // Create the SQL query with placeholders for the category IDs
-    const placeholders = categoryIdsArray.map(() => '?').join(',');
+    const placeholders = selectedCategories.map(() => '?').join(',');
     const query = `
       SELECT * FROM vacancies
       WHERE category_id IN (${placeholders})
       AND user_id = ?
     `;
-
-    // Prepare the values for the query
-    const queryValues = [...categoryIdsArray, userId];
-
-    // Execute the query
+    const queryValues = [...selectedCategories, userId];
     pool.query(query, queryValues, (error, results) => {
       if (error) {
         reject(error);
@@ -331,7 +323,7 @@ function getVacanciesByCategories(userId, catIdsArray ) {
 app.get("/vacancy", async (req, res) => {
   try {
     const userId = req.user.id;
-    const selectedCategories = req.query.selectedCategories;
+    const selectedCategories = req.query.selectedCategories.split(",");
 
     const vacancies = await getVacanciesByCategories(userId, selectedCategories);
 
@@ -341,6 +333,35 @@ app.get("/vacancy", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
+app.get("/vacancy/new", async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const selectedCategories = req.query.selectedCategories.split(",");
+
+    const newVacancies = await getVacanciesByCategories(userId, selectedCategories);
+
+    res.json(newVacancies);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
+app.get("/vacancy/others", async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const selectedCategories = req.query.selectedCategories.split(",");
+
+    const otherVacancies = await getVacanciesByCategories(userId, selectedCategories);
+
+    res.json(otherVacancies);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+
 
 
 
