@@ -10,6 +10,7 @@ import bcrypt from "bcrypt";
 import crypto from 'crypto';
 import cors from "cors";
 import nodemailer from "nodemailer";
+import schedule from 'node-schedule';
 const app = express();
 
 const pool = mysql.createPool({
@@ -301,39 +302,117 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
+const weeklyVacancyJob = schedule.scheduleJob('0 0 * * 0', fetchWeeklyVacancies);
+
+
 app.post('/vacancy', cors(), (req, res) => {
   const userId = req.body.userId;
 
-  // Construct the SQL query to retrieve the cat_id for the provided user ID
-  const userQuery = `SELECT cat_id FROM users WHERE id = '${userId}'`;
-
-  // Execute the user query
-  pool.query(userQuery, (error, userResults) => {
-    if (error) {
-      console.error('Error retrieving user cat_id:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    } else {
-      if (userResults.length > 0) {
-        const userCat = JSON.parse(userResults[0].cat_id);
-
-        // Construct the SQL query with JOIN
-        const query = `SELECT * FROM vacancies WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})`;
-
-        // Execute the vacancies query
-        pool.query(query, (error, results) => {
-          if (error) {
-            console.error('Error retrieving vacancies:', error);
-            res.status(500).json({ error: 'Internal server error' });
-          } else {
-            res.json(results);
-          }
-        });
+  // Retrieve the weekly vacancies for the provided user ID
+  fetchWeeklyVacancies(userId)
+    .then(vacancies => {
+      if (vacancies.length > 0) {
+        res.json(vacancies);
       } else {
-        res.status(404).json({ message: 'User not found' });
+        // If no vacancies found for the current week, retrieve the latest vacancies
+        fetchLatestVacancies(userId)
+          .then(latestVacancies => res.json(latestVacancies))
+          .catch(error => res.status(500).json({ error: 'Internal server error' }));
       }
-    }
-  });
+    })
+    .catch(error => res.status(500).json({ error: 'Internal server error' }));
 });
+
+function fetchWeeklyVacancies(userId) {
+  return new Promise((resolve, reject) => {
+    // Construct the SQL query to retrieve the cat_id for the provided user ID
+    const userQuery = `SELECT cat_id FROM users WHERE id = '${userId}'`;
+
+    // Execute the user query
+    pool.query(userQuery, (error, userResults) => {
+      if (error) {
+        console.error('Error retrieving user cat_id:', error);
+        reject('Internal server error');
+      } else {
+        if (userResults.length > 0) {
+          const userCat = JSON.parse(userResults[0].cat_id);
+
+          // Calculate the start and end dates for the current week
+          const currentDate = new Date();
+          const currentYear = currentDate.getFullYear();
+          const currentMonth = currentDate.getMonth();
+          const currentDateOfMonth = currentDate.getDate();
+          const firstDayOfWeek = new Date(currentYear, currentMonth, currentDateOfMonth - currentDate.getDay());
+          const lastDayOfWeek = new Date(currentYear, currentMonth, currentDateOfMonth + (6 - currentDate.getDay()));
+
+          // Format the start and end dates as strings in the format 'YYYY-MM-DD'
+          const startDate = firstDayOfWeek.toISOString().split('T')[0];
+          const endDate = lastDayOfWeek.toISOString().split('T')[0];
+
+          // Construct the SQL query with JOIN and date filter
+          const query = `
+            SELECT *
+            FROM vacancies
+            WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
+            AND created_at >= '${startDate}' AND created_at <= '${endDate}'
+          `;
+
+          // Execute the vacancies query
+          pool.query(query, (error, results) => {
+            if (error) {
+              console.error('Error retrieving weekly vacancies:', error);
+              reject('Internal server error');
+            } else {
+              resolve(results);
+            }
+          });
+        } else {
+          reject('User not found');
+        }
+      }
+    });
+  });
+}
+
+function fetchLatestVacancies(userId) {
+  return new Promise((resolve, reject) => {
+    // Construct the SQL query to retrieve the cat_id for the provided user ID
+    const userQuery = `SELECT cat_id FROM users WHERE id = '${userId}'`;
+
+    // Execute the user query
+    pool.query(userQuery, (error, userResults) => {
+      if (error) {
+        console.error('Error retrieving user cat_id:', error);
+        reject('Internal server error');
+      } else {
+        if (userResults.length > 0) {
+          const userCat = JSON.parse(userResults[0].cat_id);
+
+          // Construct the SQL query with JOIN to retrieve the latest vacancies
+          const query = `
+            SELECT *
+            FROM vacancies
+            WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
+            ORDER BY created_at DESC
+            LIMIT 10
+          `;
+
+          // Execute the vacancies query
+          pool.query(query, (error, results) => {
+            if (error) {
+              console.error('Error retrieving latest vacancies:', error);
+              reject('Internal server error');
+            } else {
+              resolve(results);
+            }
+          });
+        } else {
+          reject('User not found');
+        }
+      }
+    });
+  });
+}
 
 app.get("/vacancy/new", async (req, res) => {
   try {
