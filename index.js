@@ -394,7 +394,7 @@ function fetchLatestVacancies(userId) {
             FROM vacancies
             WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
             ORDER BY created_at DESC
-            LIMIT 10
+            LIMIT 20
           `;
 
           // Execute the vacancies query
