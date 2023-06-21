@@ -60,9 +60,16 @@ const upload = multer({ storage });
 const uploadToBlobStorage = async (file, folderName = "trainings") => {
   const folder = "company"; // Specify the folder name
   const folderPath = folder + "/"; // Add a trailing slash to indicate a folder
-  const fileName = folderPath + Date.now() + "_" + file.originalname; // Include the folder path as part of the blob name
+  const fileName = folderPath + Date.now() + "_" + file.originalname; 
+  const extension = file.originalname.split('.').pop();
+  const contentType = mime.contentType(extension);
+
   const blockBlobClient = containerClient.getBlockBlobClient(fileName);
-  await blockBlobClient.uploadFile(file.path);
+  await blockBlobClient.uploadFile(file.path, {
+    blobHTTPHeaders: {
+      blobContentType: contentType,
+    },
+  });
 
   const fileUrl = `https://${containerName}.blob.core.windows.net/${fileName}`;
   return fileUrl;
