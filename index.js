@@ -374,6 +374,7 @@ function fetchWeeklyVacancies(userId) {
   });
 }
 
+
 function fetchLatestVacancies(userId) {
   return new Promise((resolve, reject) => {
     // Construct the SQL query to retrieve the cat_id for the provided user ID
