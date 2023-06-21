@@ -302,8 +302,7 @@ app.post('/change-password', async (req, res) => {
   });
 });
 
-const weeklyVacancyJob = schedule.scheduleJob('0 0 * * 0', fetchWeeklyVacancies);
-
+const weeklyVacancyJob = schedule.scheduleJob('0 0 * * 0', () => fetchWeeklyVacancies('138'));
 
 app.post('/vacancy', cors(), (req, res) => {
   const userId = req.body.userId;
@@ -374,7 +373,6 @@ function fetchWeeklyVacancies(userId) {
   });
 }
 
-
 function fetchLatestVacancies(userId) {
   return new Promise((resolve, reject) => {
     // Construct the SQL query to retrieve the cat_id for the provided user ID
@@ -395,7 +393,6 @@ function fetchLatestVacancies(userId) {
             FROM vacancies
             WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
             ORDER BY created_at DESC
-            LIMIT 10
           `;
 
           // Execute the vacancies query
