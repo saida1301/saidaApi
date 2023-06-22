@@ -314,20 +314,21 @@ const weeklyVacancyJob = schedule.scheduleJob('0 0 * * 0', fetchWeeklyVacancies)
 
 app.post('/vacancy', cors(), (req, res) => {
   const userId = req.body.userId;
-  const offset = req.query.offset || 0; // Get the offset value from the query parameters
 
   // Retrieve the weekly vacancies for the provided user ID
-  fetchLatestVacancies(userId, offset)
+  fetchWeeklyVacancies(userId)
     .then(vacancies => {
       if (vacancies.length > 0) {
         res.json(vacancies);
       } else {
-        res.json([]); // Return an empty array if no more vacancies found
+        // If no vacancies found for the current week, retrieve the latest vacancies
+        fetchLatestVacancies(userId)
+          .then(latestVacancies => res.json(latestVacancies))
+          .catch(error => res.status(500).json({ error: 'Internal server error' }));
       }
     })
     .catch(error => res.status(500).json({ error: 'Internal server error' }));
 });
-
 
 function fetchWeeklyVacancies(userId) {
   return new Promise((resolve, reject) => {
@@ -380,7 +381,7 @@ function fetchWeeklyVacancies(userId) {
   });
 }
 
-function fetchLatestVacancies(userId, offset) {
+function fetchLatestVacancies(userId) {
   return new Promise((resolve, reject) => {
     // Construct the SQL query to retrieve the cat_id for the provided user ID
     const userQuery = `SELECT cat_id FROM users WHERE id = '${userId}'`;
@@ -394,73 +395,13 @@ function fetchLatestVacancies(userId, offset) {
         if (userResults.length > 0) {
           const userCat = JSON.parse(userResults[0].cat_id);
 
-          // Construct the SQL query with JOIN to retrieve the next 20 vacancies
+          // Construct the SQL query with JOIN to retrieve the latest vacancies
           const query = `
             SELECT *
             FROM vacancies
             WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
             ORDER BY created_at DESC
             LIMIT 20
-            OFFSET ${offset}
-          `;
-
-          // Execute the vacancies query
-          pool.query(query, (error, results) => {
-            if (error) {
-              console.error('Error retrieving latest vacancies:', error);
-              reject('Internal server error');
-            } else {
-              resolve(results);
-            }
-          });
-        } else {
-          reject('User not found');
-        }
-      }
-    });
-  });
-}
-
-// Add a new API endpoint to retrieve vacancies with offset
-app.get('/vacancy/offset/:offset', cors(), (req, res) => {
-  const userId = req.body.userId;
-  const offset = req.params.offset || 0; // Get the offset value from the URL parameters
-
-  fetchLatestVacancies(userId, offset)
-    .then(vacancies => {
-      if (vacancies.length > 0) {
-        res.json(vacancies);
-      } else {
-        res.json([]); // Return an empty array if no more vacancies found
-      }
-    })
-    .catch(error => res.status(500).json({ error: 'Internal server error' }));
-});
-
-// ...
-
-function fetchLatestVacancies(userId, offset) {
-  return new Promise((resolve, reject) => {
-    // Construct the SQL query to retrieve the cat_id for the provided user ID
-    const userQuery = `SELECT cat_id FROM users WHERE id = '${userId}'`;
-
-    // Execute the user query
-    pool.query(userQuery, (error, userResults) => {
-      if (error) {
-        console.error('Error retrieving user cat_id:', error);
-        reject('Internal server error');
-      } else {
-        if (userResults.length > 0) {
-          const userCat = JSON.parse(userResults[0].cat_id);
-
-          // Construct the SQL query with JOIN to retrieve the next 20 vacancies
-          const query = `
-            SELECT *
-            FROM vacancies
-            WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
-            ORDER BY created_at DESC
-            LIMIT 20
-            OFFSET ${offset}
           `;
 
           // Execute the vacancies query
