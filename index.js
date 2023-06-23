@@ -317,7 +317,7 @@ app.post('/vacancy', cors(), (req, res) => {
   const startIndex = req.body.startIndex || 0; // Default startIndex to 0 if not provided
 
   // Retrieve the vacancies based on the userId and startIndex
-  fetchVacancies(userId, startIndex)
+  fetchLatestVacancies(userId, startIndex)
     .then(vacancies => {
       if (vacancies.length > 0) {
         res.json(vacancies);
