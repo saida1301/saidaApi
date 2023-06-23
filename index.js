@@ -314,21 +314,20 @@ const weeklyVacancyJob = schedule.scheduleJob('0 0 * * 0', fetchWeeklyVacancies)
 
 app.post('/vacancy', cors(), (req, res) => {
   const userId = req.body.userId;
+  const startIndex = req.body.startIndex || 0; // Default startIndex to 0 if not provided
 
-  // Retrieve the weekly vacancies for the provided user ID
-  fetchWeeklyVacancies(userId)
+  // Retrieve the vacancies based on the userId and startIndex
+  fetchVacancies(userId, startIndex)
     .then(vacancies => {
       if (vacancies.length > 0) {
         res.json(vacancies);
       } else {
-        // If no vacancies found for the current week, retrieve the latest vacancies
-        fetchLatestVacancies(userId)
-          .then(latestVacancies => res.json(latestVacancies))
-          .catch(error => res.status(500).json({ error: 'Internal server error' }));
+        res.json([]); // Return an empty array if no vacancies found
       }
     })
     .catch(error => res.status(500).json({ error: 'Internal server error' }));
 });
+
 
 function fetchWeeklyVacancies(userId) {
   return new Promise((resolve, reject) => {
@@ -381,7 +380,7 @@ function fetchWeeklyVacancies(userId) {
   });
 }
 
-function fetchLatestVacancies(userId) {
+function fetchLatestVacancies(userId, startIndex) {
   return new Promise((resolve, reject) => {
     // Construct the SQL query to retrieve the cat_id for the provided user ID
     const userQuery = `SELECT cat_id FROM users WHERE id = '${userId}'`;
@@ -395,13 +394,13 @@ function fetchLatestVacancies(userId) {
         if (userResults.length > 0) {
           const userCat = JSON.parse(userResults[0].cat_id);
 
-          // Construct the SQL query with JOIN to retrieve the latest vacancies
+          // Construct the SQL query with JOIN, startIndex, and limit
           const query = `
             SELECT *
             FROM vacancies
             WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
             ORDER BY created_at DESC
-            LIMIT 20
+            LIMIT 20 OFFSET ${startIndex}
           `;
 
           // Execute the vacancies query
@@ -420,6 +419,7 @@ function fetchLatestVacancies(userId) {
     });
   });
 }
+
 
 app.get("/vacancy/new", async (req, res) => {
   try {
