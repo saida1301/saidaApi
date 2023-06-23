@@ -1070,22 +1070,21 @@ app.get("/cv", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.get("/cv/:cvId", (req, res) => {
-  const cvId = req.params.id;
+app.get("/cv/:userId", (req, res) => {
+  const userId = req.params.userId;
 
-  const sql = "SELECT * FROM cv WHERE id = ?";
-  const values = [cvId];
+  const sql = "SELECT * FROM cv WHERE user_id = ? AND status = '1'"; 
+  const values = [userId];
 
   pool.query(sql, values, (error, results) => {
     if (error) {
       console.error(error);
-      return res.status(500).send("Error retrieving CV");
+      return res.status(500).send("Error retrieving trainings");
     }
 
     return res.json(results);
   });
 });
-
 app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
   const {
     user_id,
