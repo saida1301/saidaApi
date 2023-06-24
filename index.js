@@ -944,11 +944,11 @@ app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
   }
 });
 
-app.get("/cvs/:userId", (req, res) => {
-  const userId = req.params.id;
+app.get("/cvs/:cvId", (req, res) => {
+  const cvId = req.params.id;
 
   const sql = "SELECT * FROM cv WHERE id = ? AND status = '1'"; 
-  const values = [userId];
+  const values = [cvId];
 
   pool.query(sql, values, (error, results) => {
     if (error) {
