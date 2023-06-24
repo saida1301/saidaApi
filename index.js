@@ -135,57 +135,72 @@ app.post(
   }
 );
 
-app.post("/signup",cors(), (req, res) => {
-  const { name, surname, email, password, cat_id } = req.body;
+app.post(
+  '/signup',
+  [
+    body('name').notEmpty(),
+    body('surname').notEmpty(),
+    body('email').isEmail().normalizeEmail(),
+    body('password').notEmpty(),
+    body('cat_id').isArray(),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-  pool.query(
-    "SELECT * FROM users WHERE email = ?",
-    [email],
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ message: "Internal server error" });
-      }
+    const { name, surname, email, password, cat_id } = req.body;
 
-      if (results.length > 0) {
-        return res.status(400).json({ message: "Email already in use" });
-      }
-
-      bcrypt.genSalt(10, (err, salt) => {
+    pool.query(
+      'SELECT * FROM users WHERE email = ?',
+      [email],
+      (err, results) => {
         if (err) {
           console.log(err);
-          return res.status(500).json({ message: "Internal server error" });
+          return res.status(500).json({ message: 'Internal server error' });
         }
 
-        bcrypt.hash(password, salt, (err, hash) => {
+        if (results.length > 0) {
+          return res.status(400).json({ message: 'Email already in use' });
+        }
+
+        bcrypt.genSalt(10, (err, salt) => {
           if (err) {
             console.log(err);
-            return res.status(500).json({ message: "Internal server error" });
+            return res.status(500).json({ message: 'Internal server error' });
           }
 
-          const catIdsArray = Array.isArray(cat_id) ? cat_id : [cat_id];
-          const catIdsJSON = JSON.stringify(catIdsArray);
-
-          pool.query(
-            "INSERT INTO users (name, surname, email, password, cat_id) VALUES (?, ?, ?, ?, ?)",
-            [name, surname, email, hash, catIdsJSON],
-            (err, results) => {
-              if (err) {
-                console.log(err);
-                return res.status(500).json({ message: "Internal server error" });
-              }
-
-              const token = jwt.sign({ id: results.insertId }, "secret", {
-                expiresIn: "1h",
-              });
-              return res.json({ token, cat_id: catIdsArray }); // Include cat_id in the response
+          bcrypt.hash(password, salt, (err, hash) => {
+            if (err) {
+              console.log(err);
+              return res.status(500).json({ message: 'Internal server error' });
             }
-          );
+
+            const catIdsArray = Array.isArray(cat_id) ? cat_id : [cat_id];
+            const catIdsJSON = JSON.stringify(catIdsArray);
+
+            pool.query(
+              'INSERT INTO users (name, surname, email, password, cat_id) VALUES (?, ?, ?, ?, ?)',
+              [name, surname, email, hash, catIdsJSON],
+              (err, results) => {
+                if (err) {
+                  console.log(err);
+                  return res.status(500).json({ message: 'Internal server error' });
+                }
+
+                const token = jwt.sign({ id: results.insertId }, 'secret', {
+                  expiresIn: '1h',
+                });
+                return res.json({ token, cat_id: catIdsArray }); // Include cat_id in the response
+              }
+            );
+          });
         });
-      });
-    }
-  );
-});
+      }
+    );
+  }
+);
 
 
 
