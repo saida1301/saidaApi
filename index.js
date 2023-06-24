@@ -11,7 +11,7 @@ import crypto from 'crypto';
 import cors from "cors";
 import nodemailer from "nodemailer";
 import schedule from 'node-schedule';
-import { body, validationResult } from 'express-validator';
+import { body, validationResult, param  } from 'express-validator';
 const app = express();
 
 const pool = mysql.createPool({
