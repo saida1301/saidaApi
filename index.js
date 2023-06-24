@@ -944,21 +944,26 @@ app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
   }
 });
 
-app.get("/cvs/:userId", (req, res) => {
-  const userId = req.params.userId;
+app.get("/cv/:cvId", (req, res) => {
+  const cvId = req.params.cvId;
 
-  const sql = "SELECT * FROM cv WHERE user_id = ? AND status = '1'"; 
-  const values = [userId];
+  const sql = "SELECT * FROM cv WHERE id = ? AND status = '1'"; 
+  const values = [cvId];
 
   pool.query(sql, values, (error, results) => {
     if (error) {
       console.error(error);
-      return res.status(500).send("Error retrieving companies");
+      return res.status(500).send("Error retrieving CV");
     }
 
-    return res.json(results);
+    if (results.length === 0) {
+      return res.status(404).send("CV not found");
+    }
+
+    return res.json(results[0]);
   });
 });
+
 
 app.get("/company/:userId", (req, res) => {
   const userId = req.params.userId;
