@@ -89,42 +89,50 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.post("/login", (req, res) => {
-  const { email, password } = req.body;
-  pool.query(
-    "SELECT * FROM users WHERE email = ?",
-    [email],
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        res.status(500).json({ message: "Internal server error" });
-        return;
-      }
+app.post(
+  '/login',
+  [
+    body('email').isEmail().normalizeEmail(),
+    body('password').notEmpty(),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
-      if (results.length === 0) {
-        res.status(401).json({ message: "Email or password is incorrect" });
-        return;
-      }
-
-      const user = results[0];
-      bcrypt.compare(password, user.password, (err, isMatch) => {
+    const { email, password } = req.body;
+    pool.query(
+      'SELECT * FROM users WHERE email = ?',
+      [email],
+      (err, results) => {
         if (err) {
           console.log(err);
-          res.status(500).json({ message: "Internal server error" });
-          return;
+          return res.status(500).json({ message: 'Internal server error' });
         }
 
-        if (!isMatch) {
-          res.status(401).json({ message: "Email or password is incorrect" });
-          return;
+        if (results.length === 0) {
+          return res.status(401).json({ message: 'Email or password is incorrect' });
         }
 
-        const token = jwt.sign({ id: user.id }, "secret", { expiresIn: "1h" });
-        res.json({ token });
-      });
-    }
-  );
-});
+        const user = results[0];
+        bcrypt.compare(password, user.password, (err, isMatch) => {
+          if (err) {
+            console.log(err);
+            return res.status(500).json({ message: 'Internal server error' });
+          }
+
+          if (!isMatch) {
+            return res.status(401).json({ message: 'Email or password is incorrect' });
+          }
+
+          const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
+          return res.json({ token });
+        });
+      }
+    );
+  }
+);
 
 app.post("/signup",cors(), (req, res) => {
   const { name, surname, email, password, cat_id } = req.body;
