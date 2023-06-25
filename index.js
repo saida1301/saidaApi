@@ -1937,11 +1937,11 @@ app.post('/apply', [
 });
 
 app.post('/candidates', cors(), upload, [
-  body('vacancyId').notEmpty().isInt().withMessage('Vacancy ID is required and must be an integer'),
-  body('name').optional().withMessage('Name is required'),
-  body('email').optional().isEmail().withMessage('Email is required and must be a valid email address'),
-  body('surname').optional().withMessage('Surname is required'),
-  body('phone').optional().withMessage('Phone is required')
+  body('vacancyId').notEmpty().withMessage('Vacancy ID is required and must be an integer').bail().isInt().withMessage('Vacancy ID must be an integer'),
+  body('name').notEmpty().withMessage('Name is required'),
+  body('email').notEmpty().withMessage('Email is required').bail().isEmail().withMessage('Email must be a valid email address'),
+  body('surname').notEmpty().withMessage('Surname is required'),
+  body('phone').notEmpty().withMessage('Phone is required')
 ], async (req, res) => {
   try {
     const cvFile = req.file;
