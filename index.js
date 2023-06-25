@@ -556,8 +556,37 @@ app.use("/vacancies/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/vacanci', cors(), async (req, res) => {
+const vacancyValidationRules = [
+  body('user_id').notEmpty().isInt(),
+  body('company_id').notEmpty().isInt(),
+  body('city_id').notEmpty().isInt(),
+  body('category_id').notEmpty().isInt(),
+  body('job_type_id').notEmpty().isInt(),
+  body('experience_id').notEmpty().isInt(),
+  body('education_id').notEmpty().isInt(),
+  body('position').notEmpty().isString(),
+  body('min_salary').notEmpty().isInt(),
+  body('max_salary').notEmpty().isInt(),
+  body('min_age').notEmpty().isInt(),
+  body('max_age').notEmpty().isInt(),
+  body('salary_type').notEmpty().isString(),
+  body('requirement').notEmpty().isString(),
+  body('description').notEmpty().isString(),
+  body('contact_name').notEmpty().isString(),
+  body('accept_type').notEmpty().isString(),
+  body('contact_info').notEmpty().isString(),
+  body('deadline').notEmpty().isString(),
+];
+
+app.post('/vacanci', cors(), vacancyValidationRules, async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    // Validation passed, continue with the code
+
     const {
       user_id,
       company_id,
@@ -615,7 +644,6 @@ app.post('/vacanci', cors(), async (req, res) => {
     res.status(500).json({ error: 'Failed to add vacancy' });
   }
 });
-
 
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
@@ -724,8 +752,29 @@ app.use("/companies/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/companiy', cors(), upload.single('image'), async (req, res) => {
+const companyValidationRules = [
+  body('user_id').notEmpty().isInt(),
+  body('sector_id').notEmpty().isInt(),
+  body('average').notEmpty().isFloat(),
+  body('name').notEmpty().isString(),
+  body('about').notEmpty().isString(),
+  body('address').notEmpty().isString(),
+  body('website').optional().isURL(),
+  body('map').optional().isString(),
+  body('hr').optional().isString(),
+  body('instagram').optional().isString(),
+  body('linkedin').optional().isString(),
+  body('facebook').optional().isString(),
+  body('twitter').optional().isString(),
+];
+
+app.post('/companiy', cors(), upload.single('image'), companyValidationRules, async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const {
       user_id,
       sector_id,
@@ -750,6 +799,9 @@ app.post('/companiy', cors(), upload.single('image'), async (req, res) => {
 
     // Check if file was uploaded
     if (imagePath) {
+      // Validate the image file (e.g., check file size, type)
+      // Your validation logic here
+
       // Upload the image to Azure Blob Storage
       const uploadedFileName = await uploadToBlobStorage(req.file);
       imageUrl = `back/assets/images/companies/${uploadedFileName}`;
@@ -1034,7 +1086,22 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/training', cors(),upload.single('image'), async (req, res) => {
+const trainingValidationRules = [
+  body('user_id').notEmpty().isInt(),
+  body('company_id').notEmpty().isInt(),
+  body('title').notEmpty().isString(),
+  body('about').notEmpty().isString(),
+  body('price').notEmpty().isFloat(),
+  body('redirect_link').optional().isURL(),
+  body('deadline').notEmpty().isString(),
+];
+
+app.post('/training', cors(), upload.single('image'), trainingValidationRules, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
   const imagePath = req.file ? req.file.path : null;
   const slug = title.toLowerCase().replace(/\s+/g, '-');
@@ -1045,6 +1112,9 @@ app.post('/training', cors(),upload.single('image'), async (req, res) => {
 
     // Check if file was uploaded
     if (imagePath) {
+      // Validate the image file (e.g., check file size, type)
+      // Your validation logic here
+
       // Upload the image to Azure Blob Storage
       const uploadedFileName = await uploadToBlobStorage(req.file);
       imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
