@@ -556,8 +556,36 @@ app.use("/vacancies/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/vacanci', cors(), async (req, res) => {
+const vacancyValidationRules = [
+  body('user_id').notEmpty().isInt(),
+  body('company_id').notEmpty().isInt(),
+  body('city_id').notEmpty().isInt(),
+  body('category_id').notEmpty().isInt(),
+  body('job_type_id').notEmpty().isInt(),
+  body('experience_id').notEmpty().isInt(),
+  body('education_id').notEmpty().isInt(),
+  body('position').notEmpty().isString(),
+  body('min_salary').optional().isInt(),
+  body('max_salary').optional().isInt(),
+  body('min_age').notEmpty().isInt(),
+  body('max_age').notEmpty().isInt(),
+  body('salary_type').notEmpty().isString(),
+  body('requirement').notEmpty().isString(),
+  body('description').notEmpty().isString(),
+  body('contact_name').optional().isString(),
+  body('accept_type').notEmpty().isString(),
+  body('contact_info').optional().isString(),
+  body('deadline').notEmpty().isString(),
+];
+app.post('/vacanci', cors(), vacancyValidationRules, async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    // Validation passed, continue with the code
+
     const {
       user_id,
       company_id,
@@ -724,8 +752,29 @@ app.use("/companies/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/companiy', cors(), upload.single('image'), async (req, res) => {
+const companyValidationRules = [
+  body('user_id').notEmpty().isInt(),
+  body('sector_id').notEmpty().isInt(),
+  body('average').optional().isFloat(),
+  body('name').notEmpty().isString(),
+  body('about').notEmpty().isString(),
+  body('address').notEmpty().isString(),
+  body('website').optional().isURL(),
+  body('map').optional().isString(),
+  body('hr').optional().isString(),
+  body('instagram').optional().isString(),
+  body('linkedin').optional().isString(),
+  body('facebook').optional().isString(),
+  body('twitter').optional().isString(),
+];
+
+app.post('/companiy', cors(), upload.single('image'), companyValidationRules, async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const {
       user_id,
       sector_id,
@@ -750,6 +799,9 @@ app.post('/companiy', cors(), upload.single('image'), async (req, res) => {
 
     // Check if file was uploaded
     if (imagePath) {
+      // Validate the image file (e.g., check file size, type)
+      // Your validation logic here
+
       // Upload the image to Azure Blob Storage
       const uploadedFileName = await uploadToBlobStorage(req.file);
       imageUrl = `back/assets/images/companies/${uploadedFileName}`;
@@ -1034,7 +1086,21 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/training', cors(),upload.single('image'), async (req, res) => {
+const trainingValidationRules = [
+  body('user_id').notEmpty().isInt(),
+  body('company_id').notEmpty().isInt(),
+  body('title').notEmpty().isString(),
+  body('about').notEmpty().isString(),
+  body('price').optional().isFloat(),
+  body('redirect_link').notEmpty().isURL(),
+  body('deadline').notEmpty().isString(),
+];
+app.post('/training', cors(), upload.single('image'), trainingValidationRules, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
   const imagePath = req.file ? req.file.path : null;
   const slug = title.toLowerCase().replace(/\s+/g, '-');
@@ -1045,6 +1111,9 @@ app.post('/training', cors(),upload.single('image'), async (req, res) => {
 
     // Check if file was uploaded
     if (imagePath) {
+      // Validate the image file (e.g., check file size, type)
+      // Your validation logic here
+
       // Upload the image to Azure Blob Storage
       const uploadedFileName = await uploadToBlobStorage(req.file);
       imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
@@ -1122,7 +1191,73 @@ app.get("/cv/:userId", (req, res) => {
     return res.json(results);
   });
 });
-app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
+const cvValidationRules = [
+  body('user_id').notEmpty().isInt(),
+  body('category_id').optional().isInt(),
+  body('city_id').optional().isInt(),
+  body('education_id').optional().isInt(),
+  body('experience_id').optional().isInt(),
+  body('job_type_id').optional().isInt(),
+  body('gender_id').optional().isInt(),
+  body('name').optional().isString(),
+  body('surname').optional().isString(),
+  body('father_name').optional().isString(),
+  body('email').optional().isEmail(),
+  body('contact_phone').optional().isString(),
+  body('position').optional().isString(),
+  body('about_education').optional().isString(),
+  body('salary').optional().isFloat(),
+  body('birth_date').optional().isString(),
+  body('work_history').optional().isString(),
+  body('skills').optional().isString(),
+  body('cv').custom((value, { req }) => {
+    // Custom validation for the cv field (e.g., check file size, type)
+    if (value) {
+      // Perform validation if cv field is present
+      const fileSize = req.files['cv'][0].size;
+      const fileType = req.files['cv'][0].mimetype;
+
+      // Check file size
+      if (fileSize > MAX_FILE_SIZE) {
+        throw new Error('CV file size exceeds the maximum limit');
+      }
+
+      // Check file type
+      if (!SUPPORTED_FILE_TYPES.includes(fileType)) {
+        throw new Error('Invalid CV file type');
+      }
+    }
+    return true; // Return true if validation passes or if cv field is not present
+  }),
+body('image').custom((value, { req }) => {
+  // Custom validation for the image field (e.g., check file size, type)
+  if (value) {
+    // Perform validation if image field is present
+    const imageFile = req.files['image'][0];
+    const fileSizeLimit = 10 * 1024 * 1024; // 10MB
+    const allowedMimeTypes = ['image/jpeg', 'image/png'];
+
+    // Check file size
+    if (imageFile.size > fileSizeLimit) {
+      throw new Error('Image file size exceeds the allowed limit');
+    }
+
+    // Check file type
+    if (!allowedMimeTypes.includes(imageFile.mimetype)) {
+      throw new Error('Invalid image file type. Only JPEG and PNG formats are allowed');
+    }
+  }
+
+  return true; // Return true if validation passes or if image field is not present
+}),
+
+];
+app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), cvValidationRules, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const {
     user_id,
     category_id,
@@ -1147,7 +1282,6 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
   try {
     const cvFile = req.files ? req.files['cv'][0] : null;
     const imageFile = req.files ? req.files['image'][0] : null;
-
 
     // Upload files to storage service (implement uploadToBlobStorage function accordingly)
     const cvUrl = cvFile ? await uploadToBlobStorage(cvFile, 'cv') : null;
@@ -1186,9 +1320,7 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
 
     // Perform database insertion (adjust your database query and connection accordingly)
     const query =
-    'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
-  
-  
+      'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
     const values = [
       user_id,
@@ -1371,30 +1503,36 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
   }
 });
 
-app.post("/reviews", async (req, res) => {
+app.post('/reviews', [
+  body('user_id').notEmpty().isInt().withMessage('User ID must be a non-empty integer'),
+  body('company_id').notEmpty().isInt().withMessage('Company ID must be a non-empty integer'),
+  body('message').optional().withMessage('Message is required'),
+  body('rating').notEmpty().isInt().withMessage('Rating is required and must be an integer'),
+], async (req, res) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
     const { user_id, company_id, message, rating } = req.body;
 
-    const getUserQuery = "SELECT name AS fullname FROM users WHERE id = ?";
+    const getUserQuery = 'SELECT name AS fullname FROM users WHERE id = ?';
     pool.query(getUserQuery, [user_id], (error, results, fields) => {
       if (error) throw error;
 
       // Check if user exists and retrieve the full name
       if (results.length === 0) {
-        throw new Error("User not found");
+        throw new Error('User not found');
       }
       const fullname = results[0].fullname;
 
-      if (!rating) {
-        throw new Error("Rating is required");
-      }
-
       pool.query(
-        "INSERT INTO review (user_id, fullname, company_id, message, rating, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())",
+        'INSERT INTO review (user_id, fullname, company_id, message, rating, created_at, updated_at) VALUES (?, ?, ?, ?, ?, NOW(), NOW())',
         [user_id, fullname, company_id, message, rating],
         (error, results, fields) => {
           if (error) throw error;
-          console.log("Review added");
+          console.log('Review added');
           res.sendStatus(201);
         }
       );
@@ -1663,16 +1801,24 @@ app.use("/categories/:id", async (req, res) => {
 //   await blockBlobClient.uploadFile(file.path);
 //   return fileName;
 // };
-app.post("/favorites", async (req, res) => {
+app.post('/favorites', [
+  body('user_id').notEmpty().isInt().withMessage('User ID must be a non-empty integer'),
+  body('vacancy_id').notEmpty().isInt().withMessage('Vacancy ID must be a non-empty integer'),
+], async (req, res) => {
   try {
-    const { user_id , vacancy_id } = req.body;
-    const query = "INSERT INTO favorits (user_id, vacancy_id) VALUES (?, ?)";
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { user_id, vacancy_id } = req.body;
+    const query = 'INSERT INTO favorits (user_id, vacancy_id) VALUES (?, ?)';
     pool.query(query, [user_id, vacancy_id], (error, results, fields) => {
       if (error) {
         console.error(error);
         res.sendStatus(500);
       } else {
-        console.log(`Added to favorites`);
+        console.log('Added to favorites');
         res.sendStatus(201);
       }
     });
@@ -1682,9 +1828,17 @@ app.post("/favorites", async (req, res) => {
   }
 });
 
-app.post("/favorite", async (req, res) => {
+app.post("/favorite", [
+  body('user_id').notEmpty().isInt().withMessage('User ID is required and must be an integer'),
+  body('cv_id').notEmpty().isInt().withMessage('CV ID is required and must be an integer')
+], async (req, res) => {
   try {
     const { user_id, cv_id } = req.body;
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
     const query = "INSERT INTO favorits (user_id, cv_id) VALUES (?, ?)";
     pool.query(query, [user_id, cv_id], (error, results, fields) => {
@@ -1701,6 +1855,7 @@ app.post("/favorite", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 app.get("/favorites/:userId", (req, res) => {
@@ -1733,45 +1888,69 @@ app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
     return res.status(200).send("Item removed from favorites");
   });
 });
-app.post('/apply', (req, res) => {
-  const { userId, vacancyId, cvId } = req.body;
-
-  const selectQuery = 'SELECT name, email, surname, contact_phone, cv FROM cv WHERE user_id = ? AND id = ?';
-
-  pool.query(selectQuery, [userId, cvId], (selectError, selectResults) => {
-    if (selectError) {
-      console.error('Error retrieving user information from cv:', selectError);
-      res.status(500).json({ message: 'Error applying for the vacancy' });
-      return;
-    }
-
-    if (selectResults.length === 0) {
-      console.error('CV not found for the given user ID and CV ID');
-      res.status(400).json({ message: 'CV not found' });
-      return;
-    }
-
-    const user = selectResults[0];
-
-    const insertQuery = 'INSERT INTO candidates (user_id, vacancy_id, name, mail, surname, phone, cv) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    const values = [userId, vacancyId, user.name, user.email, user.surname, user.contact_phone, user.cv];
-
-    pool.query(insertQuery, values, (insertError, insertResults) => {
-      if (insertError) {
-        console.error('Error inserting application:', insertError);
-        res.status(500).json({ message: 'Error applying for the vacancy' });
-      } else {
-        res.status(200).json({ message: 'Application submitted successfully' });
-      }
-    });
-  });
-});
-app.post('/candidates', cors(), async (req, res) => {
+app.post('/apply', [
+  body('userId').notEmpty().isInt().withMessage('User ID is required and must be an integer'),
+  body('vacancyId').notEmpty().isInt().withMessage('Vacancy ID is required and must be an integer'),
+  body('cvId').notEmpty().isInt().withMessage('CV ID is required and must be an integer')
+], (req, res) => {
   try {
-  const cvFile = req.file;// Use req.file instead of req.files['cv'][0]
+    const { userId, vacancyId, cvId } = req.body;
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const selectQuery = 'SELECT name, email, surname, contact_phone, cv FROM cv WHERE user_id = ? AND id = ?';
+
+    pool.query(selectQuery, [userId, cvId], (selectError, selectResults) => {
+      if (selectError) {
+        console.error('Error retrieving user information from cv:', selectError);
+        res.status(500).json({ message: 'Error applying for the vacancy' });
+        return;
+      }
+
+      if (selectResults.length === 0) {
+        console.error('CV not found for the given user ID and CV ID');
+        res.status(400).json({ message: 'CV not found' });
+        return;
+      }
+
+      const user = selectResults[0];
+
+      const insertQuery = 'INSERT INTO candidates (user_id, vacancy_id, name, mail, surname, phone, cv) VALUES (?, ?, ?, ?, ?, ?, ?)';
+      const values = [userId, vacancyId, user.name, user.email, user.surname, user.contact_phone, user.cv];
+
+      pool.query(insertQuery, values, (insertError, insertResults) => {
+        if (insertError) {
+          console.error('Error inserting application:', insertError);
+          res.status(500).json({ message: 'Error applying for the vacancy' });
+        } else {
+          res.status(200).json({ message: 'Application submitted successfully' });
+        }
+      });
+    });
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
+
+app.post('/candidates', cors(), upload, [
+  body('vacancyId').notEmpty().isInt().withMessage('Vacancy ID is required and must be an integer'),
+  body('name').optional().withMessage('Name is required'),
+  body('email').optional().isEmail().withMessage('Email is required and must be a valid email address'),
+  body('surname').optional().withMessage('Surname is required'),
+  body('phone').optional().withMessage('Phone is required')
+], async (req, res) => {
+  try {
+    const cvFile = req.file;
     const { vacancyId, name, email, surname, phone } = req.body;
 
-    // Rest of your code here...
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
     const insertQuery = 'INSERT INTO candidates (vacancy_id, name, mail, surname, phone, cv) VALUES (?, ?, ?, ?, ?, ?)';
     const values = [vacancyId, name, email, surname, phone, cvFile];
