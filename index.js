@@ -128,13 +128,12 @@ app.post(
           }
 
           const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
-          return res.json({ token });
+          return res.json({ id: user.id, token }); // Return user ID and token in the response
         });
       }
     );
   }
 );
-
 app.post(
   '/signup',
   [
