@@ -279,7 +279,13 @@ app.post('/forgot-password', [
 
       // Generate a password reset token
       const resetToken = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
-
+   let transport = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'humbeteliyevaseide2001@gmail.com',
+        pass: 'nwudhimwttuqdzxv'
+      }
+    });
       // Send the reset token to the user's email
       const mailOptions = {
         from: 'humbeteliyevaseide2001@gmail.com', // Replace with your email address
