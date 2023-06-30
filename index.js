@@ -305,6 +305,11 @@ app.post('/forgot-password', [
     }
   );
 });
+app.get('/reset-password', (req, res) => {
+  // Render the reset password screen using a view template
+  res.render('reset'); // Replace 'reset-password' with the actual view template name
+});
+
 app.post('/reset-password', [
   body('token').notEmpty(),
   body('password').notEmpty(),
