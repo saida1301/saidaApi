@@ -305,10 +305,7 @@ app.post('/forgot-password', [
     }
   );
 });
-app.get('/reset-password', (req, res) => {
-  // Render the reset password screen using a view template
-  res.render('reset'); // Replace 'reset-password' with the actual view template name
-});
+
 
 app.post('/reset-password', [
   body('token').notEmpty(),
@@ -342,7 +339,10 @@ app.post('/reset-password', [
     return res.status(401).json({ message: 'Invalid or expired token' });
   }
 });
-
+app.get('/reset-password', (req, res) => {
+  // Render the reset password screen using a view template
+  res.redirect('reset'); // Replace 'reset-password' with the actual view template name
+});
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
   const query = "SELECT * FROM users WHERE id = ?";
