@@ -291,7 +291,7 @@ app.post('/forgot-password', [
         from: 'humbeteliyevaseide2001@gmail.com', // Replace with your email address
         to: email,
         subject: 'Password Reset',
-        text: `To reset your password, please click on the following link: http://example.com/reset-password?token=${resetToken}`
+        text: `To reset your password, please click on the following link: http://1is.butagrup.az/reset-password?token=${resetToken}`
       };
 
       transport.sendMail(mailOptions, (error) => {
