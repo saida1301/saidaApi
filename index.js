@@ -253,6 +253,85 @@ app.post('/contact', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while saving the contact message.' });
   }
 });
+app.post('/forgot-password', [
+  body('email').isEmail().normalizeEmail(),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { email } = req.body;
+  pool.query(
+    'SELECT * FROM users WHERE email = ?',
+    [email],
+    (err, results) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const user = results[0];
+
+      // Generate a password reset token
+      const resetToken = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
+
+      // Send the reset token to the user's email
+      const mailOptions = {
+        from: 'humbeteliyevaseide2001@gmail.com', // Replace with your email address
+        to: email,
+        subject: 'Password Reset',
+        text: `To reset your password, please click on the following link: http://example.com/reset-password?token=${resetToken}`
+      };
+
+      transporter.sendMail(mailOptions, (error) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ message: 'Error sending email' });
+        }
+
+        return res.json({ message: 'Password reset token has been sent to your email' });
+      });
+    }
+  );
+});
+app.post('/reset-password', [
+  body('token').notEmpty(),
+  body('password').notEmpty(),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  const { token, password } = req.body;
+
+  try {
+    const decoded = jwt.verify(token, 'secret'); // Verify the reset token
+
+    // Update the user's password in the database
+    pool.query(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [password, decoded.id],
+      (err) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        return res.json({ message: 'Password has been reset successfully' });
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    return res.status(401).json({ message: 'Invalid or expired token' });
+  }
+});
+
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
   const query = "SELECT * FROM users WHERE id = ?";
