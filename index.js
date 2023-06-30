@@ -308,40 +308,56 @@ app.post('/forgot-password', [
 
 
 app.post('/reset-password', [
-  body('token').notEmpty(),
-  body('password').notEmpty(),
+  body('email').isEmail().normalizeEmail(),
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { token, password } = req.body;
+  const { email } = req.body;
+  pool.query(
+    'SELECT * FROM users WHERE email = ?',
+    [email],
+    (err, results) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
 
-  try {
-    const decoded = jwt.verify(token, 'secret'); // Verify the reset token
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
 
-    // Update the user's password in the database
-    pool.query(
-      'UPDATE users SET password = ? WHERE id = ?',
-      [password, decoded.id],
-      (err) => {
-        if (err) {
-          console.log(err);
-          return res.status(500).json({ message: 'Internal server error' });
+      const user = results[0];
+
+      // Generate a password reset token
+      const resetToken = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
+ let transport = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: 'humbeteliyevaseide2001@gmail.com',
+        pass: 'nwudhimwttuqdzxv'
+      }
+    });
+      // Send the reset token to the user's email
+      const mailOptions = {
+        from: 'humbeteliyevaseide2001@gmail.com',
+        to: email,
+        subject: 'Password Reset',
+        text: `To reset your password, please click on the following link: http://your-app/reset-password?token=${resetToken}`,
+      };
+
+      transport.sendMail(mailOptions, (error) => {
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ message: 'Error sending email' });
         }
 
-        return res.json({ message: 'Password has been reset successfully' });
-      }
-    );
-  } catch (error) {
-    console.error(error);
-    return res.status(401).json({ message: 'Invalid or expired token' });
-  }
-});
-app.get('/reset-password', (req, res) => {
-  // Render the reset password screen using a view template
-  res.render('reset-password'); // Replace 'reset-password' with the actual view template name
+        return res.json({ message: 'Password reset token has been sent to your email' });
+      });
+    }
+  );
 });
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
