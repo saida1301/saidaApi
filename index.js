@@ -341,7 +341,7 @@ app.post('/reset-password', [
 });
 app.get('/reset-password', (req, res) => {
   // Render the reset password screen using a view template
-  res.redirect('reset-password'); // Replace 'reset-password' with the actual view template name
+  res.render('reset-password'); // Replace 'reset-password' with the actual view template name
 });
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
