@@ -292,6 +292,7 @@ app.post('/forgot-password', [
         to: email,
         subject: 'Password Reset',
         text: `To reset your password, please click on the following link: https://movieappi.onrender.com/reset-password?token=${resetToken}`
+
       };
 
       transport.sendMail(mailOptions, (error) => {
