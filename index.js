@@ -288,7 +288,7 @@ app.post('/forgot-password', [
         text: `To reset your password, please click on the following link: http://example.com/reset-password?token=${resetToken}`
       };
 
-      transporter.sendMail(mailOptions, (error) => {
+      transport.sendMail(mailOptions, (error) => {
         if (error) {
           console.error(error);
           return res.status(500).json({ message: 'Error sending email' });
