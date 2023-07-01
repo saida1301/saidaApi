@@ -253,6 +253,18 @@ app.post('/contact', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while saving the contact message.' });
   }
 });
+function generateVerificationCode() {
+  const length = 6; // Length of the verification code
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; // Characters to choose from
+  let code = '';
+
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    code += characters.charAt(randomIndex);
+  }
+
+  return code;
+}
 
     
   app.post('/forgot-password', (req, res) => {
