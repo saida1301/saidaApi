@@ -267,34 +267,45 @@ function generateVerificationCode() {
 }
 
     
-  app.post('/forgot-password', (req, res) => {
-  const { email } = req.body;
+ app.post(
+  '/forgot-password',
+  [
+    body('email').isEmail().normalizeEmail().withMessage('Invalid email'),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
 
-  // Check if email exists in the database
-  pool.query('SELECT * FROM users WHERE email = ?', [email], (error, results) => {
-    if (error) {
-      console.error('Error executing database query:', error);
-      return res.status(500).json({ error: 'Internal server error' });
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    const user = results[0];
+    const { email } = req.body;
 
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Generate verification code
-    const verificationCode = generateVerificationCode();
-
-    // Update the user's verification code in the database
-    pool.query('UPDATE users SET email_verification_code = ? WHERE id = ?', [verificationCode, user.id], (error) => {
+    // Check if email exists in the database
+    pool.query('SELECT * FROM users WHERE email = ?', [email], (error, results) => {
       if (error) {
         console.error('Error executing database query:', error);
         return res.status(500).json({ error: 'Internal server error' });
       }
 
-      // Send verification code via email
- let transport = nodemailer.createTransport({
+      const user = results[0];
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Generate verification code
+      const verificationCode = generateVerificationCode();
+
+      // Update the user's verification code in the database
+      pool.query('UPDATE users SET email_verification_code = ? WHERE id = ?', [verificationCode, user.id], (error) => {
+        if (error) {
+          console.error('Error executing database query:', error);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        // Send verification code via email
+      let transport = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: 'humbeteliyevaseide2001@gmail.com',
@@ -302,65 +313,87 @@ function generateVerificationCode() {
       }
     });
       // Send the reset token to the user's email
-      const mailOptions = {
-        from: 'humbeteliyevaseide2001@gmail.com', // Replace with your email address
-        to: email,
-        subject: 'Password Reset',
-      text: `Your verification code is: ${verificationCode}`,
 
-      };
 
- 
+        const mailOptions = {
+          from: 'humbeteliyevaseide2001@gmail.com',
+          to: email,
+          subject: 'Password Reset',
+          text: `Your verification code is: ${verificationCode}`,
+        };
 
-      transport.sendMail(mailOptions, (error) => {
-        if (error) {
-          console.error('Error sending email:', error);
-          return res.status(500).json({ error: 'Error sending email' });
-        }
-        return res.status(200).json({ message: 'Verification code sent' });
+        transport.sendMail(mailOptions, (error) => {
+          if (error) {
+            console.error('Error sending email:', error);
+            return res.status(500).json({ error: 'Error sending email' });
+          }
+          return res.status(200).json({ message: 'Verification code sent' });
+        });
       });
     });
-  });
-});
+  }
+);
 
 // Example API endpoint for handling "Reset Password" request
-app.post('/reset-password', (req, res) => {
-  const { email, code, password } = req.body;
+app.post(
+  '/reset-password',
+  [
+    body('email').isEmail().normalizeEmail().withMessage('Invalid email'),
+    body('code').isLength({ min: 6 }).withMessage('Verification code must be at least 6 characters'),
+    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
 
-  // Find the user based on the email and verification code in the database
-  pool.query('SELECT * FROM users WHERE email = ? AND email_verification_code = ?', [email, code], (error, results) => {
-    if (error) {
-      console.error('Error executing database query:', error);
-      return res.status(500).json({ error: 'Internal server error' });
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    const user = results[0];
+    const { email, code, password } = req.body;
 
-    if (!user) {
-      return res.status(404).json({ error: 'User not found or invalid verification code' });
-    }
-
-    // Check if verification code is valid (no expiration check)
-
-    // Update the user's password in the database
-    pool.query('UPDATE users SET password = ? WHERE id = ?', [password, user.id], (error) => {
+    // Find the user based on the email and verification code in the database
+    pool.query('SELECT * FROM users WHERE email = ? AND email_verification_code = ?', [email, code], (error, results) => {
       if (error) {
         console.error('Error executing database query:', error);
         return res.status(500).json({ error: 'Internal server error' });
       }
 
-      // Clear the verification code from the user object
-      pool.query('UPDATE users SET email_verification_code = null WHERE id = ?', [user.id], (error) => {
-        if (error) {
-          console.error('Error executing database query:', error);
+      const user = results[0];
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found or invalid verification code' });
+      }
+
+      // Check if verification code is valid (no expiration check)
+
+      // Hash the new password
+      bcrypt.hash(password, 10, (hashError, hashedPassword) => {
+        if (hashError) {
+          console.error('Error hashing password:', hashError);
           return res.status(500).json({ error: 'Internal server error' });
         }
 
-        return res.status(200).json({ message: 'Password reset successful' });
+        // Update the user's password in the database with the hashed password
+        pool.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (updateError) => {
+          if (updateError) {
+            console.error('Error executing database query:', updateError);
+            return res.status(500).json({ error: 'Internal server error' });
+          }
+
+          // Clear the verification code from the user object
+          pool.query('UPDATE users SET email_verification_code = null WHERE id = ?', [user.id], (clearError) => {
+            if (clearError) {
+              console.error('Error executing database query:', clearError);
+              return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            return res.status(200).json({ message: 'Password reset successful' });
+          });
+        });
       });
     });
-  });
-});
+  }
+);
 
 
 app.get("/user/:userId", (req, res) => {
