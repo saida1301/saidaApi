@@ -338,7 +338,6 @@ function generateVerificationCode() {
 app.post(
   '/reset-password',
   [
-    body('email').isEmail().normalizeEmail().withMessage('Invalid email'),
     body('code').isLength({ min: 6 }).withMessage('Verification code must be at least 6 characters'),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   ],
@@ -349,10 +348,10 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, code, password } = req.body;
+    const { code, password } = req.body;
 
-    // Find the user based on the email and verification code in the database
-    pool.query('SELECT * FROM users WHERE email = ? AND email_verification_code = ?', [email, code], (error, results) => {
+    // Find the user based on the verification code in the database
+    pool.query('SELECT * FROM users WHERE email_verification_code = ?', [code], (error, results) => {
       if (error) {
         console.error('Error executing database query:', error);
         return res.status(500).json({ error: 'Internal server error' });
@@ -394,6 +393,7 @@ app.post(
     });
   }
 );
+
 
 
 app.get("/user/:userId", (req, res) => {
