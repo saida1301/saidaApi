@@ -308,58 +308,60 @@ app.post('/forgot-password', [
 });
 
 
+app.get('/reset-password', (req, res) => {
+  const { token } = req.query;
+  if (!token) {
+    return res.status(400).json({ message: 'Token is required' });
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, 'secret');
+    const userId = decodedToken.id;
+
+    // Redirect the user to the reset password screen
+    return res.redirect(`https://movieappi.onrender.com/reset-password?token=${token}&userId=${userId}`);
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({ message: 'Invalid token' });
+  }
+});
+
 app.post('/reset-password', [
-  body('email').isEmail().normalizeEmail(),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.password) {
+      throw new Error('Passwords do not match');
+    }
+    return true;
+  }),
 ], (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { email } = req.body;
-  pool.query(
-    'SELECT * FROM users WHERE email = ?',
-    [email],
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ message: 'Internal server error' });
-      }
+  const { token, userId, password } = req.body;
+  if (!token || !userId) {
+    return res.status(400).json({ message: 'Token and userId are required' });
+  }
 
-      if (results.length === 0) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+  try {
+    const decodedToken = jwt.verify(token, 'secret');
+    const decodedUserId = decodedToken.id;
 
-      const user = results[0];
-
-      // Generate a password reset token
-      const resetToken = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
- let transport = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'humbeteliyevaseide2001@gmail.com',
-        pass: 'nwudhimwttuqdzxv'
-      }
-    });
-      // Send the reset token to the user's email
-      const mailOptions = {
-        from: 'humbeteliyevaseide2001@gmail.com',
-        to: email,
-        subject: 'Password Reset',
-        text: `To reset your password, please click on the following link: https://movieappi.onrender.com/reset-password?token=${resetToken}`,
-      };
-
-      transport.sendMail(mailOptions, (error) => {
-        if (error) {
-          console.error(error);
-          return res.status(500).json({ message: 'Error sending email' });
-        }
-
-        return res.json({ message: 'Password reset token has been sent to your email' });
-      });
+    if (decodedUserId !== userId) {
+      return res.status(400).json({ message: 'Invalid token or userId' });
     }
-  );
+
+    // TODO: Update the user's password in the database using the userId
+
+    return res.json({ message: 'Password reset successful' });
+  } catch (error) {
+    console.error(error);
+    return res.status(400).json({ message: 'Invalid token' });
+  }
 });
+
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
   const query = "SELECT * FROM users WHERE id = ?";
