@@ -253,33 +253,30 @@ app.post('/contact', async (req, res) => {
     res.status(500).json({ error: 'An error occurred while saving the contact message.' });
   }
 });
-app.post('/forgot-password', [
-  body('email').isEmail().normalizeEmail(),
-], (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+
+    
+    
+
+// Example API endpoint for handling "Forgot Password" request
+app.post('/forgot-password', (req, res) => {
+  const { email } = req.body;
+
+  // Check if email exists in the database
+  const user = users.find((user) => user.email === email);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
   }
 
-  const { email } = req.body;
-  pool.query(
-    'SELECT * FROM users WHERE email = ?',
-    [email],
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ message: 'Internal server error' });
-      }
+  // Generate verification code
+  const verificationCode = generateVerificationCode();
 
-      if (results.length === 0) {
-        return res.status(404).json({ message: 'User not found' });
-      }
+  // Update the user's verification code and expiration time in the database
+  user.email_verification_code = verificationCode;
+  user.email_verification_expiresAt = new Date(Date.now() + 600000); // Expires in 10 minutes
+  // Save the updated user object to the 'users' table in your database
 
-      const user = results[0];
-
-      // Generate a password reset token
-      const resetToken = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
-   let transport = nodemailer.createTransport({
+  // Send verification code via email
+  let transport = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: 'humbeteliyevaseide2001@gmail.com',
@@ -294,73 +291,45 @@ app.post('/forgot-password', [
         text: `To reset your password, please click on the following link: https://movieappi.onrender.com/reset-password?token=${resetToken}`
 
       };
-
-      transport.sendMail(mailOptions, (error) => {
-        if (error) {
-          console.error(error);
-          return res.status(500).json({ message: 'Error sending email' });
-        }
-
-        return res.json({ message: 'Password reset token has been sent to your email' });
-      });
+  transport.sendMail(mailOptions, (error) => {
+    if (error) {
+      console.error('Error sending email:', error);
+      return res.status(500).json({ error: 'Error sending email' });
     }
-  );
+    return res.status(200).json({ message: 'Verification code sent' });
+  });
+});
+
+// Example API endpoint for handling "Reset Password" request
+app.post('/reset-password', (req, res) => {
+  const { email, code, password } = req.body;
+
+  // Find the user based on the email in the database
+  const user = users.find((user) => user.email === email);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  // Check if verification code matches
+  if (user.email_verification_code !== code || user.email_verification_expiresAt < new Date()) {
+    return res.status(400).json({ error: 'Invalid or expired verification code' });
+  }
+
+  // Update the user's password in the database
+  user.password = password;
+  // Update user's password in the database
+
+  // Optionally, clear the verification code and expiration time from the user object
+  user.email_verification_code = null;
+  user.email_verification_expiresAt = null;
+  // Save the updated user object to the 'users' table in your database
+
+  return res.status(200).json({ message: 'Password reset successful' });
 });
 
 
-app.get('/reset-password', (req, res) => {
-  const { token } = req.query;
-  if (!token) {
-    return res.status(400).json({ message: 'Token is required' });
-  }
 
-  try {
-    const decodedToken = jwt.verify(token, 'secret');
-    const userId = decodedToken.id;
 
-    // Redirect the user to the reset password screen
-    return res.redirect(`https://movieappi.onrender.com/reset-password?token=${token}&userId=${userId}`);
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ message: 'Invalid token' });
-  }
-});
-
-app.post('/reset-password', [
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('confirmPassword').custom((value, { req }) => {
-    if (value !== req.body.password) {
-      throw new Error('Passwords do not match');
-    }
-    return true;
-  }),
-], (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { token, userId, password } = req.body;
-  if (!token || !userId) {
-    return res.status(400).json({ message: 'Token and userId are required' });
-  }
-
-  try {
-    const decodedToken = jwt.verify(token, 'secret');
-    const decodedUserId = decodedToken.id;
-
-    if (decodedUserId !== userId) {
-      return res.status(400).json({ message: 'Invalid token or userId' });
-    }
-
-    // TODO: Update the user's password in the database using the userId
-
-    return res.json({ message: 'Password reset successful' });
-  } catch (error) {
-    console.error(error);
-    return res.status(400).json({ message: 'Invalid token' });
-  }
-});
 
 app.get("/user/:userId", (req, res) => {
   const userId = req.params.userId;
