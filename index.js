@@ -255,28 +255,34 @@ app.post('/contact', async (req, res) => {
 });
 
     
-    
-
-// Example API endpoint for handling "Forgot Password" request
-app.post('/forgot-password', (req, res) => {
+  app.post('/forgot-password', (req, res) => {
   const { email } = req.body;
 
   // Check if email exists in the database
-  const user = users.find((user) => user.email === email);
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
-  }
+  pool.query('SELECT * FROM users WHERE email = ?', [email], (error, results) => {
+    if (error) {
+      console.error('Error executing database query:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
 
-  // Generate verification code
-  const verificationCode = generateVerificationCode();
+    const user = results[0];
 
-  // Update the user's verification code and expiration time in the database
-  user.email_verification_code = verificationCode;
-  user.email_verification_expiresAt = new Date(Date.now() + 600000); // Expires in 10 minutes
-  // Save the updated user object to the 'users' table in your database
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-  // Send verification code via email
-  let transport = nodemailer.createTransport({
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
+
+    // Update the user's verification code in the database
+    pool.query('UPDATE users SET email_verification_code = ? WHERE id = ?', [verificationCode, user.id], (error) => {
+      if (error) {
+        console.error('Error executing database query:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      // Send verification code via email
+ let transport = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: 'humbeteliyevaseide2001@gmail.com',
@@ -288,15 +294,20 @@ app.post('/forgot-password', (req, res) => {
         from: 'humbeteliyevaseide2001@gmail.com', // Replace with your email address
         to: email,
         subject: 'Password Reset',
-        text: `To reset your password, please click on the following link: https://movieappi.onrender.com/reset-password?token=${resetToken}`
+      text: `Your verification code is: ${verificationCode}`,
 
       };
-  transport.sendMail(mailOptions, (error) => {
-    if (error) {
-      console.error('Error sending email:', error);
-      return res.status(500).json({ error: 'Error sending email' });
-    }
-    return res.status(200).json({ message: 'Verification code sent' });
+
+ 
+
+      transport.sendMail(mailOptions, (error) => {
+        if (error) {
+          console.error('Error sending email:', error);
+          return res.status(500).json({ error: 'Error sending email' });
+        }
+        return res.status(200).json({ message: 'Verification code sent' });
+      });
+    });
   });
 });
 
@@ -304,31 +315,40 @@ app.post('/forgot-password', (req, res) => {
 app.post('/reset-password', (req, res) => {
   const { email, code, password } = req.body;
 
-  // Find the user based on the email in the database
-  const user = users.find((user) => user.email === email);
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
-  }
+  // Find the user based on the email and verification code in the database
+  pool.query('SELECT * FROM users WHERE email = ? AND email_verification_code = ?', [email, code], (error, results) => {
+    if (error) {
+      console.error('Error executing database query:', error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
 
-  // Check if verification code matches
-  if (user.email_verification_code !== code || user.email_verification_expiresAt < new Date()) {
-    return res.status(400).json({ error: 'Invalid or expired verification code' });
-  }
+    const user = results[0];
 
-  // Update the user's password in the database
-  user.password = password;
-  // Update user's password in the database
+    if (!user) {
+      return res.status(404).json({ error: 'User not found or invalid verification code' });
+    }
 
-  // Optionally, clear the verification code and expiration time from the user object
-  user.email_verification_code = null;
-  user.email_verification_expiresAt = null;
-  // Save the updated user object to the 'users' table in your database
+    // Check if verification code is valid (no expiration check)
 
-  return res.status(200).json({ message: 'Password reset successful' });
+    // Update the user's password in the database
+    pool.query('UPDATE users SET password = ? WHERE id = ?', [password, user.id], (error) => {
+      if (error) {
+        console.error('Error executing database query:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+
+      // Clear the verification code from the user object
+      pool.query('UPDATE users SET email_verification_code = null WHERE id = ?', [user.id], (error) => {
+        if (error) {
+          console.error('Error executing database query:', error);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        return res.status(200).json({ message: 'Password reset successful' });
+      });
+    });
+  });
 });
-
-
-
 
 
 app.get("/user/:userId", (req, res) => {
