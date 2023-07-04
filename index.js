@@ -749,7 +749,7 @@ const vacancyValidationRules = [
   body('deadline').notEmpty().isString(),
 ];
 
-app.post('/vacanci', cors(), vacancyValidationRules, async (req, res) => {
+app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -760,7 +760,6 @@ app.post('/vacanci', cors(), vacancyValidationRules, async (req, res) => {
 
     const {
       user_id,
-      company_id,
       city_id,
       category_id,
       job_type_id,
@@ -782,6 +781,14 @@ app.post('/vacanci', cors(), vacancyValidationRules, async (req, res) => {
 
     const slug = position.toLowerCase().replace(/\s+/g, '-');
     req.body.slug = slug;
+
+    // Retrieve the company ID based on the logged-in user ID
+    const companyQuery = `SELECT id AS company_id FROM companies WHERE user_id = ?`;
+    const companyValues = [user_id];
+
+    // Execute the database query to retrieve the company ID
+    const companyResult = await pool.query(companyQuery, companyValues);
+    const company_id = companyResult[0].company_id;
 
     const query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, slug, min_salary, max_salary, min_age, max_age, salary_type, requirement, description, contact_name, accept_type, contact_info, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
     const values = [
@@ -807,14 +814,16 @@ app.post('/vacanci', cors(), vacancyValidationRules, async (req, res) => {
       deadline,
     ];
 
-    // Execute the database query
+    // Execute the database query to add a vacancy
     await pool.query(query, values);
+
     res.status(201).json({ message: 'Vacancy added successfully' });
   } catch (error) {
     console.error('Error adding vacancy:', error);
     res.status(500).json({ error: 'Failed to add vacancy' });
   }
 });
+
 
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
