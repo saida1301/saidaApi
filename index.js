@@ -766,16 +766,15 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
       experience_id,
       education_id,
       position,
+      salary_type,
       min_salary,
       max_salary,
       min_age,
       max_age,
-      salary_type,
       requirement,
       description,
       contact_name,
       accept_type,
-      contact_info,
       deadline,
     } = req.body;
 
@@ -790,29 +789,54 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
     const companyResult = await pool.query(companyQuery, companyValues);
     const company_id = companyResult[0].company_id;
 
-    const query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, slug, min_salary, max_salary, min_age, max_age, salary_type, requirement, description, contact_name, accept_type, contact_info, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-    const values = [
-      user_id,
-      company_id,
-      city_id,
-      category_id,
-      job_type_id,
-      experience_id,
-      education_id,
-      position,
-      slug,
-      min_salary,
-      max_salary,
-      min_age,
-      max_age,
-      salary_type,
-      requirement,
-      description,
-      contact_name,
-      accept_type,
-      contact_info,
-      deadline,
-    ];
+    let query;
+    let values;
+
+    if (salary_type === 0) {
+      // User can provide either min_salary or max_salary
+      query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, slug, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+      values = [
+        user_id,
+        company_id,
+        city_id,
+        category_id,
+        job_type_id,
+        experience_id,
+        education_id,
+        position,
+        slug,
+        min_salary !== '' ? min_salary : null,
+        max_salary !== '' ? max_salary : null,
+        min_age,
+        max_age,
+        requirement,
+        description,
+        contact_name,
+        accept_type,
+        deadline,
+      ];
+    } else {
+      // User can provide only either min_salary or max_salary
+      query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, slug, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+      values = [
+        user_id,
+        company_id,
+        city_id,
+        category_id,
+        job_type_id,
+        experience_id,
+        education_id,
+        position,
+        slug,
+        min_age,
+        max_age,
+        requirement,
+        description,
+        contact_name,
+        accept_type,
+        deadline,
+      ];
+    }
 
     // Execute the database query to add a vacancy
     await pool.query(query, values);
