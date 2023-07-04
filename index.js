@@ -1033,17 +1033,23 @@ app.put('/companie/:id', cors(), upload.single('image'), async (req, res) => {
       twitter,
     } = req.body;
 
-    const imagePath = req.file ? req.file.path : null;
     const slug = name.toLowerCase().replace(/\s+/g, '-');
     req.body.slug = slug;
 
     let imageUrl = null;
 
     // Check if file was uploaded
-    if (imagePath) {
-      // Upload the image to Azure Blob Storage
-      const uploadedFileName = await uploadToBlobStorage(req.file);
-      imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
+    if (req.file) {
+      const fileContents = req.file.buffer;
+      const extension = '.png'; // Change the extension based on your file type validation
+
+      const fileName = `company_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+      console.log('Dosya yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'companies');
+      console.log('Dosya yükleme tamamlandı!');
+
+      imageUrl = `back/assets/images/companies/${fileName}`;
     }
 
     const query = `UPDATE companies SET user_id = ?, sector_id = ?, average = ?, about = ?, name = ?, address = ?, image = ?, website = ?, map = ?, hr = ?, instagram = ?, linkedin = ?, facebook = ?, twitter = ?, slug = ?, updated_at = NOW() WHERE id = ?`;
@@ -1081,6 +1087,7 @@ app.put('/companie/:id', cors(), upload.single('image'), async (req, res) => {
   }
 });
 
+
 app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
   try {
     const companyId = req.params.id;
@@ -1100,42 +1107,34 @@ app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
       twitter,
     } = req.body;
 
-    const imagePath = req.file ? req.file.path : null;
     const slug = name.toLowerCase().replace(/\s+/g, '-');
     req.body.slug = slug;
 
     let imageUrl = null;
 
     // Check if file was uploaded
-    if (imagePath) {
-      // Upload the image to Azure Blob Storage
-      const uploadedFileName = await uploadToBlobStorage(req.file);
-      imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
+    if (req.file) {
+      const fileContents = req.file.buffer;
+      const extension = '.png'; // Change the extension based on your file type validation
+
+      const fileName = `company_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+      console.log('Dosya yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'companies');
+      console.log('Dosya yükleme tamamlandı!');
+
+      imageUrl = `back/assets/images/companies/${fileName}`;
+    } else {
+      // If no new image is uploaded, retain the existing image URL
+      const query = 'SELECT image FROM companies WHERE id = ?';
+      const existingImageResult = await pool.query(query, [companyId]);
+
+      if (existingImageResult && existingImageResult.length > 0) {
+        imageUrl = existingImageResult[0].image;
+      }
     }
 
-    const query = `
-      UPDATE companies 
-      SET 
-        user_id = ?, 
-        sector_id = ?, 
-        average = ?, 
-        about = ?, 
-        name = ?, 
-        address = ?, 
-        image = ?, 
-        website = ?, 
-        map = ?, 
-        hr = ?, 
-        instagram = ?, 
-        linkedin = ?, 
-        facebook = ?, 
-        twitter = ?, 
-        slug = ?, 
-        status = 1, 
-        updated_at = NOW() 
-      WHERE 
-        id = ?
-    `;
+    const query = `UPDATE companies SET user_id = ?, sector_id = ?, average = ?, about = ?, name = ?, address = ?, image = ?, website = ?, map = ?, hr = ?, instagram = ?, linkedin = ?, facebook = ?, twitter = ?, slug = ?, updated_at = NOW() WHERE id = ?`;
     const values = [
       user_id,
       sector_id,
@@ -1169,6 +1168,7 @@ app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Error uploading image' });
   }
 });
+
 
 app.get("/cv/:cvId", (req, res) => {
   const cvId = req.params.cvId;
@@ -1289,9 +1289,16 @@ app.post('/training', cors(), upload.single('image'), trainingValidationRules, a
       // Validate the image file (e.g., check file size, type)
       // Your validation logic here
 
-      // Upload the image to Azure Blob Storage
-      const uploadedFileName = await uploadToBlobStorage(req.file);
-      imageUrl = `back/assets/images/trainings/${uploadedFileName}`;
+      const fileContents = req.file.buffer;
+      const extension = '.png'; // Change the extension based on your file type validation
+
+      const fileName = `training_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+      console.log('Dosya yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'trainings');
+      console.log('Dosya yükleme tamamlandı!');
+
+      imageUrl = `back/assets/images/trainings/${fileName}`;
     }
 
     const query = `INSERT INTO trainings (user_id, company_id, title, slug, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
@@ -1311,6 +1318,7 @@ app.post('/training', cors(), upload.single('image'), trainingValidationRules, a
     res.status(500).json({ message: 'Error uploading image' });
   }
 });
+
 
 app.get("/training/:userId", (req, res) => {
   const userId = req.params.userId;
@@ -1392,10 +1400,41 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
     const cvFile = req.files ? req.files['cv'][0] : null;
     const imageFile = req.files ? req.files['image'][0] : null;
 
-
     // Upload files to storage service (implement uploadToBlobStorage function accordingly)
-    const cvUrl = cvFile ? await uploadToBlobStorage(cvFile, 'cv') : null;
-    const imageUrl = imageFile ? await uploadToBlobStorage(imageFile, 'image') : null;
+    let cvUrl = null;
+    let imageUrl = null;
+    
+    if (cvFile) {
+      // Validate the CV file (e.g., check file size, type)
+      // Your validation logic here
+
+      const fileContents = cvFile.buffer;
+      const extension = '.pdf'; // Assuming CV files are in PDF format
+
+      const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+      console.log('CV dosyası yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'cvs');
+      console.log('CV dosyası yükleme tamamlandı!');
+
+      cvUrl = `back/assets/images/cvs/${fileName}`;
+    }
+    // Check if file was uploaded
+    if (imageFile) {
+      // Validate the image file (e.g., check file size, type)
+      // Your validation logic here
+    
+      const fileContents = req.files['image'][0].buffer;
+      const extension = '.png'; // Change the extension based on your file type validation
+    
+      const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+    
+      console.log('Dosya yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'cv_photo');
+      console.log('Dosya yükleme tamamlandı!');
+    
+      imageUrl = `back/assets/images/cv_photo/${fileName}`;
+    }
 
     // Additional logic for portfolios
     const portfolio = [];
@@ -1503,10 +1542,11 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
 
 
 
-app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
+app.put('/civi/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
   const { id } = req.params;
 
   const {
+    user_id,
     category_id,
     city_id,
     education_id,
@@ -1517,6 +1557,7 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
     surname,
     father_name,
     email,
+    contact_phone,
     position,
     about_education,
     salary,
@@ -1525,36 +1566,83 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
     skills,
   } = req.body;
 
-  const portfolio = [];
-  const numberOfPortfolios = 2; // Define the total number of portfolios dynamically
-
-  // Assuming you have form fields with names like 'portfolio_job_name_1', 'portfolio_company_1', 'portfolio_link_1', and so on
-  for (let i = 1; i <= numberOfPortfolios; i++) {
-    const jobName = req.body[`portfolio_job_name_${i}`];
-    const company = req.body[`portfolio_company_${i}`];
-    const link = req.body[`portfolio_link_${i}`];
-
-    // Check if the portfolio object has valid data
-    if (jobName && company && link) {
-      const portfolioObj = {
-        job_name: jobName,
-        company,
-        link,
-      };
-      portfolio.push(portfolioObj);
-    }
-  }
-
   try {
-    const cvFile = req.files['cv'][0];
-    const imageFile = req.files['image'][0];
+    const cvFile = req.files ? req.files['cv'][0] : null;
+    const imageFile = req.files ? req.files['image'][0] : null;
 
-    const cvUrl = await uploadToBlobStorage(cvFile, 'cv');
-    const imageUrl = await uploadToBlobStorage(imageFile, 'cv');
+    // Upload files to storage service (implement uploadToBlobStorage function accordingly)
+    let cvUrl = null;
+    let imageUrl = null;
 
-    const query = `UPDATE cv SET category_id = ?, city_id = ?, education_id = ?, experience_id = ?, job_type_id = ?, gender_id = ?, name = ?, surname = ?, father_name = ?, email = ?, position = ?, about_education = ?, salary = ?, birth_date = ?, work_history = ?, skills = ?, cv = ?, image = ?, portfolio = ?, updated_at = NOW() WHERE id = ?`;
+    if (cvFile) {
+      // Validate the CV file (e.g., check file size, type)
+      // Your validation logic here
+
+      const fileContents = cvFile.buffer;
+      const extension = '.pdf'; // Assuming CV files are in PDF format
+
+      const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+      console.log('CV dosyası yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'cvs');
+      console.log('CV dosyası yükleme tamamlandı!');
+
+      cvUrl = `back/assets/images/cvs/${fileName}`;
+    }
+    // Check if file was uploaded
+    if (imageFile) {
+      // Validate the image file (e.g., check file size, type)
+      // Your validation logic here
+
+      const fileContents = req.files['image'][0].buffer;
+      const extension = '.png'; // Change the extension based on your file type validation
+
+      const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+      console.log('Dosya yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'cv_photo');
+      console.log('Dosya yükleme tamamlandı!');
+
+      imageUrl = `back/assets/images/cv_photo/${fileName}`;
+    }
+
+    // Additional logic for portfolios
+    const portfolio = [];
+    const numberOfPortfolios = Object.keys(req.body).reduce((count, key) => {
+      if (key.startsWith('portfolio_job_name_')) {
+        const index = parseInt(key.split('_')[3], 10); // Extract the index from the field name
+        return Math.max(count, index + 1); // Get the maximum index
+      }
+      return count;
+    }, 0);
+
+    for (let i = 0; i < numberOfPortfolios; i++) {
+      const jobName = req.body[`portfolio_job_name_${i}`];
+      const company = req.body[`portfolio_company_${i}`];
+      const link = req.body[`portfolio_link_${i}`];
+
+      if (jobName && company && link) {
+        const portfolioObj = {
+          job_name: jobName,
+          company: company,
+          link: link,
+        };
+
+        portfolio.push(portfolioObj);
+      }
+    }
+
+    const serializedPortfolio = JSON.stringify({ portfolio });
+
+    // Generate slug
+    const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
+
+    // Perform database update (adjust your database query and connection accordingly)
+    const query =
+      'UPDATE cv SET user_id = ?, category_id = ?, city_id = ?, education_id = ?, experience_id = ?, job_type_id = ?, gender_id = ?, name = ?, surname = ?, father_name = ?, email = ?, contact_phone = ?, position = ?, about_education = ?, salary = ?, birth_date = ?, work_history = ?, skills = ?, cv = ?, image = ?, portfolio = ?, slug = ?, updated_at = NOW() WHERE id = ?';
 
     const values = [
+      user_id,
       category_id,
       city_id,
       education_id,
@@ -1565,6 +1653,7 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
       surname,
       father_name,
       email,
+      contact_phone,
       position,
       about_education,
       salary,
@@ -1573,10 +1662,12 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
       skills,
       cvUrl,
       imageUrl,
-      JSON.stringify({ portfolio }),
+      serializedPortfolio,
+      slug,
       id,
     ];
 
+    // Execute the query (replace with your database execution logic)
     pool.query(query, values, (error, results) => {
       if (error) {
         console.error(error);
@@ -1587,8 +1678,8 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
           service: 'gmail',
           auth: {
             user: 'humbeteliyevaseide2001@gmail.com',
-            pass: 'nwudhimwttuqdzxv'
-          }
+            pass: 'nwudhimwttuqdzxv',
+          },
         });
 
         const mailOptions = {
@@ -1614,6 +1705,7 @@ app.put('/ci/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', 
     res.status(500).json({ message: 'Error uploading CV' });
   }
 });
+
 
 app.post("/reviews", async (req, res) => {
   try {
@@ -1900,13 +1992,6 @@ app.use("/categories/:id", async (req, res) => {
 });
 
 
-// Function to upload image to Azure Blob Storage
-// const uploadToBlobStorage = async (file) => {
-//   const fileName = 'trainings/' + Date.now() + '_' + file.originalname; // Include 'trainings/' as part of the blob name
-//   const blockBlobClient = containerClient.getBlockBlobClient(fileName);
-//   await blockBlobClient.uploadFile(file.path);
-//   return fileName;
-// };
 app.post("/favorites", async (req, res) => {
   try {
     const { user_id , vacancy_id } = req.body;
