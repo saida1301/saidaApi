@@ -33,48 +33,75 @@ pool.getConnection((err, connection) => {
 });
 
 
-const connectionString =
- "DefaultEndpointsProtocol=https;AccountName=ismobile;AccountKey=0vW600nc8IHVC3tPsRoHCBh6Zx/zHvRDx2H/wnmsl+w7WGq9c8plB5ws6E9qI6ZP2m05xwm/wrC8+AStRLo2FA==;EndpointSuffix=core.windows.net";
-const blobServiceClient =
-  BlobServiceClient.fromConnectionString(connectionString);
-
-const containerName = "mobileapp";
-const containerClient = blobServiceClient.getContainerClient(containerName);
-
-
-const storage = diskStorage({
-  destination: 'uploads/',
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + uuidv4();
-    const extension = file.originalname.split('.').pop();
-    let filePath = '';
-    if (file.fieldname === 'image') {
-      filePath = 'back/assets/images/cv_photo/' + uniqueSuffix + '.' + extension;
-    } else if (file.fieldname === 'cv') {
-      filePath = 'back/assets/images/cvs/' + uniqueSuffix + '.' + extension;
-    }
-    cb(null, uniqueSuffix + '.' + extension, filePath);
-  },
-});
-
+const storage = multer.memoryStorage();
 const upload = multer({ storage });
-const uploadToBlobStorage = async (file, folderName = "trainings") => {
-  const folder = "company"; // Specify the folder name
-  const folderPath = folder + "/"; // Add a trailing slash to indicate a folder
-  const fileName = folderPath + Date.now() + "_" + file.originalname; 
-  const extension = file.originalname.split('.').pop();
-  const contentType = mime.contentType(extension);
 
-  const blockBlobClient = containerClient.getBlockBlobClient(fileName);
-  await blockBlobClient.uploadFile(file.path, {
-    blobHTTPHeaders: {
-      blobContentType: contentType,
-    },
+// FTP'ye dosya yükleme
+async function uploadFileToFtp(fileContents, remotePath) {
+  return new Promise((resolve, reject) => {
+    const client = new FTP();
+
+    client.on('ready', () => {
+      console.log('FTP bağlantısı başarılı. Dosya yükleniyor...');
+
+      client.put(fileContents, remotePath, (error) => {
+        client.end(); // Close the FTP connection
+
+        if (error) {
+          console.error('Dosya yükleme hatası:', error);
+          reject(error);
+        } else {
+          console.log('Dosya başarıyla yüklendi!');
+          resolve();
+        }
+      });
+    });
+
+    client.on('error', (error) => {
+      console.error('FTP bağlantı hatası:', error);
+      reject(error);
+    });
+
+    client.connect({
+      host: '145.14.156.206', // FTP sunucu adresi
+      user: 'u983993164', // FTP kullanıcı adı
+      password: 'Pa$$w0rd!', // FTP şifre
+      port: 21, // FTP portu
+    });
   });
+}
 
-  const fileUrl = `https://${containerName}.blob.core.windows.net/${fileName}`;
-  return fileUrl;
-};
+// Hosting sunucusuna dosya kaydetme
+async function saveFileToHosting(fileContents, fileName, folderName) {
+  return new Promise((resolve, reject) => {
+    const localDirectory = `back/assets/images/${folderName}`;
+    const localPath = `${localDirectory}/${fileName}`; // Kaydedilecek yerel dosya yolunu belirtin
+
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(localDirectory)) {
+      fs.mkdirSync(localDirectory, { recursive: true });
+    }
+
+    fs.writeFile(localPath, fileContents, (error) => {
+      if (error) {
+        console.error('Dosya kaydetme hatası:', error);
+        reject(error);
+      } else {
+        console.log('Dosya hosting sunucusuna kaydedildi!');
+        const remotePath = `/domains/butagrup.az/public_html/1is/public/back/assets/images/${folderName}/${fileName}`; // Yüklenecek dosyanın uzak FTP yolu
+        uploadFileToFtp(fileContents, remotePath)
+          .then(() => {
+            console.log('Dosya FTP sunucusuna yüklendi!');
+            resolve();
+          })
+          .catch((error) => {
+            console.error('FTP dosya yükleme hatası:', error);
+            reject(error);
+          });
+      }
+    });
+  });
+}
 
 app.use(
   session({
@@ -910,7 +937,7 @@ const companyValidationRules = [
   body('twitter').optional().isString(),
 ];
 
-app.post('/companiy', cors(), upload.single('image'), companyValidationRules, async (req, res) => {
+app.post('/companiy',cors(), upload.single('image'), async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -933,20 +960,23 @@ app.post('/companiy', cors(), upload.single('image'), companyValidationRules, as
       twitter,
     } = req.body;
 
-    const imagePath = req.file ? req.file.path : null;
     const slug = name.toLowerCase().replace(/\s+/g, '-');
     req.body.slug = slug;
 
     let imageUrl = null;
 
     // Check if file was uploaded
-    if (imagePath) {
-      // Validate the image file (e.g., check file size, type)
-      // Your validation logic here
+    if (req.file) {
+      const fileContents = req.file.buffer;
+      const extension = '.png'; // Change the extension based on your file type validation
 
-      // Upload the image to Azure Blob Storage
-      const uploadedFileName = await uploadToBlobStorage(req.file);
-      imageUrl = `back/assets/images/companies/${uploadedFileName}`;
+      const fileName = `company_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+      console.log('Dosya yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'companies');
+      console.log('Dosya yükleme tamamlandı!');
+
+      imageUrl = `back/assets/images/companies/${fileName}`;
     }
 
     const query = `INSERT INTO companies (user_id, sector_id, average, about, name, address, image, website, map, hr, instagram, linkedin, facebook, twitter, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
