@@ -167,7 +167,7 @@ app.post('/google-signin', (req, res) => {
   const { email, name, photo, familyName } = req.body;
   pool.query(
     'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)',
-    [email, name, photo, familyName],
+    [email, givenName, photo, familyName],
     (err, results) => {
       if (err) {
         console.log(err);
