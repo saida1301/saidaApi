@@ -164,7 +164,7 @@ app.post(
   }
 );
 app.post('/google-signin', (req, res) => {
-  const { email, name, photo, familyName } = req.body;
+  const { email, givenName, photo, familyName } = req.body;
   pool.query(
     'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)',
     [email, givenName, photo, familyName],
@@ -177,6 +177,7 @@ app.post('/google-signin', (req, res) => {
     }
   );
 });
+
 
 app.post(
   '/signup',
