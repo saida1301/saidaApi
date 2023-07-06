@@ -123,7 +123,6 @@ app.post(
   '/login',
   [
     body('email').isEmail().normalizeEmail(),
-    body('password').notEmpty(),
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -131,7 +130,7 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { email } = req.body;
     pool.query(
       'SELECT * FROM users WHERE email = ?',
       [email],
