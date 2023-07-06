@@ -123,6 +123,7 @@ app.post(
   '/login',
   [
     body('email').isEmail().normalizeEmail(),
+    body('password').notEmpty(),
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -130,7 +131,7 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email } = req.body;
+    const { email, password } = req.body;
     pool.query(
       'SELECT * FROM users WHERE email = ?',
       [email],
@@ -162,6 +163,21 @@ app.post(
     );
   }
 );
+app.post('/google-signin', (req, res) => {
+  const { email, name, photo, familyName } = req.body;
+  pool.query(
+    'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)',
+    [email, name, photo, familyName],
+    (err, results) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+      return res.status(200).json({ message: 'User information stored successfully' });
+    }
+  );
+});
+
 app.post(
   '/signup',
   [
