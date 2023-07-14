@@ -167,12 +167,13 @@ app.post('/google-signin', (req, res) => {
   const { email, givenName, familyName, photo } = req.body;
 
   // Perform validation
-  if (!email || !givenName || !photo) {
-    return res.status(400).json({ message: 'Missing required fields' });
+  const isValid = (email && givenName && photo);
+  if (!isValid) {
+    return res.status(400).json({ message: 'Invalid login. Please provide email, givenName, and photo' });
   }
 
   const insertQuery = 'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)';
-  const values = [email, givenName, photo, familyName || null]; // Set surname as null if it's not provided
+  const values = [email, givenName, photo, familyName || null];
 
   pool.query(insertQuery, values, (err, results) => {
     if (err) {
@@ -182,6 +183,7 @@ app.post('/google-signin', (req, res) => {
     return res.status(200).json({ message: 'User information stored successfully' });
   });
 });
+
 
 
 
