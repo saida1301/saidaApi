@@ -163,17 +163,19 @@ app.post(
     );
   }
 );
+const DEFAULT_USER_IMAGE = '/assets/images/users/default-user.png';
+
 app.post('/google-signin', (req, res) => {
   const { email, givenName, familyName, photo } = req.body;
 
   // Perform validation
-  const isValid = (email && givenName && photo);
+  const isValid = (email && givenName);
   if (!isValid) {
-    return res.status(400).json({ message: 'Invalid login. Please provide email, givenName, and photo' });
+    return res.status(400).json({ message: 'Invalid login. Please provide email and givenName' });
   }
 
   const insertQuery = 'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)';
-  const values = [email, givenName, photo, familyName || null];
+  const values = [email, givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName)];
 
   pool.query(insertQuery, values, (err, results) => {
     if (err) {
@@ -183,6 +185,12 @@ app.post('/google-signin', (req, res) => {
     return res.status(200).json({ message: 'User information stored successfully' });
   });
 });
+
+function generateRandomText(name) {
+  // Generate a random text based on the givenName
+  const randomText = 'Some Random Text'; // Replace with your desired logic to generate random text
+  return randomText;
+}
 
 
 
