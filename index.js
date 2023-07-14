@@ -165,18 +165,24 @@ app.post(
 );
 app.post('/google-signin', (req, res) => {
   const { email, givenName, familyName, photo } = req.body;
-  pool.query(
-    'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)',
-    [email, givenName, photo, familyName],
-    (err, results) => {
-      if (err) {
-        console.log(err);
-        return res.status(500).json({ message: 'Internal server error' });
-      }
-      return res.status(200).json({ message: 'User information stored successfully' });
+
+  // Perform validation
+  if (!email || !givenName || !photo) {
+    return res.status(400).json({ message: 'Missing required fields' });
+  }
+
+  const insertQuery = 'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)';
+  const values = [email, givenName, photo, familyName || null]; // Set surname as null if it's not provided
+
+  pool.query(insertQuery, values, (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({ message: 'Internal server error' });
     }
-  );
+    return res.status(200).json({ message: 'User information stored successfully' });
+  });
 });
+
 
 
 app.post(
