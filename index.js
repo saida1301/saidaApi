@@ -163,7 +163,7 @@ app.post(
     );
   }
 );
-const DEFAULT_USER_IMAGE = '/assets/images/users/default-user.png';
+const DEFAULT_USER_IMAGE = 'back/assets/images/users/default-user.png';
 
 app.post('/google-signin', (req, res) => {
   const { email, givenName, familyName, photo } = req.body;
@@ -187,9 +187,9 @@ app.post('/google-signin', (req, res) => {
 });
 
 function generateRandomText(name) {
-  // Generate a random text based on the givenName
-  const randomText = 'Some Random Text'; // Replace with your desired logic to generate random text
-  return randomText;
+  // Extract the starting alphabet of the givenName
+  const firstLetter = name.charAt(0);
+  return firstLetter;
 }
 
 
