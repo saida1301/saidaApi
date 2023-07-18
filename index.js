@@ -1355,9 +1355,14 @@ app.post('/training', cors(), upload.single('image'), trainingValidationRules, a
       // Your validation logic here
 
       const fileContents = req.file.buffer;
-      const extension = '.png', '.jpg'; // Change the extension based on your file type validation
+      const extensions = ['.png', '.jpg']; // Define extensions as an array
 
-      const fileName = `training_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+      const selectedExtension = extensions.find(ext => req.file.mimetype.includes(ext));
+      if (!selectedExtension) {
+        return res.status(400).json({ message: 'Invalid file type' });
+      }
+
+      const fileName = `training_${uuidv4().substring(0, 6)}${selectedExtension}`; // Generate a random file name
 
       console.log('Dosya yüklemesi başlıyor...');
       await saveFileToHosting(fileContents, fileName, 'trainings');
@@ -1383,6 +1388,7 @@ app.post('/training', cors(), upload.single('image'), trainingValidationRules, a
     res.status(500).json({ message: 'Error uploading image' });
   }
 });
+
 
 
 app.get("/training/:userId", (req, res) => {
