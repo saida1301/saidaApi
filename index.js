@@ -1335,7 +1335,7 @@ const trainingValidationRules = [
   body('deadline').notEmpty().isString(),
 ];
 
-app.post('/training', cors(), upload.single('image'), trainingValidationRules, async (req, res) => {
+app.post('/training', cors(), upload.single('image'), async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
