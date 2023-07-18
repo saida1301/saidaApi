@@ -1343,19 +1343,19 @@ app.post('/training', cors(), upload.single('image'), async (req, res) => {
     }
 
     const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
-    const imagePath = req.file ? req.file.path : null;
+
     const slug = title.toLowerCase().replace(/\s+/g, '-');
     req.body.slug = slug; // Update the slug in the request body
 
     let imageUrl = null;
 
     // Check if file was uploaded
-    if (imagePath) {
+    if (req.file) {
       // Validate the image file (e.g., check file size, type)
       // Your validation logic here
 
       const fileContents = req.file.buffer;
-      const extension = '.jpg'; // Change the extension based on your file type validation
+      const extension = '.png'; // Change the extension based on your file type validation
 
       const fileName = `training_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
 
