@@ -1336,17 +1336,17 @@ const trainingValidationRules = [
 ];
 
 app.post('/training', cors(), upload.single('image'), async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
-  const imagePath = req.file ? req.file.path : null;
-  const slug = title.toLowerCase().replace(/\s+/g, '-');
-  req.body.slug = slug; // Update the slug in the request body
-
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
+    const imagePath = req.file ? req.file.path : null;
+    const slug = title.toLowerCase().replace(/\s+/g, '-');
+    req.body.slug = slug; // Update the slug in the request body
+
     let imageUrl = null;
 
     // Check if file was uploaded
@@ -1383,6 +1383,7 @@ app.post('/training', cors(), upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Error uploading image' });
   }
 });
+
 
 
 app.get("/training/:userId", (req, res) => {
