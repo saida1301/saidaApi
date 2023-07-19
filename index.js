@@ -844,7 +844,7 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
     // Execute the database query to retrieve the company ID
     const companyResult = await pool.query(companyQuery, companyValues);
     const company_id = companyResult[0].company_id;
-
+console.log("Salam", companyResult)
     let query;
     let values;
 
