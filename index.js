@@ -1464,7 +1464,7 @@ app.get("/cv/:userId", (req, res) => {
     return res.json(results);
   });
 });
-app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
+app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
   const {
     user_id,
     category_id,
