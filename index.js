@@ -822,31 +822,24 @@ app.post('/vacanc', cors(), async (req, res) => {
     description,
     contact_name,
     accept_type,
-    deadline
+    deadline,
+    selected_company_id // Add a field to receive the selected company_id from the frontend
   } = req.body;
 
   try {
-    // Retrieve all company_ids associated with the logged-in user's user_id
-    const getCompanyIdsQuery = 'SELECT id FROM companies WHERE user_id = ?';
-    const companyIdsValues = [user_id];
+    // Check if the selected_company_id belongs to the logged-in user
+    const checkCompanyOwnershipQuery = 'SELECT id FROM companies WHERE user_id = ? AND id = ?';
+    const checkCompanyOwnershipValues = [user_id, selected_company_id];
 
-    // Execute the query to get all company_ids (replace with your database execution logic)
-    pool.query(getCompanyIdsQuery, companyIdsValues, (error, results) => {
+    pool.query(checkCompanyOwnershipQuery, checkCompanyOwnershipValues, (error, results) => {
       if (error) {
         console.error(error);
-        res.status(500).json({ message: 'Error getting company_ids' });
+        res.status(500).json({ message: 'Error checking company ownership' });
       } else {
         if (results.length === 0) {
-          res.status(400).json({ message: 'Companies not found for the logged-in user' });
+          res.status(400).json({ message: 'Company not found or not owned by the logged-in user' });
           return;
         }
-
-        // Extract all company_ids associated with the logged-in user
-        const company_ids = results.map(result => result.id);
-
-        // Choose the company_id to be associated with the vacancy
-        // For example, you can choose the latest company_id added by the user
-        const company_id = company_ids[company_ids.length - 1];
 
         // Generate slug
         const slug = `${position.toLowerCase()}`.replace(/\s+/g, '-');
@@ -857,7 +850,7 @@ app.post('/vacanc', cors(), async (req, res) => {
 
         const insertVacancyValues = [
           user_id,
-          company_id,
+          selected_company_id, // Use the selected company_id
           category_id,
           city_id,
           education_id,
@@ -917,6 +910,7 @@ app.post('/vacanc', cors(), async (req, res) => {
     res.status(500).json({ message: 'Error uploading Vacancy' });
   }
 });
+
 
 
 
