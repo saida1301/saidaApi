@@ -845,7 +845,7 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
     console.log('companyResult:', companyResult); // Check the result of the company query
     console.log('companyData:', companyData); // Check the data returned from the company query
 
-    const company_id = companyData?.id;
+    const company_id = companyResult?.id;
 
 
     if (company_id === undefined) {
