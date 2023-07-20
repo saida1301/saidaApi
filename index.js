@@ -914,6 +914,7 @@ app.post('/vacanc', cors(), async (req, res) => {
 
 
 
+
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
 
