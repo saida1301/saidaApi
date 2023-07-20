@@ -1506,7 +1506,7 @@ app.get("/cv", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.get("/cv/:userId", (req, res) => {
+app.get("/civ/:userId", (req, res) => {
   const userId = req.params.userId;
 
   const sql = "SELECT * FROM cv WHERE user_id = ? AND status = '1'"; 
