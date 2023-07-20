@@ -805,7 +805,7 @@ const vacancyValidationRules = [
   body('deadline').notEmpty().isString(),
 ];
 
-app.post('/vacancies', cors(), vacancyValidationRules, async (req, res) => {
+app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
