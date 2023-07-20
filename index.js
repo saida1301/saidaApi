@@ -1484,7 +1484,8 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
     birth_date,
     work_history,
     skills,
-    portfolio
+    portfolio,
+    slug
   } = req.body;
 
   try {
