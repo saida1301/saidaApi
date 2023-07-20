@@ -868,9 +868,9 @@ app.post('/vacanc', cors(), async (req, res) => {
             education_id,
             experience_id,
             job_type_id,
-            null, // Set min_salary to null for fixed salary
+            min_salary,
             salary_type,
-            null, // Set max_salary to null for fixed salary
+            max_salary,
             min_age,
             max_age,
             requirement,
@@ -882,6 +882,7 @@ app.post('/vacanc', cors(), async (req, res) => {
             slug,
           ];
         } else if (salary_type === 0) {
+          // When salary_type is 0, set min_salary and max_salary to null
           insertVacancyValues = [
             user_id,
             selected_company_id,
@@ -890,9 +891,9 @@ app.post('/vacanc', cors(), async (req, res) => {
             education_id,
             experience_id,
             job_type_id,
-            min_salary,
+            null,
             salary_type,
-            max_salary,
+            null,
             min_age,
             max_age,
             requirement,
