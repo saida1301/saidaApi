@@ -1484,8 +1484,7 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
     birth_date,
     work_history,
     skills,
-    portfolio,
-    slug
+    portfolio
   } = req.body;
 
   try {
@@ -1534,10 +1533,8 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
     const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
     // Perform database insertion (adjust your database query and connection accordingly)
-    const query =
-    'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
-  
-  
+      const query =
+      'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
     const values = [
       user_id,
@@ -1560,7 +1557,7 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
       skills,
       cvUrl,
       imageUrl,
-      portfolioData,
+      JSON.stringify(portfolioData), // Convert portfolioData back to JSON string
       slug,
     ];
 
