@@ -826,29 +826,34 @@ app.post('/vacanc', cors(), async (req, res) => {
   } = req.body;
 
   try {
-    // Retrieve the company_id based on the logged-in user's user_id
-    const getCompanyIdQuery = 'SELECT id FROM companies WHERE user_id = ?';
-    const companyIdValues = [user_id];
+    // Retrieve all company_ids associated with the logged-in user's user_id
+    const getCompanyIdsQuery = 'SELECT id FROM companies WHERE user_id = ?';
+    const companyIdsValues = [user_id];
 
-    // Execute the query to get the company_id (replace with your database execution logic)
-    pool.query(getCompanyIdQuery, companyIdValues, (error, results) => {
+    // Execute the query to get all company_ids (replace with your database execution logic)
+    pool.query(getCompanyIdsQuery, companyIdsValues, (error, results) => {
       if (error) {
         console.error(error);
-        res.status(500).json({ message: 'Error getting company_id' });
+        res.status(500).json({ message: 'Error getting company_ids' });
       } else {
         if (results.length === 0) {
-          res.status(400).json({ message: 'Company not found for the logged-in user' });
+          res.status(400).json({ message: 'Companies not found for the logged-in user' });
           return;
         }
 
-        const company_id = results[0].id;
+        // Extract all company_ids associated with the logged-in user
+        const company_ids = results.map(result => result.id);
+
+        // Choose the company_id to be associated with the vacancy
+        // For example, you can choose the latest company_id added by the user
+        const company_id = company_ids[company_ids.length - 1];
 
         // Generate slug
         const slug = `${position.toLowerCase()}`.replace(/\s+/g, '-');
 
         // Perform database insertion (adjust your database query and connection accordingly)
         const insertVacancyQuery =
-          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary, max_salary, min_age, max_age, requirement, salary_type, position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary, max_salary, min_age, max_age, requirement, salary_type, position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
         const insertVacancyValues = [
           user_id,
@@ -890,8 +895,8 @@ app.post('/vacanc', cors(), async (req, res) => {
             const mailOptions = {
               from: req.body.email,
               to: 'humbesaida@gmail.com',
-              subject: 'CV Added Successfully',
-              text: 'Your CV has been added successfully. Thank you!',
+              subject: 'Vacancy Added Successfully',
+              text: 'Your Vacancy has been added successfully. Thank you!',
             };
 
             transporter.sendMail(mailOptions, (error, info) => {
@@ -908,8 +913,8 @@ app.post('/vacanc', cors(), async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error uploading CV:', error);
-    res.status(500).json({ message: 'Error uploading CV' });
+    console.error('Error uploading Vacancy:', error);
+    res.status(500).json({ message: 'Error uploading Vacancy' });
   }
 });
 
