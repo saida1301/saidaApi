@@ -804,114 +804,6 @@ const vacancyValidationRules = [
   body('contact_info').notEmpty().isString(),
   body('deadline').notEmpty().isString(),
 ];
-async function fetchDataFromDatabase(userId) {
-  const sqlQuery = `SELECT id AS company_id FROM companies WHERE user_id = ?`;
-
-  try {
-    const [results] = await pool.query(sqlQuery, [userId]);
-    console.log('Results:', results);
-    return results;
-  } catch (error) {
-    console.error('Error executing the query:', error.message);
-    throw error;
-  }
-}
-app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const {
-      user_id,
-      city_id,
-      category_id,
-      job_type_id,
-      experience_id,
-      education_id,
-      position,
-      salary_type,
-      min_salary,
-      max_salary,
-      min_age,
-      max_age,
-      requirement,
-      description,
-      contact_name,
-      accept_type,
-      deadline,
-    } = req.body;
-
-    const slug = position.toLowerCase().replace(/\s+/g, '-');
-
-    // Retrieve the company ID based on the logged-in user ID
- const companyData = await fetchDataFromDatabase(user_id);
-
-    if (!companyData || companyData.length === 0) {
-      return res.status(400).json({ error: 'Invalid user ID. Company ID not found.' });
-    }
-
-    const company_id = companyData[0].company_id;
-
-    await pool.query(query, values);
-
-    if (salary_type === 0) {
-      // User can provide either min_salary or max_salary
-      query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, slug, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-      values = [
-        user_id,
-        company_id,
-        city_id,
-        category_id,
-        job_type_id,
-        experience_id,
-        education_id,
-        position,
-        slug,
-        min_salary !== '' ? min_salary : null,
-        max_salary !== '' ? max_salary : null,
-        min_age,
-        max_age,
-        requirement,
-        description,
-        contact_name,
-        accept_type,
-        deadline,
-      ];
-    } else {
-      // User can provide only either min_salary or max_salary
-      query = `INSERT INTO vacancies (user_id, company_id, city_id, category_id, job_type_id, experience_id, education_id, position, slug, min_salary, max_salary, min_age, max_age, requirement, description, contact_name, accept_type, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-      values = [
-        user_id,
-        company_id,
-        city_id,
-        category_id,
-        job_type_id,
-        experience_id,
-        education_id,
-        position,
-        slug,
-        min_age,
-        max_age,
-        requirement,
-        description,
-        contact_name,
-        accept_type,
-        deadline,
-      ];
-    }
-
-    // Execute the database query to add a vacancy
-    await pool.query(query, values);
-
-    res.status(201).json({ message: 'Vacancy added successfully' });
-  } catch (error) {
-    console.error('Error adding vacancy:', error);
-    res.status(500).json({ error: 'Failed to add vacancy' });
-  }
-});
-
 app.post('/vacanc', cors(), async (req, res) => {
   const {
     user_id,
@@ -956,7 +848,7 @@ app.post('/vacanc', cors(), async (req, res) => {
 
         // Perform database insertion (adjust your database query and connection accordingly)
         const insertVacancyQuery =
-          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary, max_salary, min_age, max_age, requirement, salary_type, position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary, max_salary, min_age, max_age, requirement, salary_type, position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
         const insertVacancyValues = [
           user_id,
@@ -1010,7 +902,7 @@ app.post('/vacanc', cors(), async (req, res) => {
               }
             });
 
-            res.status(201).json({ message: 'Vacancy added successfully', imageUrl });
+            res.status(201).json({ message: 'Vacancy added successfully' });
           }
         });
       }
