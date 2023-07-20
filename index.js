@@ -1415,10 +1415,17 @@ app.post('/training', cors(), upload.single('image'), async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { user_id, company_id, title, about, price, redirect_link, deadline } = req.body;
+    const { user_id, company_id, title, about, payment_type, redirect_link, deadline } = req.body;
 
     const slug = title.toLowerCase().replace(/\s+/g, '-');
     req.body.slug = slug; // Update the slug in the request body
+
+    let price = null;
+
+    // Check if payment_type is 1 (pay)
+    if (payment_type === '1') {
+      price = req.body.price; // Set price if it is pay
+    }
 
     let imageUrl = null;
 
@@ -1439,8 +1446,8 @@ app.post('/training', cors(), upload.single('image'), async (req, res) => {
       imageUrl = `back/assets/images/trainings/${fileName}`;
     }
 
-    const query = `INSERT INTO trainings (user_id, company_id, title, slug, about, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
-    const values = [user_id, company_id, title, slug, about, price, redirect_link, imageUrl, deadline];
+    const query = `INSERT INTO trainings (user_id, company_id, title, slug, about, payment_type, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const values = [user_id, company_id, title, slug, about, payment_type, price, redirect_link, imageUrl, deadline];
 
     // Execute the database query
     pool.query(query, values, (error, results) => {
@@ -1456,6 +1463,7 @@ app.post('/training', cors(), upload.single('image'), async (req, res) => {
     res.status(500).json({ message: 'Error uploading image' });
   }
 });
+
 
 
 
