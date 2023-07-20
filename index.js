@@ -835,7 +835,6 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
     } = req.body;
 
     const slug = position.toLowerCase().replace(/\s+/g, '-');
-    req.body.slug = slug;
 
     // Retrieve the company ID based on the logged-in user ID
     const companyQuery = `SELECT id AS company_id FROM companies WHERE user_id = ?`;
@@ -843,8 +842,12 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
 
     // Execute the database query to retrieve the company ID
     const companyResult = await pool.query(companyQuery, companyValues);
-    const company_id = companyResult[0].company_id;
-console.log("Salam", companyResult)
+    const company_id = companyResult[0]?.company_id; // Use optional chaining to handle undefined
+
+    if (company_id === undefined) {
+      return res.status(400).json({ error: 'Invalid user ID. Company ID not found.' });
+    }
+
     let query;
     let values;
 
@@ -903,6 +906,7 @@ console.log("Salam", companyResult)
     res.status(500).json({ error: 'Failed to add vacancy' });
   }
 });
+
 
 
 app.get("/vacancie/:categoryId", (req, res) => {
