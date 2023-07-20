@@ -839,8 +839,14 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
     const companyValues = [user_id];
 
     // Execute the database query to retrieve the company ID
-    const companyResult = await pool.query(companyQuery, companyValues);
-    const company_id = companyResult[0]?.id; // Use optional chaining to handle undefined
+     const companyResult = await pool.query(companyQuery, companyValues);
+    const companyData = companyResult[0]; // Use optional chaining to handle undefined
+
+    console.log('companyResult:', companyResult); // Check the result of the company query
+    console.log('companyData:', companyData); // Check the data returned from the company query
+
+    const company_id = companyData?.id;
+
 
     if (company_id === undefined) {
       return res.status(400).json({ error: 'Invalid user ID. Company ID not found.' });
