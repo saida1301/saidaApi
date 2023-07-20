@@ -807,6 +807,7 @@ const vacancyValidationRules = [
 app.post('/vacanc', cors(), async (req, res) => {
   const {
     user_id,
+    selected_company_id, // Add a field to receive the selected company_id from the frontend
     category_id,
     city_id,
     job_type_id,
@@ -844,9 +845,11 @@ app.post('/vacanc', cors(), async (req, res) => {
         // Extract all company_ids associated with the logged-in user
         const company_ids = results.map(result => result.id);
 
-        // Choose the company_id to be associated with the vacancy
-        // For example, you can choose the latest company_id added by the user
-        const company_id = company_ids[company_ids.length - 1];
+        // Check if the selected_company_id belongs to the logged-in user
+        if (!company_ids.includes(selected_company_id)) {
+          res.status(400).json({ message: 'Selected company not found or not owned by the logged-in user' });
+          return;
+        }
 
         // Generate slug
         const slug = `${position.toLowerCase()}`.replace(/\s+/g, '-');
@@ -857,7 +860,7 @@ app.post('/vacanc', cors(), async (req, res) => {
 
         const insertVacancyValues = [
           user_id,
-          company_id,
+          selected_company_id, // Use the selected company_id
           category_id,
           city_id,
           education_id,
@@ -917,7 +920,6 @@ app.post('/vacanc', cors(), async (req, res) => {
     res.status(500).json({ message: 'Error uploading Vacancy' });
   }
 });
-
 
 
 
