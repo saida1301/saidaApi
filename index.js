@@ -806,7 +806,7 @@ const vacancyValidationRules = [
 app.post('/vacanc', cors(), async (req, res) => {
   const {
     user_id,
-    selected_company_id, // Add a field to receive the selected company_id from the frontend
+    selected_company_id,
     category_id,
     city_id,
     job_type_id,
@@ -816,6 +816,7 @@ app.post('/vacanc', cors(), async (req, res) => {
     min_salary,
     max_salary,
     min_age,
+    salary_type,
     max_age,
     requirement,
     description,
@@ -854,28 +855,58 @@ app.post('/vacanc', cors(), async (req, res) => {
 
         // Perform database insertion (adjust your database query and connection accordingly)
         const insertVacancyQuery =
-          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary, max_salary, min_age, max_age, requirement,  position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary,salary_type, max_salary, min_age, max_age, requirement,  position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
-        const insertVacancyValues = [
-          user_id,
-          selected_company_id, // Use the selected company_id
-          category_id,
-          city_id,
-          education_id,
-          experience_id,
-          job_type_id,
-          min_salary,
-          max_salary,
-          min_age,
-          max_age,
-          requirement,
-          position,
-          description,
-          contact_name,
-          accept_type,
-          deadline,
-          slug,
-        ];
+        // Adjust min_salary and max_salary values based on salary_type
+        let insertVacancyValues;
+        if (salary_type === 1) {
+          insertVacancyValues = [
+            user_id,
+            selected_company_id,
+            category_id,
+            city_id,
+            education_id,
+            experience_id,
+            job_type_id,
+            null, // Set min_salary to null for fixed salary
+            salary_type,
+            null, // Set max_salary to null for fixed salary
+            min_age,
+            max_age,
+            requirement,
+            position,
+            description,
+            contact_name,
+            accept_type,
+            deadline,
+            slug,
+          ];
+        } else if (salary_type === 0) {
+          insertVacancyValues = [
+            user_id,
+            selected_company_id,
+            category_id,
+            city_id,
+            education_id,
+            experience_id,
+            job_type_id,
+            min_salary,
+            salary_type,
+            max_salary,
+            min_age,
+            max_age,
+            requirement,
+            position,
+            description,
+            contact_name,
+            accept_type,
+            deadline,
+            slug,
+          ];
+        } else {
+          res.status(400).json({ message: 'Invalid salary_type' });
+          return;
+        }
 
         // Execute the query to insert the vacancy (replace with your database execution logic)
         pool.query(insertVacancyQuery, insertVacancyValues, (error, results) => {
@@ -917,6 +948,7 @@ app.post('/vacanc', cors(), async (req, res) => {
     res.status(500).json({ message: 'Error uploading Vacancy' });
   }
 });
+
 
 
 
