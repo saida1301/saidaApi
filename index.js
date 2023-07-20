@@ -846,19 +846,15 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
     const slug = position.toLowerCase().replace(/\s+/g, '-');
 
     // Retrieve the company ID based on the logged-in user ID
-    const companyData = await fetchDataFromDatabase(user_id);
+ const companyData = await fetchDataFromDatabase(user_id);
 
-    console.log('companyResult:', companyResult); // Check the result of the company query
-    console.log('companyData:', companyData); // Check the data returned from the company query
-
-     if (!companyData || companyData.length === 0) {
+    if (!companyData || companyData.length === 0) {
       return res.status(400).json({ error: 'Invalid user ID. Company ID not found.' });
     }
 
     const company_id = companyData[0].company_id;
 
-    let query;
-    let values;
+    await pool.query(query, values);
 
     if (salary_type === 0) {
       // User can provide either min_salary or max_salary
