@@ -1484,6 +1484,7 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
     birth_date,
     work_history,
     skills,
+    portfolio
   } = req.body;
 
   try {
@@ -1527,33 +1528,7 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
     }
 
     // Additional logic for portfolios
-    const portfolio = [];
-    const numberOfPortfolios = Object.keys(req.body).reduce((count, key) => {
-      if (key.startsWith('portfolio_job_name_')) {
-        const index = parseInt(key.split('_')[3], 10); // Extract the index from the field name
-        return Math.max(count, index + 1); // Get the maximum index
-      }
-      return count;
-    }, 0);
-
-    for (let i = 0; i < numberOfPortfolios; i++) {
-      const jobName = req.body[`portfolio_job_name_${i}`];
-      const company = req.body[`portfolio_company_${i}`];
-      const link = req.body[`portfolio_link_${i}`];
-
-      if (jobName && company && link) {
-        const portfolioObj = {
-          job_name: jobName,
-          company: company,
-          link: link,
-        };
-
-        portfolio.push(portfolioObj);
-      }
-    }
-
-    const serializedPortfolio = JSON.stringify({ portfolio });
-
+   const portfolioData = JSON.parse(portfolio);
     // Generate slug
     const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
@@ -1584,7 +1559,7 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
       skills,
       cvUrl,
       imageUrl,
-      serializedPortfolio,
+      portfolioData,
       slug,
     ];
 
