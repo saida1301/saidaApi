@@ -796,6 +796,7 @@ const vacancyValidationRules = [
   body('max_salary').notEmpty().isInt(),
   body('min_age').notEmpty().isInt(),
   body('max_age').notEmpty().isInt(),
+  body('salary_type').notEmpty().isString(),
   body('requirement').notEmpty().isString(),
   body('description').notEmpty().isString(),
   body('contact_name').notEmpty().isString(),
@@ -816,7 +817,6 @@ app.post('/vacanc', cors(), async (req, res) => {
     min_salary,
     max_salary,
     min_age,
-    salary_type,
     max_age,
     requirement,
     description,
@@ -855,7 +855,7 @@ app.post('/vacanc', cors(), async (req, res) => {
 
         // Perform database insertion (adjust your database query and connection accordingly)
         const insertVacancyQuery =
-          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary,salary_type, max_salary, min_age, max_age, requirement,  position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary, max_salary, min_age, max_age, requirement,  position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
         const insertVacancyValues = [
           user_id,
@@ -870,10 +870,9 @@ app.post('/vacanc', cors(), async (req, res) => {
           min_age,
           max_age,
           requirement,
-          position,
-          salary_type
-          description,
           salary_type,
+          position,
+          description,
           contact_name,
           accept_type,
           deadline,
