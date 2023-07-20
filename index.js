@@ -912,6 +912,114 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
   }
 });
 
+app.post('/vacanc', cors(), async (req, res) => {
+  const {
+    user_id,
+    category_id,
+    city_id,
+    job_type_id,
+    experience_id,
+    education_id,
+    position,
+    min_salary,
+    max_salary,
+    min_age,
+    max_age,
+    requirement,
+    salary_type,
+    description,
+    contact_name,
+    accept_type,
+    deadline
+  } = req.body;
+
+  try {
+    // Retrieve the company_id based on the logged-in user's user_id
+    const getCompanyIdQuery = 'SELECT id FROM companies WHERE user_id = ?';
+    const companyIdValues = [user_id];
+
+    // Execute the query to get the company_id (replace with your database execution logic)
+    pool.query(getCompanyIdQuery, companyIdValues, (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error getting company_id' });
+      } else {
+        if (results.length === 0) {
+          res.status(400).json({ message: 'Company not found for the logged-in user' });
+          return;
+        }
+
+        const company_id = results[0].id;
+
+        // Generate slug
+        const slug = `${position.toLowerCase()}`.replace(/\s+/g, '-');
+
+        // Perform database insertion (adjust your database query and connection accordingly)
+        const insertVacancyQuery =
+          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary, max_salary, min_age, max_age, requirement, salary_type, position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+
+        const insertVacancyValues = [
+          user_id,
+          company_id,
+          category_id,
+          city_id,
+          education_id,
+          experience_id,
+          job_type_id,
+          min_salary,
+          max_salary,
+          min_age,
+          max_age,
+          requirement,
+          salary_type,
+          position,
+          description,
+          contact_name,
+          accept_type,
+          deadline,
+          slug,
+        ];
+
+        // Execute the query to insert the vacancy (replace with your database execution logic)
+        pool.query(insertVacancyQuery, insertVacancyValues, (error, results) => {
+          if (error) {
+            console.error(error);
+            res.status(500).json({ message: 'Error adding Vacancy' });
+          } else {
+            // Send email to user
+            const transporter = nodemailer.createTransport({
+              service: 'gmail',
+              auth: {
+                user: 'humbeteliyevaseide2001@gmail.com',
+                pass: 'nwudhimwttuqdzxv',
+              },
+            });
+
+            const mailOptions = {
+              from: req.body.email,
+              to: 'humbesaida@gmail.com',
+              subject: 'CV Added Successfully',
+              text: 'Your CV has been added successfully. Thank you!',
+            };
+
+            transporter.sendMail(mailOptions, (error, info) => {
+              if (error) {
+                console.error('Error sending email:', error);
+              } else {
+                console.log('Email sent:', info.response);
+              }
+            });
+
+            res.status(201).json({ message: 'Vacancy added successfully', imageUrl });
+          }
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading CV:', error);
+    res.status(500).json({ message: 'Error uploading CV' });
+  }
+});
 
 
 
