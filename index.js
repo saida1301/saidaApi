@@ -804,7 +804,18 @@ const vacancyValidationRules = [
   body('contact_info').notEmpty().isString(),
   body('deadline').notEmpty().isString(),
 ];
+async function fetchDataFromDatabase(userId) {
+  const sqlQuery = `SELECT id AS company_id FROM companies WHERE user_id = ?`;
 
+  try {
+    const [results] = await pool.query(sqlQuery, [userId]);
+    console.log('Results:', results);
+    return results;
+  } catch (error) {
+    console.error('Error executing the query:', error.message);
+    throw error;
+  }
+}
 app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -835,22 +846,16 @@ app.post('/vacancie', cors(), vacancyValidationRules, async (req, res) => {
     const slug = position.toLowerCase().replace(/\s+/g, '-');
 
     // Retrieve the company ID based on the logged-in user ID
-    const companyQuery = `SELECT id FROM companies WHERE user_id = ?`;
-    const companyValues = [user_id];
-
-    // Execute the database query to retrieve the company ID
-     const companyResult = await pool.query(companyQuery, companyValues);
-    const companyData = companyResult[0]; // Use optional chaining to handle undefined
+    const companyData = await fetchDataFromDatabase(user_id);
 
     console.log('companyResult:', companyResult); // Check the result of the company query
     console.log('companyData:', companyData); // Check the data returned from the company query
 
-    const company_id = companyResult?.id;
-
-
-    if (company_id === undefined) {
+     if (!companyData || companyData.length === 0) {
       return res.status(400).json({ error: 'Invalid user ID. Company ID not found.' });
     }
+
+    const company_id = companyData[0].company_id;
 
     let query;
     let values;
