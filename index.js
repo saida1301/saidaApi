@@ -859,7 +859,7 @@ app.post('/vacanc', cors(), async (req, res) => {
 
         // Adjust min_salary and max_salary values based on salary_type
         let insertVacancyValues;
-        if (salary_type === 1) {
+        if (salary_type === 0) {
           insertVacancyValues = [
             user_id,
             selected_company_id,
@@ -881,7 +881,7 @@ app.post('/vacanc', cors(), async (req, res) => {
             deadline,
             slug,
           ];
-        } else if (salary_type === 0) {
+        } else if (salary_type === 1) {
           // When salary_type is 0, set min_salary and max_salary to null
           insertVacancyValues = [
             user_id,
