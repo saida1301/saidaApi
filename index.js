@@ -1446,7 +1446,7 @@ app.post('/training', cors(), upload.single('image'), async (req, res) => {
       imageUrl = `back/assets/images/trainings/${fileName}`;
     }
 
-    const query = `INSERT INTO trainings (user_id, company_id, title, slug, about, payment_type, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const query = `INSERT INTO trainings (user_id, company_id, title, slug, about, payment_type, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
     const values = [user_id, company_id, title, slug, about, payment_type, price, redirect_link, imageUrl, deadline];
 
     // Execute the database query
