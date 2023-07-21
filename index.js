@@ -647,6 +647,26 @@ function fetchLatestVacancies(userId, startIndex) {
   });
 }
 
+app.route('/vacancy')
+  .get(cors(), (req, res) => {
+    const userId = req.query.userId;
+    const startIndex = req.query.startIndex || 0; // Default startIndex to 0 if not provided
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required in the query parameters' });
+    }
+
+    // Retrieve the vacancies based on the userId and startIndex
+    fetchLatestVacancies(userId, startIndex)
+      .then(vacancies => {
+        if (vacancies.length > 0) {
+          res.json(vacancies);
+        } else {
+          res.json([]); // Return an empty array if no vacancies found
+        }
+      })
+      .catch(error => res.status(500).json({ error: 'Internal server error' }));
+  });
 
 app.get("/vacancy/new", async (req, res) => {
   try {
