@@ -396,48 +396,65 @@ function generateVerificationCode() {
 );
 
 // Example API endpoint for handling "Reset Password" request
-app.post('/change-password', async (req, res) => {
-  const { email, oldPassword, newPassword, confirmNewPassword } = req.body;
+app.post(
+  '/reset-password',
+  [
+    body('code').isLength({ min: 6 }).withMessage('Verification code must be at least 6 characters'),
+    body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  ],
+  (req, res) => {
+    const errors = validationResult(req);
 
-  if (newPassword !== confirmNewPassword) {
-    res.status(400).send('New passwords do not match');
-    return;
-  }
-
-  const getUserQuery = `SELECT * FROM users WHERE email = ?`;
-  pool.query(getUserQuery, [email], async (error, results) => {
-    if (error) {
-      console.error(error);
-      res.status(500).send('Error querying database');
-      return;
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
     }
 
-    if (results.length === 0) {
-      res.status(401).send('User not found');
-      return;
-    }
+    const { code, password } = req.body;
 
-    const user = results[0];
-
-    const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
-    if (!isOldPasswordCorrect) {
-      res.status(401).send('Incorrect old password');
-      return;
-    }
-
-    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    const updatePasswordQuery = `UPDATE users SET password = ? WHERE email = ?`;
-    pool.query(updatePasswordQuery, [hashedNewPassword, email], (error, results) => {
+    // Find the user based on the verification code in the database
+    pool.query('SELECT * FROM users WHERE email_verification_code = ?', [code], (error, results) => {
       if (error) {
-        console.error(error);
-        res.status(500).send('Error updating password');
-        return;
+        console.error('Error executing database query:', error);
+        return res.status(500).json({ error: 'Internal server error' });
       }
 
-      res.status(200).send('Password updated successfully');
+      const user = results[0];
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found or invalid verification code' });
+      }
+
+      // Check if verification code is valid (no expiration check)
+
+      // Hash the new password
+      bcrypt.hash(password, 10, (hashError, hashedPassword) => {
+        if (hashError) {
+          console.error('Error hashing password:', hashError);
+          return res.status(500).json({ error: 'Internal server error' });
+        }
+
+        // Update the user's password in the database with the hashed password
+        pool.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, user.id], (updateError) => {
+          if (updateError) {
+            console.error('Error executing database query:', updateError);
+            return res.status(500).json({ error: 'Internal server error' });
+          }
+
+          // Clear the verification code from the user object
+          pool.query('UPDATE users SET email_verification_code = null WHERE id = ?', [user.id], (clearError) => {
+            if (clearError) {
+              console.error('Error executing database query:', clearError);
+              return res.status(500).json({ error: 'Internal server error' });
+            }
+
+            return res.status(200).json({ message: 'Password reset successful' });
+          });
+        });
+      });
     });
-  });
-});
+  }
+);
+
 
 
 app.get("/user/:userId", (req, res) => {
