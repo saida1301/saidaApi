@@ -2167,7 +2167,7 @@ app.use("/categories/:id", async (req, res) => {
 });
 
 
-app.post("/favorites", async (req, res) => {
+app.post("/fav", async (req, res) => {
   try {
     const { user_id , vacancy_id } = req.body;
     const query = "INSERT INTO favorits (user_id, vacancy_id) VALUES (?, ?)";
