@@ -522,8 +522,8 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
       name,
       surname,
       email,
-      phone
-      cvUrl
+      phone,
+      cvUrl,
      
     ];
 
