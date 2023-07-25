@@ -487,6 +487,83 @@ app.get("/user", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), async (req, res) => {
+  const { vacancyId, name, email, surname, phone } = req.body;
+
+  try {
+    const cvFile = req.files ? req.files['cv'][0] : null;
+
+
+    // Upload files to storage service (implement uploadToBlobStorage function accordingly)
+    let cvUrl = null;
+
+    
+    if (cvFile) {
+      // Validate the CV file (e.g., check file size, type)
+      // Your validation logic here
+
+      const fileContents = cvFile.buffer;
+      const extension = '.pdf'; // Assuming CV files are in PDF format
+
+      const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+      console.log('CV dosyası yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'cvs');
+      console.log('CV dosyası yükleme tamamlandı!');
+
+      cvUrl = `back/assets/images/cvs/${fileName}`;
+    }
+
+      const query =
+      'INSERT INTO candidates (vacancyId, name, surname,  email, phone,  cv, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,  NOW(), NOW())';
+
+    const values = [
+      vacancyId,
+      name,
+      surname,
+      email,
+      cvUrl
+     
+    ];
+
+    // Execute the query (replace with your database execution logic)
+    pool.query(query, values, (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error adding CV' });
+      } else {
+        // Send email to user
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: 'humbeteliyevaseide2001@gmail.com',
+            pass: 'nwudhimwttuqdzxv',
+          },
+        });
+
+        const mailOptions = {
+          from: req.body.email,
+          to: 'humbesaida@gmail.com',
+          subject: 'Candidate Added Successfully',
+          text: 'Your request has been added successfully. Thank you!',
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+          if (error) {
+            console.error('Error sending email:', error);
+          } else {
+            console.log('Email sent:', info.response);
+          }
+        });
+
+        res.status(201).json({ message: 'Candidate added successfully', imageUrl });
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading Candidate:', error);
+    res.status(500).json({ message: 'Error uploading Candidate' });
+  }
+});
 app.get("/stories", async (req, res) => {
   try {
     pool.query("SELECT * FROM stories WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
