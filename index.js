@@ -696,6 +696,25 @@ app.get("/vacancy/others", async (req, res) => {
   }
 });
 
+// Assuming you have set up a database connection pool named 'pool'
+app.get("/favorited_vacancies/:user_id/:vacancy_id", async (req, res) => {
+  const user_id = req.params.user_id;
+  const vacancy_id = req.params.vacancy_id;
+  
+  try {
+    pool.query(
+      "SELECT * FROM favorits WHERE user_id = ? AND vacancy_id = ?",
+      [user_id, vacancy_id],
+      (error, results, fields) => {
+        if (error) throw error;
+        res.json(results);
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 
 
 
