@@ -557,7 +557,7 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
           }
         });
 
-        res.status(201).json({ message: 'Candidate added successfully', imageUrl });
+        res.status(201).json({ message: 'Candidate added successfully' });
       }
     });
   } catch (error) {
