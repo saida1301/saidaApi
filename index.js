@@ -265,7 +265,24 @@ app.post(
 
 
 
-
+app.delete("/fv/:cvId", async (req, res) => {
+  try {
+    const cvId = req.params.vacancyId;
+    const query = "DELETE FROM favorits WHERE cv_id = ?";
+    pool.query(query, [cvId], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.sendStatus(500);
+      } else {
+        console.log(`Removed from favorites`);
+        res.sendStatus(200);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
 
 
 
