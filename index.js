@@ -596,19 +596,31 @@ app.get("/stories", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/change-password',cors(), async (req, res) => {
+const executeQuery = (query, params) => {
+  return new Promise((resolve, reject) => {
+    pool.query(query, params, (error, results) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(results);
+      }
+    });
+  });
+};
+
+app.post('/change-password', async (req, res) => {
   const { email, oldPassword, newPassword } = req.body;
 
   try {
     const getUserQuery = `SELECT * FROM users WHERE email = ?`;
-    const [rows, fields] = await pool.promise().execute(getUserQuery, [email]);
+    const userResults = await executeQuery(getUserQuery, [email]);
 
-    if (rows.length === 0) {
+    if (userResults.length === 0) {
       res.status(401).send('User not found');
       return;
     }
 
-    const user = rows[0];
+    const user = userResults[0];
     const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
 
     if (!isOldPasswordCorrect) {
@@ -618,7 +630,7 @@ app.post('/change-password',cors(), async (req, res) => {
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     const updatePasswordQuery = `UPDATE users SET password = ? WHERE email = ?`;
-    await pool.promise().execute(updatePasswordQuery, [hashedNewPassword, email]);
+    await executeQuery(updatePasswordQuery, [hashedNewPassword, email]);
 
     res.status(200).send('Password updated successfully');
   } catch (error) {
