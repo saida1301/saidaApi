@@ -455,6 +455,26 @@ app.post(
   }
 );
 
+// Assuming you are using Express.js for your backend
+
+app.delete("/fav/:vacancyId", async (req, res) => {
+  try {
+    const vacancyId = req.params.vacancyId;
+    const query = "DELETE FROM favorits WHERE vacancy_id = ?";
+    pool.query(query, [vacancyId], (error, results, fields) => {
+      if (error) {
+        console.error(error);
+        res.sendStatus(500);
+      } else {
+        console.log(`Removed from favorites`);
+        res.sendStatus(200);
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+});
 
 
 app.get("/user/:userId", (req, res) => {
