@@ -395,6 +395,21 @@ function generateVerificationCode() {
   }
 );
 
+
+app.get("/fvrts/:userId", (req, res) => {
+  const { userId } = req.params;
+
+  const sql = `SELECT * FROM cv WHERE id IN (SELECT cv_id FROM favorits WHERE user_id = ?)`;
+
+  pool.query(sql, [userId], (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error retrieving favorites");
+    }
+
+    return res.json(results);
+  });
+});
 // Example API endpoint for handling "Reset Password" request
 app.post(
   '/reset-password',
