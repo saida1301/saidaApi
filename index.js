@@ -19,9 +19,9 @@ const app = express();
 const pool = mysql.createPool({
   connectionLimit: 10,
   host: "145.14.156.192",
-  user: "u983993164_1is_test",
-  password: "@Ucvlqcq8$",
-  database: "u983993164_1is_test",
+  user: "u983993164_1is",
+  password: "Buta2023@",
+  database: "u983993164_1is",
   timeout: 100000,
 });
 
@@ -265,24 +265,7 @@ app.post(
 
 
 
-app.delete("/fv/:cvId", async (req, res) => {
-  try {
-    const cvId = req.params.vacancyId;
-    const query = "DELETE FROM favorits WHERE cv_id = ?";
-    pool.query(query, [cvId], (error, results, fields) => {
-      if (error) {
-        console.error(error);
-        res.sendStatus(500);
-      } else {
-        console.log(`Removed from favorites`);
-        res.sendStatus(200);
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
-  }
-});
+
 
 
 
@@ -412,21 +395,6 @@ function generateVerificationCode() {
   }
 );
 
-
-app.get("/fvrts/:userId", (req, res) => {
-  const { userId } = req.params;
-
-  const sql = `SELECT * FROM cv WHERE id IN (SELECT cv_id FROM favorits WHERE user_id = ?)`;
-
-  pool.query(sql, [userId], (error, results) => {
-    if (error) {
-      console.error(error);
-      return res.status(500).send("Error retrieving favorites");
-    }
-
-    return res.json(results);
-  });
-});
 // Example API endpoint for handling "Reset Password" request
 app.post(
   '/reset-password',
@@ -487,26 +455,6 @@ app.post(
   }
 );
 
-// Assuming you are using Express.js for your backend
-
-app.delete("/fav/:vacancyId", async (req, res) => {
-  try {
-    const vacancyId = req.params.vacancyId;
-    const query = "DELETE FROM favorits WHERE vacancy_id = ?";
-    pool.query(query, [vacancyId], (error, results, fields) => {
-      if (error) {
-        console.error(error);
-        res.sendStatus(500);
-      } else {
-        console.log(`Removed from favorites`);
-        res.sendStatus(200);
-      }
-    });
-  } catch (error) {
-    console.error(error);
-    res.sendStatus(500);
-  }
-});
 
 
 app.get("/user/:userId", (req, res) => {
@@ -628,33 +576,25 @@ app.get("/stories", async (req, res) => {
     res.sendStatus(500);
   }
 });
-const executeQuery = (query, params) => {
-  return new Promise((resolve, reject) => {
-    pool.query(query, params, (error, results) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(results);
-      }
-    });
-  });
-};
-
 app.post('/change-password', async (req, res) => {
   const { email, oldPassword, newPassword } = req.body;
 
-  try {
-    const getUserQuery = `SELECT * FROM users WHERE email = ?`;
-    const userResults = await executeQuery(getUserQuery, [email]);
+  const getUserQuery = `SELECT * FROM users WHERE email = ?`;
+  pool.query(getUserQuery, [email], async (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).send('Error querying database');
+      return;
+    }
 
-    if (userResults.length === 0) {
+    if (results.length === 0) {
       res.status(401).send('User not found');
       return;
     }
 
-    const user = userResults[0];
-    const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+    const user = results[0];
 
+    const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
     if (!isOldPasswordCorrect) {
       res.status(401).send('Incorrect old password');
       return;
@@ -662,13 +602,16 @@ app.post('/change-password', async (req, res) => {
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     const updatePasswordQuery = `UPDATE users SET password = ? WHERE email = ?`;
-    await executeQuery(updatePasswordQuery, [hashedNewPassword, email]);
+    pool.query(updatePasswordQuery, [hashedNewPassword, email], (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).send('Error updating password');
+        return;
+      }
 
-    res.status(200).send('Password updated successfully');
-  } catch (error) {
-    console.error(error);
-    res.status(500).send('Error updating password');
-  }
+      res.status(200).send('Password updated successfully');
+    });
+  });
 });
 
 const weeklyVacancyJob = schedule.scheduleJob('0 0 * * 0', fetchWeeklyVacancies);
@@ -867,25 +810,15 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Default to page 1 if no query parameter is provided
-    const limit = 10; // Number of vacancies to fetch in each request
-    const offset = (page - 1) * limit; // Calculate the offset based on the page number
-
-    const results = await pool.query("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [offset, limit]);
-
-    // Return the vacancies to the frontend
-    res.json(results);
+    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
-
-
-
-
-
-
 
 app.get('/vacancy/:userId', [
   param('userId').isNumeric().withMessage('Invalid userId'),
