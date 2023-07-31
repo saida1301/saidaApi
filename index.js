@@ -19,9 +19,9 @@ const app = express();
 const pool = mysql.createPool({
   connectionLimit: 10,
   host: "145.14.156.192",
-  user: "u983993164_1is",
+  user: "u983993164_1is_test",
   password: "@Ucvlqcq8$",
-  database: "u983993164_1is",
+  database: "u983993164_1is_test",
   timeout: 100000,
 });
 
@@ -810,16 +810,8 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const { page = 1, perPage = 30 } = req.query;
-    const offset = (page - 1) * perPage;
-    
-    // Perform the query to fetch vacancies with pagination
-    const query = "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    pool.query(query, [parseInt(perPage), parseInt(offset)], (error, results, fields) => {
-      if (error) {
-        console.log(error);
-        return res.sendStatus(500);
-      }
+    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
       res.json(results);
     });
   } catch (error) {
