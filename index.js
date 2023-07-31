@@ -867,23 +867,20 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
-    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
+    const page = req.query.page || 1; // Default to page 1 if no query parameter is provided
+    const limit = 10; // Number of vacancies to fetch in each request
+    const offset = (page - 1) * limit; // Calculate the offset based on the page number
 
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-
-    pool.query("SELECT * FROM vacancies WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
+    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [offset, limit], (error, results, fields) => {
       if (error) throw error;
-
-      const paginatedResults = results.slice(startIndex, endIndex);
-      res.json(paginatedResults);
+      res.json(results);
     });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
+
 
 
 app.get('/vacancy/:userId', [
