@@ -1222,6 +1222,7 @@ app.post('/companies/:id/view', (req, res) => {
   });
 });
 
+// Update this value as per your requirement
 const companiesPerPage = 30; // Number of companies to show per page
 
 app.get("/companies", async (req, res) => {
@@ -1251,6 +1252,7 @@ app.get("/companies", async (req, res) => {
             data: results,
             currentPage: page,
             totalPages: totalPages,
+            totalItems: totalCompanies,
           });
         });
       }
@@ -1260,6 +1262,7 @@ app.get("/companies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 app.get("/candidates", async (req, res) => {
   try {
