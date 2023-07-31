@@ -902,6 +902,7 @@ app.get("/vacancies", async (req, res) => {
 
 
 
+
 app.get('/vacancy/:userId', [
   param('userId').isNumeric().withMessage('Invalid userId'),
 ], (req, res) => {
