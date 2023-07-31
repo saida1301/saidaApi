@@ -861,17 +861,31 @@ app.post('/vacancies/:id/view', (req, res) => {
     }
   });
 });
+const ITEMS_PER_PAGE = 50; // Set the number of vacancies to return per page
+
 app.get("/vacancies", async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1; // Get the page number from the query string, default to page 1 if not provided
+
+    const startIndex = (page - 1) * ITEMS_PER_PAGE; // Calculate the starting index for the current page
+    const endIndex = startIndex + ITEMS_PER_PAGE; // Calculate the ending index for the current page
+
     pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
-      res.json(results);
+
+      const paginatedResults = results.slice(startIndex, endIndex); // Get the vacancies for the current page
+      res.json({
+        vacancies: paginatedResults,
+        currentPage: page,
+        totalPages: Math.ceil(results.length / ITEMS_PER_PAGE),
+      });
     });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
+
 
 
 app.get('/vacancy/:userId', [
