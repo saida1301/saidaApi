@@ -870,14 +870,21 @@ app.get("/vacancies", async (req, res) => {
     const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
     const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
 
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-
-    pool.query("SELECT * FROM vacancies WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
+    pool.query("SELECT COUNT(*) as total FROM vacancies WHERE status = '1'", (error, countResults, fields) => {
       if (error) throw error;
 
-      const paginatedResults = results.slice(startIndex, endIndex);
-      res.json(paginatedResults);
+      const totalItems = countResults[0].total;
+      const totalPages = Math.ceil(totalItems / pageSize);
+
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+
+      pool.query("SELECT * FROM vacancies WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
+        if (error) throw error;
+
+        const paginatedResults = results.slice(startIndex, endIndex);
+        res.json({ vacancies: paginatedResults, totalItems, totalPages });
+      });
     });
   } catch (error) {
     console.log(error);
