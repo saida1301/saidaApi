@@ -306,6 +306,37 @@ app.get("/vacanc", async (req, res) => {
 
 
 
+app.get("/categor", async (req, res) => {
+  try {
+    const categoriesQuery = "SELECT * FROM categories";
+    const vacanciesQuery = "SELECT category_id, COUNT(*) AS vacancy_count FROM vacancies GROUP BY category_id";
+
+    // Fetch categories data
+    const categoriesResult = await pool.query(categoriesQuery);
+
+    // Fetch the count of vacancies for each category
+    const vacanciesResult = await pool.query(vacanciesQuery);
+
+    // Create a map to store the vacancy count for each category
+    const vacancyCountMap = {};
+    vacanciesResult.forEach((row) => {
+      vacancyCountMap[row.category_id] = row.vacancy_count;
+    });
+
+    // Combine the category data with the vacancy count
+    const categoriesWithData = categoriesResult.map((category) => {
+      return {
+        ...category,
+        vacancy_count: vacancyCountMap[category.id] || 0,
+      };
+    });
+
+    res.json(categoriesWithData);
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 
 
 
