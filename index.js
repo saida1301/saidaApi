@@ -810,7 +810,11 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
+    const { page = 1, perPage = 30 } = req.query;
+    const offset = (page - 1) * perPage;
+    
+    const query = "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?";
+    pool.query(query, [parseInt(perPage), parseInt(offset)], (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
@@ -819,6 +823,7 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 app.get('/vacancy/:userId', [
   param('userId').isNumeric().withMessage('Invalid userId'),
