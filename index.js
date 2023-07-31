@@ -867,19 +867,38 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const page = req.query.page || 1; // Default to page 1 if no query parameter is provided
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if no query parameter is provided
     const limit = 10; // Number of vacancies to fetch in each request
     const offset = (page - 1) * limit; // Calculate the offset based on the page number
 
     pool.query("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [offset, limit], (error, results, fields) => {
       if (error) throw error;
-      res.json(results);
+
+      // If there are no more vacancies for the current page, return an empty array
+      if (results.length === 0) {
+        return res.json([]);
+      }
+
+      // If there are vacancies for the current page, continue fetching the next page
+      const nextPage = page + 1;
+      const nextOffset = (nextPage - 1) * limit;
+
+      pool.query("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [nextOffset, limit], (nextError, nextResults, nextFields) => {
+        if (nextError) throw nextError;
+
+        // Combine the current page vacancies and the next page vacancies
+        const allVacancies = [...results, ...nextResults];
+
+        // Return the combined vacancies to the frontend
+        res.json(allVacancies);
+      });
     });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
+
 
 
 
