@@ -862,7 +862,6 @@ app.post('/vacancies/:id/view', (req, res) => {
   });
 });
 const vacanciesPerPage = 30; // Number of vacancies to show per page
-
 app.get("/vacancies", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1; // Get the page number from the query, default to page 1 if not provided
@@ -876,7 +875,7 @@ app.get("/vacancies", async (req, res) => {
 
     // Fetch the vacancies for the current page
     pool.query(
-      "SELECT * FROM vacancies WHERE ORDER BY created_at DESC LIMIT ? OFFSET ?",
+      "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?",
       [vacanciesPerPage, offset],
       (error, results, fields) => {
         if (error) {
