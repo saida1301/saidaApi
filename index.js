@@ -19,9 +19,9 @@ const app = express();
 const pool = mysql.createPool({
   connectionLimit: 10,
   host: "145.14.156.192",
-  user: "u983993164_1is",
+  user: "u983993164_1is_test",
   password: "@Ucvlqcq8$",
-  database: "u983993164_1is",
+  database: "u983993164_1is_test",
   timeout: 100000,
 });
 
@@ -867,15 +867,24 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
+    const page = parseInt(req.query.page) || 1; // Default to page 1 if not provided
+    const pageSize = parseInt(req.query.pageSize) || 10; // Default page size to 10 if not provided
+
+    const startIndex = (page - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+
+    pool.query("SELECT * FROM vacancies WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
-      res.json(results);
+
+      const paginatedResults = results.slice(startIndex, endIndex);
+      res.json(paginatedResults);
     });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
+
 
 app.get('/vacancy/:userId', [
   param('userId').isNumeric().withMessage('Invalid userId'),
