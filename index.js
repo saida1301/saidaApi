@@ -21,7 +21,7 @@ const pool = mysql.createPool({
   host: "145.14.156.192",
   user: "u983993164_1is_test",
   password: "@Ucvlqcq8$",
-  database: "u983993164_1is",
+  database: "u983993164_1is_test",
   timeout: 100000,
 });
 
