@@ -1222,48 +1222,17 @@ app.post('/companies/:id/view', (req, res) => {
   });
 });
 
-// Update this value as per your requirement
-const companiesPerPage = 30; // Number of companies to show per page
-
 app.get("/companies", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Get the page number from the query, default to page 1 if not provided
-
-    // Calculate the offset to determine the starting index of companies for the current page
-    const offset = (page - 1) * companiesPerPage;
-
-    // Fetch the companies for the current page
-    pool.query(
-      "SELECT * FROM companies ORDER BY created_at DESC LIMIT ? OFFSET ?",
-      [companiesPerPage, offset],
-      (error, results, fields) => {
-        if (error) throw error;
-
-        // Calculate the total number of companies in the database
-        pool.query("SELECT COUNT(*) AS totalCompanies FROM companies", (error, countResults) => {
-          if (error) throw error;
-          const totalCompanies = countResults[0].totalCompanies;
-
-          // Calculate the total number of pages based on the total companies and companies per page
-          const totalPages = Math.ceil(totalCompanies / companiesPerPage);
-
-          // Send the response containing the companies for the current page and pagination metadata
-          res.json({
-            data: results,
-            currentPage: page,
-            totalPages: totalPages,
-            totalItems: totalCompanies,
-          });
-        });
-      }
-    );
+    pool.query("SELECT * FROM companies ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
-
-
 app.get("/candidates", async (req, res) => {
   try {
     pool.query("SELECT * FROM candidates ORDER BY created_at DESC", (error, results, fields) => {
@@ -1785,45 +1754,17 @@ app.post('/cv/:id/view', (req, res) => {
   });
 });
 
-const cvPerPage = 30; // Number of CVs to show per page
-
 app.get("/cv", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Get the page number from the query, default to page 1 if not provided
-
-    // Calculate the offset to determine the starting index of CVs for the current page
-    const offset = (page - 1) * cvPerPage;
-
-    // Fetch the CVs for the current page
-    pool.query(
-      "SELECT * FROM cv ORDER BY created_at DESC LIMIT ? OFFSET ?",
-      [cvPerPage, offset],
-      (error, results, fields) => {
-        if (error) throw error;
-
-        // Calculate the total number of CVs in the database
-        pool.query("SELECT COUNT(*) AS totalCVs FROM cv", (error, countResults) => {
-          if (error) throw error;
-          const totalCVs = countResults[0].totalCVs;
-
-          // Calculate the total number of pages based on the total CVs and CVs per page
-          const totalPages = Math.ceil(totalCVs / cvPerPage);
-
-          // Send the response containing the CVs for the current page and pagination metadata
-          res.json({
-            data: results,
-            currentPage: page,
-            totalPages: totalPages,
-          });
-        });
-      }
-    );
+    pool.query("SELECT * FROM cv ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
-
 app.get("/civ/:userId", (req, res) => {
   const userId = req.params.userId;
 
