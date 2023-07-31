@@ -872,7 +872,7 @@ app.get("/vacancies", async (req, res) => {
 
     // Fetch the vacancies for the current page
     pool.query(
-      "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?",
+      "SELECT * FROM vacancies WHERE status = '1' ORDER BY created_at DESC LIMIT ? OFFSET ?",
       [vacanciesPerPage, offset],
       (error, results, fields) => {
         if (error) throw error;
