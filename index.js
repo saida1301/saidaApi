@@ -263,6 +263,46 @@ app.post(
 );
 
 
+app.get("/vacanc", async (req, res) => {
+  const itemsPerPage = 50; // You can adjust this number according to your preference
+  let currentPage = req.query.page || 1;
+  const offset = (currentPage - 1) * itemsPerPage;
+
+  try {
+    const category_id = req.query.category_id; // Get the category ID from query parameters if needed
+    const countQuery = category_id
+      ? "SELECT COUNT(*) AS total FROM vacancies WHERE category_id = ?"
+      : "SELECT COUNT(*) AS total FROM vacancies";
+    const vacanciesQuery = category_id
+      ? "SELECT * FROM vacancies WHERE category_id = ? ORDER BY created_at DESC LIMIT ?, ?"
+      : "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?";
+
+    const countParams = category_id ? [category_id] : [];
+    const vacanciesParams = [...countParams, offset, itemsPerPage];
+
+    // Fetch the total count of vacancies for pagination
+    const [countResult, vacanciesResult] = await Promise.all([
+      pool.query(countQuery, countParams),
+      pool.query(vacanciesQuery, vacanciesParams),
+    ]);
+
+    const totalVacancies = countResult[0].total;
+    const totalPages = Math.ceil(totalVacancies / itemsPerPage);
+
+    res.json({
+      vacancies: vacanciesResult,
+      pagination: {
+        totalVacancies,
+        totalPages,
+        currentPage,
+        itemsPerPage,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 
 
 
