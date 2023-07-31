@@ -867,6 +867,10 @@ app.get("/vacancies", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1; // Get the page number from the query, default to page 1 if not provided
 
+    if (isNaN(page) || page < 1) {
+      return res.status(400).json({ error: "Invalid page number" });
+    }
+
     // Calculate the offset to determine the starting index of vacancies for the current page
     const offset = (page - 1) * vacanciesPerPage;
 
@@ -875,11 +879,17 @@ app.get("/vacancies", async (req, res) => {
       "SELECT * FROM vacancies WHERE status = '1' ORDER BY created_at DESC LIMIT ? OFFSET ?",
       [vacanciesPerPage, offset],
       (error, results, fields) => {
-        if (error) throw error;
+        if (error) {
+          console.log(error);
+          return res.status(500).json({ error: "Failed to fetch vacancies" });
+        }
 
         // Calculate the total number of vacancies in the database
-        pool.query("SELECT COUNT(*) AS totalVacancies FROM vacancies", (error, countResults) => {
-          if (error) throw error;
+        pool.query("SELECT COUNT(*) AS totalVacancies FROM vacancies WHERE status = '1'", (error, countResults) => {
+          if (error) {
+            console.log(error);
+            return res.status(500).json({ error: "Failed to fetch total vacancies count" });
+          }
           const totalVacancies = countResults[0].totalVacancies;
 
           // Calculate the total number of pages based on the total vacancies and vacancies per page
@@ -896,9 +906,10 @@ app.get("/vacancies", async (req, res) => {
     );
   } catch (error) {
     console.log(error);
-    res.sendStatus(500);
+    res.status(500).json({ error: "An unexpected error occurred" });
   }
 });
+
 
 
 
