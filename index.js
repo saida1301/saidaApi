@@ -883,10 +883,11 @@ app.get("/vacancies", async (req, res) => {
       });
     };
 
-    const results = await queryPromise("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [offset, limit]);
-    const nextResults = await queryPromise("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [offset + limit, limit]);
+    const results = await queryPromise("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT limit, OFFSET offset");
+    //const nextResults = await queryPromise("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [offset + limit, limit]);
 
-    const allVacancies = [...results, ...nextResults];
+    //const allVacancies = [...results, ...nextResults];
+    const allVacancies = [...results];
 
     // Return the combined vacancies to the frontend
     res.json(allVacancies);
