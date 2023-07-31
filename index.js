@@ -262,6 +262,61 @@ app.post(
   }
 );
 
+app.get("/vacanc", async (req, res) => {
+  try {
+    const { page = 1, perPage = 30 } = req.query;
+    const offset = (page - 1) * perPage;
+
+    // Fetch the total count of vacancies for each category
+    const countByCategoryQuery = "SELECT category_id, COUNT(*) AS count FROM vacancies GROUP BY category_id";
+    pool.query(countByCategoryQuery, (error, categoryCounts) => {
+      if (error) {
+        console.log(error);
+        return res.sendStatus(500);
+      }
+
+      // Convert categoryCounts array to a dictionary for easy access
+      const vacancyCount = {};
+      categoryCounts.forEach(category => {
+        vacancyCount[category.category_id] = category.count;
+      });
+
+      const totalVacanciesQuery = "SELECT COUNT(*) AS total FROM vacancies";
+      const vacanciesQuery = "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?";
+
+      // Fetch the total number of vacancies for pagination
+      pool.query(totalVacanciesQuery, (error, countResult) => {
+        if (error) {
+          console.log(error);
+          return res.sendStatus(500);
+        }
+
+        const totalVacancies = countResult[0].total;
+
+        // Fetch the vacancies for the current page
+        pool.query(vacanciesQuery, [parseInt(perPage), parseInt(offset)], (error, results, fields) => {
+          if (error) {
+            console.log(error);
+            return res.sendStatus(500);
+          }
+
+          const totalPages = Math.ceil(totalVacancies / perPage);
+
+          // Respond with the paginated data and additional pagination information
+          res.json({
+            data: results,
+            currentPage: parseInt(page),
+            totalPages,
+            vacancyCount,
+          });
+        });
+      });
+    });
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
 
 
 
