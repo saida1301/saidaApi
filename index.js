@@ -861,17 +861,45 @@ app.post('/vacancies/:id/view', (req, res) => {
     }
   });
 });
+const vacanciesPerPage = 30; // Number of vacancies to show per page
+
 app.get("/vacancies", async (req, res) => {
   try {
-    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
-      if (error) throw error;
-      res.json(results);
-    });
+    const page = parseInt(req.query.page) || 1; // Get the page number from the query, default to page 1 if not provided
+
+    // Calculate the offset to determine the starting index of vacancies for the current page
+    const offset = (page - 1) * vacanciesPerPage;
+
+    // Fetch the vacancies for the current page
+    pool.query(
+      "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?",
+      [vacanciesPerPage, offset],
+      (error, results, fields) => {
+        if (error) throw error;
+
+        // Calculate the total number of vacancies in the database
+        pool.query("SELECT COUNT(*) AS totalVacancies FROM vacancies", (error, countResults) => {
+          if (error) throw error;
+          const totalVacancies = countResults[0].totalVacancies;
+
+          // Calculate the total number of pages based on the total vacancies and vacancies per page
+          const totalPages = Math.ceil(totalVacancies / vacanciesPerPage);
+
+          // Send the response containing the vacancies for the current page and pagination metadata
+          res.json({
+            data: results,
+            currentPage: page,
+            totalPages: totalPages,
+          });
+        });
+      }
+    );
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
   }
 });
+
 
 
 
