@@ -867,7 +867,7 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC WHERE status = '1", (error, results, fields) => {
+    pool.query("SELECT * FROM vacancies  WHERE status = '1' ORDER BY created_at DESC ", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
