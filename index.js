@@ -866,36 +866,36 @@ app.post('/vacancies/:id/view', (req, res) => {
   });
 });
 app.get("/vacancies", async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1; // Default to page 1 if no query parameter is provided
-    const limit = 10; // Number of vacancies to fetch in each request
-    const offset = (page - 1) * limit; // Calculate the offset based on the page number
+try {
+  const page = parseInt(req.query.page) || 1; // Eğer sorgu parametresi belirtilmezse, varsayılan olarak 1. sayfayı kullanır
+  const limit = 10; // Her istekte alınacak iş ilanı sayısı
+  const offset = (page - 1) * limit; // Sayfa numarasına göre kaydırma (offset) değeri hesaplanır
 
-    const queryPromise = (query, params) => {
-      return new Promise((resolve, reject) => {
-        pool.query(query, params, (error, results, fields) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(results);
-          }
-        });
+  const queryPromise = (query, params) => {
+    return new Promise((resolve, reject) => {
+      pool.query(query, params, (error, results, fields) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
       });
-    };
+    });
+  };
 
-    const results = await queryPromise("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT limit, OFFSET offset");
-    //const nextResults = await queryPromise("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [offset + limit, limit]);
+  const results = await queryPromise("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [offset, limit]);
+  //const nextResults = await queryPromise("SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?", [offset + limit, limit]);
 
-    //const allVacancies = [...results, ...nextResults];
-    const allVacancies = [...results];
+  //const allVacancies = [...results, ...nextResults];
+  const allVacancies = [...results];
 
-    // Return the combined vacancies to the frontend
-    res.json(allVacancies);
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
+  // Return the combined vacancies to the frontend
+  res.json(allVacancies);
+} catch (error) {
+  console.log(error);
+  res.sendStatus(500);
+}
+
 
 
 
