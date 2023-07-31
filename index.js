@@ -813,9 +813,13 @@ app.get("/vacancies", async (req, res) => {
     const { page = 1, perPage = 30 } = req.query;
     const offset = (page - 1) * perPage;
     
+    // Perform the query to fetch vacancies with pagination
     const query = "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?";
     pool.query(query, [parseInt(perPage), parseInt(offset)], (error, results, fields) => {
-      if (error) throw error;
+      if (error) {
+        console.log(error);
+        return res.sendStatus(500);
+      }
       res.json(results);
     });
   } catch (error) {
