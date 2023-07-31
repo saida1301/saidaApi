@@ -876,7 +876,7 @@ app.get("/vacancies", async (req, res) => {
 
     // Fetch the vacancies for the current page
     pool.query(
-      "SELECT * FROM vacancies WHERE status = '1' ORDER BY created_at DESC LIMIT ? OFFSET ?",
+      "SELECT * FROM vacancies WHERE ORDER BY created_at DESC LIMIT ? OFFSET ?",
       [vacanciesPerPage, offset],
       (error, results, fields) => {
         if (error) {
@@ -885,7 +885,7 @@ app.get("/vacancies", async (req, res) => {
         }
 
         // Calculate the total number of vacancies in the database
-        pool.query("SELECT COUNT(*) AS totalVacancies FROM vacancies WHERE status = '1'", (error, countResults) => {
+        pool.query("SELECT COUNT(*) AS totalVacancies FROM vacancies", (error, countResults) => {
           if (error) {
             console.log(error);
             return res.status(500).json({ error: "Failed to fetch total vacancies count" });
