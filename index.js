@@ -6,7 +6,23 @@ import session from "express-session";
 import bodyParser from "body-parser";
 import mysql from "mysql";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import bcrypt from "bcrypt";app.get("/vacancies/total", async (req, res) => {
+  try {
+    const query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
+    pool.query(query, (error, results, fields) => {
+      if (error) {
+        console.log("Error in SQL query:", error.message);
+        throw error;
+      }
+      console.log("Total vacancies:", results[0].count);
+      res.json({ count: results[0].count });
+    });
+  } catch (error) {
+    console.log("Error in API:", error.message);
+    res.sendStatus(500);
+  }
+});
+
 import crypto from 'crypto';
 import FTP from 'ftp';
 import fs from 'fs';
@@ -841,6 +857,22 @@ app.get("/vacancies", async (req, res) => {
 });
 
 
+app.get("/vacancies/total", async (req, res) => {
+  try {
+    const query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
+    pool.query(query, (error, results, fields) => {
+      if (error) {
+        console.log("Error in SQL query:", error.message);
+        throw error;
+      }
+      console.log("Total vacancies:", results[0].count);
+      res.json({ count: results[0].count });
+    });
+  } catch (error) {
+    console.log("Error in API:", error.message);
+    res.sendStatus(500);
+  }
+});
 
 
 
