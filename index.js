@@ -882,11 +882,23 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const { page, pageSize } = req.query;
+    const { page, pageSize, sortBy, sortOrder } = req.query;
     const offset = (page - 1) * pageSize;
     console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
 
-    let query = "SELECT * FROM vacancies WHERE status = 1 ORDER BY created_at DESC";
+    let query = "SELECT * FROM vacancies WHERE status = 1";
+
+    // Check and apply sorting parameters
+    if (sortBy && sortOrder) {
+      const validSortFields = ["created_at", "position", "city"]; // Add more fields if needed
+      if (validSortFields.includes(sortBy)) {
+        query += ` ORDER BY ${sortBy} ${sortOrder.toUpperCase()}`;
+      } else {
+        console.log("Invalid sortBy field:", sortBy); // Added log
+      }
+    } else {
+      query += " ORDER BY created_at DESC"; // Default sorting
+    }
 
     if (pageSize) {
       query += " LIMIT ?, ?";
@@ -913,6 +925,7 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 app.get("/vacancies/total", async (req, res) => {
