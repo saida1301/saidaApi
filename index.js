@@ -808,13 +808,8 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const { limit, offset } = req.query;
-    const sqlQuery = "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?";
-    pool.query(sqlQuery, [parseInt(limit), parseInt(offset)], (error, results) => {
-      if (error) {
-        console.error("Database error:", error);
-        return res.status(500).json({ error: "A database error occurred." });
-      }
+    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
       res.json(results);
     });
   } catch (error) {
@@ -822,7 +817,6 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
 
 
 app.get('/vacancy/:userId', [
