@@ -810,16 +810,22 @@ app.get("/vacancies", async (req, res) => {
   try {
     const { page, pageSize } = req.query;
     const offset = (page - 1) * pageSize;
+    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
     const query = "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ?, ?";
     pool.query(query, [offset, parseInt(pageSize)], (error, results, fields) => {
-      if (error) throw error;
+      if (error) {
+        console.log("Error in SQL query:", error.message); // Added log
+        throw error;
+      }
+      console.log("Query results:", results); // Added log
       res.json(results);
     });
   } catch (error) {
-    console.log(error);
+    console.log("Error in API:", error.message); // Added log
     res.sendStatus(500);
   }
 });
+
 
 
 
