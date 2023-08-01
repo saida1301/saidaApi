@@ -263,6 +263,36 @@ app.post(
   }
 );
 
+app.get("/categories-with-count", async (req, res) => {
+  try {
+    const { page, pageSize } = req.query;
+    const offset = (page - 1) * pageSize;
+    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
+
+    // SQL query to fetch vacancies and their category counts
+    const query = `
+      SELECT c.*, COUNT(v.id) AS vacancy_count
+      FROM categories c
+      LEFT JOIN vacancies v ON c.id = v.category_id AND v.status = 1
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+      ${pageSize ? "LIMIT ?, ?" : ""}
+    `;
+
+    // Use the pool.query method to execute the SQL query
+    pool.query(query, pageSize ? [offset, parseInt(pageSize)] : [], (error, results, fields) => {
+      if (error) {
+        console.log("Error in SQL query:", error.message); // Added log
+        throw error;
+      }
+      console.log("Query results:", results); // Added log
+      res.json(results);
+    });
+  } catch (error) {
+    console.log("Error in API:", error.message); // Added log
+    res.sendStatus(500);
+  }
+});
 
 
 app.get("/vaca", async (req, res) => {
