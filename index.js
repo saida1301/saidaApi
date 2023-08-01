@@ -19,9 +19,9 @@ const app = express();
 const pool = mysql.createPool({
   connectionLimit: 10,
   host: "145.14.156.192",
-  user: "u983993164_1is_test",
+  user: "u983993164_1is",
   password: "@Ucvlqcq8$",
-  database: "u983993164_1is_test",
+  database: "u983993164_1is",
   timeout: 100000,
 });
 
@@ -262,61 +262,6 @@ app.post(
   }
 );
 
-app.get("/vacanc", async (req, res) => {
-  try {
-    const { page = 1, perPage = 30 } = req.query;
-    const offset = (page - 1) * perPage;
-
-    // Fetch the total count of vacancies for each category
-    const countByCategoryQuery = "SELECT category_id, COUNT(*) AS count FROM vacancies GROUP BY category_id";
-    pool.query(countByCategoryQuery, (error, categoryCounts) => {
-      if (error) {
-        console.log(error);
-        return res.sendStatus(500);
-      }
-
-      // Convert categoryCounts array to a dictionary for easy access
-      const vacancyCount = {};
-      categoryCounts.forEach(category => {
-        vacancyCount[category.category_id] = category.count;
-      });
-
-      const totalVacanciesQuery = "SELECT COUNT(*) AS total FROM vacancies";
-      const vacanciesQuery = "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?";
-
-      // Fetch the total number of vacancies for pagination
-      pool.query(totalVacanciesQuery, (error, countResult) => {
-        if (error) {
-          console.log(error);
-          return res.sendStatus(500);
-        }
-
-        const totalVacancies = countResult[0].total;
-
-        // Fetch the vacancies for the current page
-        pool.query(vacanciesQuery, [parseInt(perPage), parseInt(offset)], (error, results, fields) => {
-          if (error) {
-            console.log(error);
-            return res.sendStatus(500);
-          }
-
-          const totalPages = Math.ceil(totalVacancies / perPage);
-
-          // Respond with the paginated data and additional pagination information
-          res.json({
-            data: results,
-            currentPage: parseInt(page),
-            totalPages,
-            vacancyCount,
-          });
-        });
-      });
-    });
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
 
 
 
@@ -861,56 +806,17 @@ app.post('/vacancies/:id/view', (req, res) => {
     }
   });
 });
-const vacanciesPerPage = 30; // Number of vacancies to show per page
 app.get("/vacancies", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // Get the page number from the query, default to page 1 if not provided
-
-    if (isNaN(page) || page < 1) {
-      return res.status(400).json({ error: "Invalid page number" });
-    }
-
-    // Calculate the offset to determine the starting index of vacancies for the current page
-    const offset = (page - 1) * vacanciesPerPage;
-
-    // Fetch the vacancies for the current page
-    pool.query(
-      "SELECT * FROM vacancies ORDER BY created_at DESC LIMIT ? OFFSET ?",
-      [vacanciesPerPage, offset],
-      (error, results, fields) => {
-        if (error) {
-          console.log(error);
-          return res.status(500).json({ error: "Failed to fetch vacancies" });
-        }
-
-        // Calculate the total number of vacancies in the database
-        pool.query("SELECT COUNT(*) AS totalVacancies FROM vacancies", (error, countResults) => {
-          if (error) {
-            console.log(error);
-            return res.status(500).json({ error: "Failed to fetch total vacancies count" });
-          }
-          const totalVacancies = countResults[0].totalVacancies;
-
-          // Calculate the total number of pages based on the total vacancies and vacancies per page
-          const totalPages = Math.ceil(totalVacancies / vacanciesPerPage);
-
-          // Send the response containing the vacancies for the current page and pagination metadata
-          res.json({
-            data: results,
-            currentPage: page,
-            totalPages: totalPages,
-          });
-        });
-      }
-    );
+    pool.query("SELECT * FROM vacancies ORDER BY created_at DESC", (error, results, fields) => {
+      if (error) throw error;
+      res.json(results);
+    });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "An unexpected error occurred" });
+    res.sendStatus(500);
   }
 });
-
-
-
 
 
 app.get('/vacancy/:userId', [
