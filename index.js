@@ -2437,7 +2437,7 @@ app.get("/favorites/:userId", (req, res) => {
 app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
   const { user_id, vacancy_id } = req.body;
 
-  const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND movie_id = ${vacancy_id}`;
+  const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND vacancy_id = ${vacancy_id}`;
 
   pool.query(sql, (error, results) => {
     if (error) {
