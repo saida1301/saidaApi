@@ -929,13 +929,17 @@ app.get("/vacancies", async (req, res) => {
 
 app.get("/vacancies/total", async (req, res) => {
   try {
-    const query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
-    pool.query(query, (error, results, fields) => {
+    // Calculate the date one year ago from the current date
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    const query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1 AND created_at >= ?";
+    pool.query(query, [oneYearAgo], (error, results, fields) => {
       if (error) {
         console.log("Error in SQL query:", error.message);
         throw error;
       }
-      console.log("Total vacancies:", results[0].count);
+      console.log("Total vacancies created in the last year:", results[0].count);
       res.json({ count: results[0].count });
     });
   } catch (error) {
@@ -943,6 +947,7 @@ app.get("/vacancies/total", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 
