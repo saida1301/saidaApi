@@ -868,18 +868,60 @@ app.get("/favorited_vacancies/:user_id/:vacancy_id", async (req, res) => {
 
 
 
-app.post('/vacancies/:id/view', (req, res) => {
-  const vacancyId = req.params.id;
+app.get("/vacancies", async (req, res) => {
+  try {
+    const { page, pageSize, city_id } = req.query;
 
-  pool.query('UPDATE vacancies SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
-    if (error) {
-      console.error('Failed to increment view count:', error);
-      res.sendStatus(500);
-    } else {
-      res.sendStatus(200);
+    // Parse the page and pageSize parameters as integers
+    const pageNumber = parseInt(page);
+    const itemsPerPage = parseInt(pageSize);
+
+    // Validate that page and pageSize are valid positive integers
+    if (isNaN(pageNumber) || isNaN(itemsPerPage) || pageNumber <= 0 || itemsPerPage <= 0) {
+      return res.status(400).json({ error: "Invalid page or pageSize parameters." });
     }
-  });
+
+    const offset = (pageNumber - 1) * itemsPerPage;
+    console.log("Page:", pageNumber, "PageSize:", itemsPerPage, "Offset:", offset);
+
+    // Calculate the date one year ago from the current date
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    // Calculate the date one year from now
+    const oneYearFromNow = new Date();
+    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+    let query = "SELECT * FROM vacancies WHERE status = 1 AND created_at >= ? AND deadline <= ?";
+
+    const queryParams = [oneYearAgo, oneYearFromNow];
+
+    if (city_id && city_id !== "All") {
+      query += " AND city_id = ?";
+      queryParams.push(city_id);
+    }
+
+    query += " ORDER BY created_at DESC";
+
+    if (!isNaN(itemsPerPage)) {
+      query += " LIMIT ?, ?";
+      queryParams.push(offset, itemsPerPage);
+    }
+
+    pool.query(query, queryParams, (error, results, fields) => {
+      if (error) {
+        console.log("Error in SQL query:", error.message);
+        return res.sendStatus(500);
+      }
+      console.log("Query results:", results);
+      res.json(results);
+    });
+  } catch (error) {
+    console.log("Error in API:", error.message);
+    res.sendStatus(500);
+  }
 });
+
 app.get("/vacancies", async (req, res) => {
   try {
     const { page, pageSize, city_id } = req.query;
