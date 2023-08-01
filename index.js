@@ -883,8 +883,18 @@ app.post('/vacancies/:id/view', (req, res) => {
 app.get("/vacancies", async (req, res) => {
   try {
     const { page, pageSize } = req.query;
-    const offset = (page - 1) * pageSize;
-    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
+
+    // Parse the page and pageSize parameters as integers
+    const pageNumber = parseInt(page);
+    const itemsPerPage = parseInt(pageSize);
+
+    // Validate that page and pageSize are valid positive integers
+    if (isNaN(pageNumber) || isNaN(itemsPerPage) || pageNumber <= 0 || itemsPerPage <= 0) {
+      return res.status(400).json({ error: "Invalid page or pageSize parameters." });
+    }
+
+    const offset = (pageNumber - 1) * itemsPerPage;
+    console.log("Page:", pageNumber, "PageSize:", itemsPerPage, "Offset:", offset);
 
     // Calculate the date one year ago from the current date
     const oneYearAgo = new Date();
@@ -892,25 +902,27 @@ app.get("/vacancies", async (req, res) => {
 
     let query = "SELECT * FROM vacancies WHERE status = 1 AND created_at >= ? ORDER BY created_at DESC";
 
-    const queryParams = pageSize ? [oneYearAgo, offset, parseInt(pageSize)] : [oneYearAgo];
+    const queryParams = [oneYearAgo];
 
-    if (pageSize) {
+    if (!isNaN(itemsPerPage)) {
       query += " LIMIT ?, ?";
+      queryParams.push(offset, itemsPerPage);
     }
 
     pool.query(query, queryParams, (error, results, fields) => {
       if (error) {
-        console.log("Error in SQL query:", error.message); // Added log
-        throw error;
+        console.log("Error in SQL query:", error.message);
+        return res.sendStatus(500);
       }
-      console.log("Query results:", results); // Added log
+      console.log("Query results:", results);
       res.json(results);
     });
   } catch (error) {
-    console.log("Error in API:", error.message); // Added log
+    console.log("Error in API:", error.message);
     res.sendStatus(500);
   }
 });
+
 
 
 
