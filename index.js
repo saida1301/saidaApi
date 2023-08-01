@@ -19,9 +19,9 @@ const app = express();
 const pool = mysql.createPool({
   connectionLimit: 10,
   host: "145.14.156.192",
-  user: "u983993164_1is_test",
+  user: "u983993164_1is",
   password: "@Ucvlqcq8$",
-  database: "u983993164_1is_test",
+  database: "u983993164_1is",
   timeout: 100000,
 });
 
@@ -812,7 +812,7 @@ app.get("/vacancies", async (req, res) => {
     const offset = (page - 1) * pageSize;
     console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
 
-    let query = "SELECT * FROM vacancies ORDER BY created_at DESC";
+    let query = "SELECT * FROM vacancies WHERE status = 1 ORDER BY created_at DESC";
 
     if (pageSize) {
       query += " LIMIT ?, ?";
