@@ -265,6 +265,48 @@ app.post(
 
 
 
+app.get("/vaca", async (req, res) => {
+  try {
+    const { page, pageSize } = req.query;
+    const offset = (page - 1) * pageSize;
+    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
+
+    let query = "SELECT * FROM vacancies WHERE status = 1 ORDER BY created_at DESC";
+
+    if (pageSize) {
+      query += " LIMIT ?, ?";
+      pool.query(query, [offset, parseInt(pageSize)], (error, results, fields) => {
+        if (error) {
+          console.log("Error in SQL query:", error.message); // Added log
+          return res.status(500).json({ error: "Failed to fetch vacancies" });
+        }
+        console.log("Query results:", results); // Added log
+        // Assuming you have the total count of vacancies in the database
+        const totalVacancies = TOTAL_VACANCIES_COUNT; // Replace with the actual count
+
+        // Calculate total pages based on the pageSize
+        const totalPages = Math.ceil(totalVacancies / parseInt(pageSize));
+
+        res.json({
+          data: results,
+          totalPages: totalPages,
+        });
+      });
+    } else {
+      pool.query(query, (error, results, fields) => {
+        if (error) {
+          console.log("Error in SQL query:", error.message); // Added log
+          return res.status(500).json({ error: "Failed to fetch vacancies" });
+        }
+        console.log("Query results:", results); // Added log
+        res.json(results);
+      });
+    }
+  } catch (error) {
+    console.log("Error in API:", error.message); // Added log
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 
