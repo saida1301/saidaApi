@@ -882,11 +882,18 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const { page, pageSize } = req.query;
+    const { page, pageSize, showFinished } = req.query;
     const offset = (page - 1) * pageSize;
-    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
+    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset, "Show Finished:", showFinished); // Added log
 
-    let query = "SELECT * FROM vacancies WHERE status = 1 ORDER BY created_at DESC";
+    let query = "SELECT * FROM vacancies WHERE status = 1";
+
+    if (showFinished === "false") {
+      // If showFinished is false, include filtering to not show finished vacancies
+      query += " AND deadline >= NOW()";
+    }
+
+    query += " ORDER BY created_at DESC";
 
     if (pageSize) {
       query += " LIMIT ?, ?";
