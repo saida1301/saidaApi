@@ -882,7 +882,7 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const { page, pageSize } = req.query;
+    const { page, pageSize, city_id } = req.query;
 
     // Parse the page and pageSize parameters as integers
     const pageNumber = parseInt(page);
@@ -900,9 +900,16 @@ app.get("/vacancies", async (req, res) => {
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-    let query = "SELECT * FROM vacancies WHERE status = 1 AND created_at >= ? ORDER BY created_at DESC";
+    let query = "SELECT * FROM vacancies WHERE status = 1 AND created_at >= ?";
 
     const queryParams = [oneYearAgo];
+
+    if (city_id && city_id !== "All") {
+      query += " AND city_id = ?";
+      queryParams.push(city_id);
+    }
+
+    query += " ORDER BY created_at DESC";
 
     if (!isNaN(itemsPerPage)) {
       query += " LIMIT ?, ?";
@@ -922,6 +929,7 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 
