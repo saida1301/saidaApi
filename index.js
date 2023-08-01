@@ -882,49 +882,36 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const { page, pageSize, sortBy, sortOrder } = req.query;
+    const { page, pageSize } = req.query;
     const offset = (page - 1) * pageSize;
     console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
 
-    let query = "SELECT * FROM vacancies WHERE status = 1";
+    // Calculate the date one year ago from the current date
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-    // Check and apply sorting parameters
-    if (sortBy && sortOrder) {
-      const validSortFields = ["created_at", "position", "city"]; // Add more fields if needed
-      if (validSortFields.includes(sortBy)) {
-        query += ` ORDER BY ${sortBy} ${sortOrder.toUpperCase()}`;
-      } else {
-        console.log("Invalid sortBy field:", sortBy); // Added log
-      }
-    } else {
-      query += " ORDER BY created_at DESC"; // Default sorting
-    }
+    let query = "SELECT * FROM vacancies WHERE status = 1 AND created_at >= ? ORDER BY created_at DESC";
+
+    const queryParams = pageSize ? [oneYearAgo, offset, parseInt(pageSize)] : [oneYearAgo];
 
     if (pageSize) {
       query += " LIMIT ?, ?";
-      pool.query(query, [offset, parseInt(pageSize)], (error, results, fields) => {
-        if (error) {
-          console.log("Error in SQL query:", error.message); // Added log
-          throw error;
-        }
-        console.log("Query results:", results); // Added log
-        res.json(results);
-      });
-    } else {
-      pool.query(query, (error, results, fields) => {
-        if (error) {
-          console.log("Error in SQL query:", error.message); // Added log
-          throw error;
-        }
-        console.log("Query results:", results); // Added log
-        res.json(results);
-      });
     }
+
+    pool.query(query, queryParams, (error, results, fields) => {
+      if (error) {
+        console.log("Error in SQL query:", error.message); // Added log
+        throw error;
+      }
+      console.log("Query results:", results); // Added log
+      res.json(results);
+    });
   } catch (error) {
     console.log("Error in API:", error.message); // Added log
     res.sendStatus(500);
   }
 });
+
 
 
 
