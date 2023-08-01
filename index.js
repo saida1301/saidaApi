@@ -269,13 +269,13 @@ app.get("/categories-with-count", async (req, res) => {
     const offset = (page - 1) * pageSize;
     console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
 
-    // SQL query to fetch vacancies and their category counts
+    // SQL query to fetch vacancies and their category counts, sorted by vacancy_count in descending order
     const query = `
       SELECT c.*, COUNT(v.id) AS vacancy_count
       FROM categories c
       LEFT JOIN vacancies v ON c.id = v.category_id AND v.status = 1
       GROUP BY c.id
-      ORDER BY c.created_at DESC
+      ORDER BY vacancy_count DESC
       ${pageSize ? "LIMIT ?, ?" : ""}
     `;
 
@@ -293,6 +293,7 @@ app.get("/categories-with-count", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 app.get("/vaca", async (req, res) => {
