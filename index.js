@@ -269,13 +269,13 @@ app.get("/categories-with-count", async (req, res) => {
     const offset = (page - 1) * pageSize;
     console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
 
-    // SQL query to fetch vacancies and their category counts
+    // SQL query to fetch vacancies and their category counts, sorted by vacancy_count in descending order
     const query = `
       SELECT c.*, COUNT(v.id) AS vacancy_count
       FROM categories c
       LEFT JOIN vacancies v ON c.id = v.category_id AND v.status = 1
       GROUP BY c.id
-      ORDER BY c.created_at DESC
+      ORDER BY vacancy_count DESC
       ${pageSize ? "LIMIT ?, ?" : ""}
     `;
 
@@ -293,6 +293,7 @@ app.get("/categories-with-count", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 app.get("/vaca", async (req, res) => {
@@ -882,36 +883,48 @@ app.post('/vacancies/:id/view', (req, res) => {
 app.get("/vacancies", async (req, res) => {
   try {
     const { page, pageSize } = req.query;
-    const offset = (page - 1) * pageSize;
-    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
 
-    let query = "SELECT * FROM vacancies WHERE status = 1 ORDER BY created_at DESC";
+    // Parse the page and pageSize parameters as integers
+    const pageNumber = parseInt(page);
+    const itemsPerPage = parseInt(pageSize);
 
-    if (pageSize) {
-      query += " LIMIT ?, ?";
-      pool.query(query, [offset, parseInt(pageSize)], (error, results, fields) => {
-        if (error) {
-          console.log("Error in SQL query:", error.message); // Added log
-          throw error;
-        }
-        console.log("Query results:", results); // Added log
-        res.json(results);
-      });
-    } else {
-      pool.query(query, (error, results, fields) => {
-        if (error) {
-          console.log("Error in SQL query:", error.message); // Added log
-          throw error;
-        }
-        console.log("Query results:", results); // Added log
-        res.json(results);
-      });
+    // Validate that page and pageSize are valid positive integers
+    if (isNaN(pageNumber) || isNaN(itemsPerPage) || pageNumber <= 0 || itemsPerPage <= 0) {
+      return res.status(400).json({ error: "Invalid page or pageSize parameters." });
     }
+
+    const offset = (pageNumber - 1) * itemsPerPage;
+    console.log("Page:", pageNumber, "PageSize:", itemsPerPage, "Offset:", offset);
+
+    // Calculate the date one year ago from the current date
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    let query = "SELECT * FROM vacancies WHERE status = 1 AND created_at >= ? ORDER BY created_at DESC";
+
+    const queryParams = [oneYearAgo];
+
+    if (!isNaN(itemsPerPage)) {
+      query += " LIMIT ?, ?";
+      queryParams.push(offset, itemsPerPage);
+    }
+
+    pool.query(query, queryParams, (error, results, fields) => {
+      if (error) {
+        console.log("Error in SQL query:", error.message);
+        return res.sendStatus(500);
+      }
+      console.log("Query results:", results);
+      res.json(results);
+    });
   } catch (error) {
-    console.log("Error in API:", error.message); // Added log
+    console.log("Error in API:", error.message);
     res.sendStatus(500);
   }
 });
+
+
+
 
 
 app.get("/vacancies/total", async (req, res) => {
@@ -1254,7 +1267,7 @@ app.post('/companies/:id/view', (req, res) => {
 
 app.get("/companies", async (req, res) => {
   try {
-    pool.query("SELECT * FROM companies ORDER BY created_at DESC", (error, results, fields) => {
+    pool.query("SELECT * FROM companies WHERE status ='1' ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
@@ -2434,9 +2447,9 @@ app.get("/favorites/:userId", (req, res) => {
 
 
 app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
-  const { user_id, vacancy_id } = req.body;
+  const { user_id, vacancy_id } = req.params;
 
-  const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND movie_id = ${vacancy_id}`;
+  const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND vacancy_id = ${vacancy_id}`;
 
   pool.query(sql, (error, results) => {
     if (error) {
