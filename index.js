@@ -810,35 +810,40 @@ app.get("/vacancies", async (req, res) => {
   try {
     const { page, pageSize } = req.query;
     const offset = (page - 1) * pageSize;
-    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset); // Added log
 
     let query = "SELECT * FROM vacancies WHERE status = 1 ORDER BY created_at DESC";
+
+    // Fetch total vacancies count
+    const totalVacanciesQuery = "SELECT COUNT(*) as totalCount FROM vacancies WHERE status = 1";
+    const [totalCountResult] = await pool.query(totalVacanciesQuery);
+    const totalCount = totalCountResult[0].totalCount;
+
+    let totalPages = Math.ceil(totalCount / pageSize);
 
     if (pageSize) {
       query += " LIMIT ?, ?";
       pool.query(query, [offset, parseInt(pageSize)], (error, results, fields) => {
         if (error) {
-          console.log("Error in SQL query:", error.message); // Added log
+          console.log("Error in SQL query:", error.message);
           throw error;
         }
-        console.log("Query results:", results); // Added log
-        res.json(results);
+        res.json({ data: results, totalCount, totalPages });
       });
     } else {
       pool.query(query, (error, results, fields) => {
         if (error) {
-          console.log("Error in SQL query:", error.message); // Added log
+          console.log("Error in SQL query:", error.message);
           throw error;
         }
-        console.log("Query results:", results); // Added log
-        res.json(results);
+        res.json({ data: results, totalCount, totalPages });
       });
     }
   } catch (error) {
-    console.log("Error in API:", error.message); // Added log
+    console.log("Error in API:", error.message);
     res.sendStatus(500);
   }
 });
+
 
 
 
