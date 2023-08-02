@@ -1870,7 +1870,7 @@ app.post('/cv/:id/view', (req, res) => {
 
 app.get("/cv", async (req, res) => {
   try {
-    pool.query("SELECT * FROM cv ORDER BY created_at DESC", (error, results, fields) => {
+    pool.query("SELECT * FROM cv WHERE status = '1' ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
