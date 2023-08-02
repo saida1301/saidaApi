@@ -193,6 +193,60 @@ function generateRandomText(name) {
   return firstLetter;
 }
 
+const performSearch = async (query) => {
+  try {
+    // Search for companies with names matching the query
+    const companyResults = await searchCompanies(query);
+
+    // Search for vacancies with positions matching the query
+    const vacancyResults = await searchVacancies(query);
+
+    // Combine and return the results
+    const searchResults = [...companyResults, ...vacancyResults];
+    return searchResults;
+  } catch (error) {
+    console.error('Error performing search:', error.message);
+    throw error;
+  }
+};
+
+const searchCompanies = async (query) => {
+  try {
+    const sql = `SELECT * FROM companies WHERE name LIKE ?`;
+    const queryParams = [`%${query}%`];
+
+    const [rows] = await pool.execute(sql, queryParams);
+    return rows;
+  } catch (error) {
+    console.error('Error searching companies:', error.message);
+    throw error;
+  }
+};
+
+const searchVacancies = async (query) => {
+  try {
+    const sql = `SELECT * FROM vacancies WHERE position LIKE ?`;
+    const queryParams = [`%${query}%`];
+
+    const [rows] = await pool.execute(sql, queryParams);
+    return rows;
+  } catch (error) {
+    console.error('Error searching vacancies:', error.message);
+    throw error;
+  }
+};
+
+
+app.get('/search', async (req, res) => {
+  try {
+    const { query } = req.query;
+    const searchResults = await performSearch(query);
+    res.json(searchResults);
+  } catch (error) {
+    console.error('Error in search API:', error.message);
+    res.sendStatus(500);
+  }
+});
 
 app.get("/vacancies/company/:company_id", async (req, res) => {
   try {
