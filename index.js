@@ -985,7 +985,7 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const { page, pageSize, showFinished, city_id } = req.query;
+    const { page, pageSize, showFinished, city_id, sort } = req.query;
     const offset = (page - 1) * pageSize;
 
     let query = "SELECT * FROM vacancies WHERE status = 1";
@@ -999,7 +999,14 @@ app.get("/vacancies", async (req, res) => {
       query += " AND city_id = ?";
     }
 
-    query += " ORDER BY created_at DESC";
+    if (sort === "asc") {
+      query += " ORDER BY views ASC";
+    } else if (sort === "desc") {
+      query += " ORDER BY views DESC";
+    } else {
+      // Default sorting by created_at in descending order
+      query += " ORDER BY created_at DESC";
+    }
 
     if (pageSize) {
       query += " LIMIT ?, ?";
@@ -1026,6 +1033,7 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 app.get("/vacancies/total", async (req, res) => {
