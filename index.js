@@ -882,9 +882,8 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const { page, pageSize, showFinished } = req.query;
+    const { page, pageSize, showFinished, city_id } = req.query;
     const offset = (page - 1) * pageSize;
-    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset, "Show Finished:", showFinished); // Added log
 
     let query = "SELECT * FROM vacancies WHERE status = 1";
 
@@ -893,30 +892,34 @@ app.get("/vacancies", async (req, res) => {
       query += " AND deadline >= NOW()";
     }
 
+    if (city_id && city_id !== "All") {
+      query += " AND city_id = ?";
+    }
+
     query += " ORDER BY created_at DESC";
 
     if (pageSize) {
       query += " LIMIT ?, ?";
-      pool.query(query, [offset, parseInt(pageSize)], (error, results, fields) => {
+      const queryParams = city_id && city_id !== "All" ? [city_id, offset, parseInt(pageSize)] : [offset, parseInt(pageSize)];
+
+      pool.query(query, queryParams, (error, results, fields) => {
         if (error) {
-          console.log("Error in SQL query:", error.message); // Added log
+          console.log("Error in SQL query:", error.message);
           throw error;
         }
-        console.log("Query results:", results); // Added log
         res.json(results);
       });
     } else {
       pool.query(query, (error, results, fields) => {
         if (error) {
-          console.log("Error in SQL query:", error.message); // Added log
+          console.log("Error in SQL query:", error.message);
           throw error;
         }
-        console.log("Query results:", results); // Added log
         res.json(results);
       });
     }
   } catch (error) {
-    console.log("Error in API:", error.message); // Added log
+    console.log("Error in API:", error.message);
     res.sendStatus(500);
   }
 });
