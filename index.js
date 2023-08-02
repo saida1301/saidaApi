@@ -924,8 +924,18 @@ app.get("/vacancies", async (req, res) => {
 
 app.get("/vacancies/total", async (req, res) => {
   try {
-    const query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
-    pool.query(query, (error, results, fields) => {
+    let query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
+    const { showFinished, createdAfter } = req.query;
+
+    if (showFinished === "0") {
+      query += " AND deadline >= NOW()";
+    }
+
+    if (createdAfter) {
+      query += " AND created_at >= ?";
+    }
+
+    pool.query(query, [createdAfter], (error, results, fields) => {
       if (error) {
         console.log("Error in SQL query:", error.message);
         throw error;
@@ -938,6 +948,7 @@ app.get("/vacancies/total", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 
