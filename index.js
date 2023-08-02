@@ -194,6 +194,55 @@ function generateRandomText(name) {
 }
 
 
+app.get("/vacancies/company/:company_id", async (req, res) => {
+  try {
+    const { page, pageSize, showFinished, city_id } = req.query;
+    const { company_id } = req.params;
+    const offset = (page - 1) * pageSize;
+
+    let query = "SELECT * FROM vacancies WHERE status = 1 AND company_id = ?";
+
+    if (showFinished === "false") {
+      query += " AND deadline >= NOW()";
+    }
+
+    if (city_id && city_id !== "All") {
+      query += " AND city_id = ?";
+    }
+
+    query += " ORDER BY created_at DESC";
+
+    let queryParams = [company_id];
+
+    if (city_id && city_id !== "All") {
+      queryParams.push(city_id);
+    }
+
+    if (pageSize) {
+      query += " LIMIT ?, ?";
+      queryParams = queryParams.concat([offset, parseInt(pageSize)]);
+
+      pool.query(query, queryParams, (error, results, fields) => {
+        if (error) {
+          console.log("Error in SQL query:", error.message);
+          throw error;
+        }
+        res.json(results);
+      });
+    } else {
+      pool.query(query, queryParams, (error, results, fields) => {
+        if (error) {
+          console.log("Error in SQL query:", error.message);
+          throw error;
+        }
+        res.json(results);
+      });
+    }
+  } catch (error) {
+    console.log("Error in API:", error.message);
+    res.sendStatus(500);
+  }
+});
 
 
 app.post(
