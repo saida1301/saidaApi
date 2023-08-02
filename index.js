@@ -1000,9 +1000,9 @@ app.get("/vacancies", async (req, res) => {
     }
 
     if (sort === "asc") {
-      query += " ORDER BY views ASC";
+      query += " ORDER BY view ASC";
     } else if (sort === "desc") {
-      query += " ORDER BY views DESC";
+      query += " ORDER BY view DESC";
     } else {
       // Default sorting by created_at in descending order
       query += " ORDER BY created_at DESC";
