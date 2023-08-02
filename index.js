@@ -927,30 +927,43 @@ app.get("/vacancies", async (req, res) => {
 
 app.get("/vacancies/total", async (req, res) => {
   try {
-    let query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
-    const { showFinished, createdAfter } = req.query;
+    const { showFinished, city_id, createdAfter } = req.query;
 
-    if (showFinished === "0") {
+    let query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
+
+    if (showFinished === "false") {
       query += " AND deadline >= NOW()";
+    }
+
+    if (city_id && city_id !== "All") {
+      query += " AND city_id = ?";
     }
 
     if (createdAfter) {
       query += " AND created_at >= ?";
     }
 
-    pool.query(query, [createdAfter], (error, results, fields) => {
+    const queryParams = [];
+    if (city_id && city_id !== "All") {
+      queryParams.push(city_id);
+    }
+    if (createdAfter) {
+      queryParams.push(createdAfter);
+    }
+
+    pool.query(query, queryParams, (error, results, fields) => {
       if (error) {
         console.log("Error in SQL query:", error.message);
         throw error;
       }
-      console.log("Total vacancies:", results[0].count);
-      res.json({ count: results[0].count });
+      res.json(results[0]);
     });
   } catch (error) {
     console.log("Error in API:", error.message);
     res.sendStatus(500);
   }
 });
+
 
 
 
