@@ -868,128 +868,69 @@ app.get("/favorited_vacancies/:user_id/:vacancy_id", async (req, res) => {
 
 
 
+app.post('/vacancies/:id/view', (req, res) => {
+  const vacancyId = req.params.id;
+
+  pool.query('UPDATE vacancies SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+    if (error) {
+      console.error('Failed to increment view count:', error);
+      res.sendStatus(500);
+    } else {
+      res.sendStatus(200);
+    }
+  });
+});
 app.get("/vacancies", async (req, res) => {
   try {
-    const { page, pageSize, city_id } = req.query;
+    const { page, pageSize, showFinished } = req.query;
+    const offset = (page - 1) * pageSize;
+    console.log("Page:", page, "PageSize:", pageSize, "Offset:", offset, "Show Finished:", showFinished); // Added log
 
-    // Parse the page and pageSize parameters as integers
-    const pageNumber = parseInt(page);
-    const itemsPerPage = parseInt(pageSize);
+    let query = "SELECT * FROM vacancies WHERE status = 1";
 
-    // Validate that page and pageSize are valid positive integers
-    if (isNaN(pageNumber) || isNaN(itemsPerPage) || pageNumber <= 0 || itemsPerPage <= 0) {
-      return res.status(400).json({ error: "Invalid page or pageSize parameters." });
-    }
-
-    const offset = (pageNumber - 1) * itemsPerPage;
-    console.log("Page:", pageNumber, "PageSize:", itemsPerPage, "Offset:", offset);
-
-    // Calculate the date one year ago from the current date
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-    // Calculate the date one year from now
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
-
-    let query = "SELECT * FROM vacancies WHERE status = 1 AND created_at >= ? AND deadline <= ?";
-
-    const queryParams = [oneYearAgo, oneYearFromNow];
-
-    if (city_id && city_id !== "All") {
-      query += " AND city_id = ?";
-      queryParams.push(city_id);
+    if (showFinished === "false") {
+      // If showFinished is false, include filtering to not show finished vacancies
+      query += " AND deadline >= NOW()";
     }
 
     query += " ORDER BY created_at DESC";
 
-    if (!isNaN(itemsPerPage)) {
+    if (pageSize) {
       query += " LIMIT ?, ?";
-      queryParams.push(offset, itemsPerPage);
+      pool.query(query, [offset, parseInt(pageSize)], (error, results, fields) => {
+        if (error) {
+          console.log("Error in SQL query:", error.message); // Added log
+          throw error;
+        }
+        console.log("Query results:", results); // Added log
+        res.json(results);
+      });
+    } else {
+      pool.query(query, (error, results, fields) => {
+        if (error) {
+          console.log("Error in SQL query:", error.message); // Added log
+          throw error;
+        }
+        console.log("Query results:", results); // Added log
+        res.json(results);
+      });
     }
-
-    pool.query(query, queryParams, (error, results, fields) => {
-      if (error) {
-        console.log("Error in SQL query:", error.message);
-        return res.sendStatus(500);
-      }
-      console.log("Query results:", results);
-      res.json(results);
-    });
   } catch (error) {
-    console.log("Error in API:", error.message);
+    console.log("Error in API:", error.message); // Added log
     res.sendStatus(500);
   }
 });
-
-app.get("/vacancies", async (req, res) => {
-  try {
-    const { page, pageSize, city_id } = req.query;
-
-    // Parse the page and pageSize parameters as integers
-    const pageNumber = parseInt(page);
-    const itemsPerPage = parseInt(pageSize);
-
-    // Validate that page and pageSize are valid positive integers
-    if (isNaN(pageNumber) || isNaN(itemsPerPage) || pageNumber <= 0 || itemsPerPage <= 0) {
-      return res.status(400).json({ error: "Invalid page or pageSize parameters." });
-    }
-
-    const offset = (pageNumber - 1) * itemsPerPage;
-    console.log("Page:", pageNumber, "PageSize:", itemsPerPage, "Offset:", offset);
-
-    // Calculate the date one year ago from the current date
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-    let query = "SELECT * FROM vacancies WHERE status = 1 AND created_at >= ?";
-
-    const queryParams = [oneYearAgo];
-
-    if (city_id && city_id !== "All") {
-      query += " AND city_id = ?";
-      queryParams.push(city_id);
-    }
-
-    query += " ORDER BY created_at DESC";
-
-    if (!isNaN(itemsPerPage)) {
-      query += " LIMIT ?, ?";
-      queryParams.push(offset, itemsPerPage);
-    }
-
-    pool.query(query, queryParams, (error, results, fields) => {
-      if (error) {
-        console.log("Error in SQL query:", error.message);
-        return res.sendStatus(500);
-      }
-      console.log("Query results:", results);
-      res.json(results);
-    });
-  } catch (error) {
-    console.log("Error in API:", error.message);
-    res.sendStatus(500);
-  }
-});
-
-
-
-
 
 
 app.get("/vacancies/total", async (req, res) => {
   try {
-    // Calculate the date one year ago from the current date
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
-    const query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1 AND created_at >= ?";
-    pool.query(query, [oneYearAgo], (error, results, fields) => {
+    const query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
+    pool.query(query, (error, results, fields) => {
       if (error) {
         console.log("Error in SQL query:", error.message);
         throw error;
       }
-      console.log("Total vacancies created in the last year:", results[0].count);
+      console.log("Total vacancies:", results[0].count);
       res.json({ count: results[0].count });
     });
   } catch (error) {
@@ -997,7 +938,6 @@ app.get("/vacancies/total", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
 
 
 
@@ -1322,7 +1262,7 @@ app.post('/companies/:id/view', (req, res) => {
 
 app.get("/companies", async (req, res) => {
   try {
-    pool.query("SELECT * FROM companies WHERE status ='1' ORDER BY created_at DESC", (error, results, fields) => {
+    pool.query("SELECT * FROM companies ORDER BY created_at DESC", (error, results, fields) => {
       if (error) throw error;
       res.json(results);
     });
