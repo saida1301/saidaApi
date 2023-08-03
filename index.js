@@ -1463,7 +1463,7 @@ app.post('/companiy',cors(), upload.single('image'), async (req, res) => {
     const {
       user_id,
       sector_id,
-      average,
+      average = 0,
       name,
       about,
       address,
