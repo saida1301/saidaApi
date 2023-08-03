@@ -2651,7 +2651,7 @@ app.post('/candidates', cors(), async (req, res) => {
 
 app.post('/candidate/:user_id/:vacancy_id', cors(), async (req, res) => {
   const { user_id, vacancy_id } = req.params;
-  const { cvUrl } = req.body;
+  const { cvUrl } = req.params;
 
   try {
     // Validate the cvUrl if needed
