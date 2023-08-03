@@ -1440,7 +1440,7 @@ app.use("/companies/:id", async (req, res) => {
 const companyValidationRules = [
   body('user_id').notEmpty().isInt(),
   body('sector_id').notEmpty().isInt(),
-  body('average').notEmpty().isFloat(),
+  body('average').optional().isFloat(),
   body('name').notEmpty().isString(),
   body('about').notEmpty().isString(),
   body('address').notEmpty().isString(),
