@@ -2674,7 +2674,7 @@ app.post('/candidate/:user_id/:vacancy_id', cors(), upload.single('cv'), async (
     }
 
     const query =
-      'INSERT INTO candidates (vacancy_id, name, surname, mail, phone, cv, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,  NOW(), NOW())';
+      'INSERT INTO candidates (vacancy_id,  user_id, cv, created_at, updated_at) VALUES (?, ?, ?,  NOW(), NOW())';
 
     const values = [vacancy_id, user_id, cvUrl];
 
