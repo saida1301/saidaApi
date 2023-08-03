@@ -663,7 +663,7 @@ app.get("/user", async (req, res) => {
   }
 });
 app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), async (req, res) => {
-  const { vacancyId, name, email, surname, phone } = req.body;
+  const { vacancyId, name, email, surname, phone, userId } = req.body;
 
   try {
     const cvFile = req.files ? req.files['cv'][0] : null;
@@ -690,7 +690,7 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
     }
 
       const query =
-      'INSERT INTO candidates (vacancy_id, name, surname,  mail, phone,  cv, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,  NOW(), NOW())';
+      'INSERT INTO candidates (vacancy_id, name, surname,  mail, phone,user_id,  cv, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,?,  NOW(), NOW())';
 
     const values = [
       vacancyId,
@@ -699,7 +699,7 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
       email,
       phone,
       cvUrl,
-     
+     userId
     ];
 
     // Execute the query (replace with your database execution logic)
