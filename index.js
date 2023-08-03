@@ -2649,12 +2649,12 @@ app.post('/candidates', cors(), async (req, res) => {
   }
 });
 
-app.post('/candidat/:user_id/:vacancy_id', cors(), async (req, res) => {
+app.post('/candidate/:user_id/:vacancy_id', cors(), async (req, res) => {
   try {
     const { user_id, vacancy_id } = req.params;
-    const { cvUrl } = req.body; // Change to req.body instead of req.file
+    const { cv } = req.body; // Use the correct key 'cv' instead of 'cvUrl'
 
-    if (!cvUrl) {
+    if (!cv) {
       return res.status(400).json({ message: 'CV URL is missing' });
     }
 
@@ -2663,7 +2663,7 @@ app.post('/candidat/:user_id/:vacancy_id', cors(), async (req, res) => {
     const query =
       'INSERT INTO candidates (vacancy_id, user_id, cv, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())';
 
-    const values = [vacancy_id, user_id, cvUrl];
+    const values = [vacancy_id, user_id, cv];
 
     // Execute the query (replace with your database execution logic)
     pool.query(query, values, (error, results) => {
