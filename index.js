@@ -2649,21 +2649,21 @@ app.post('/candidates', cors(), async (req, res) => {
   }
 });
 
-app.post('/candidat/:user_id/:vacancy_id', cors(), async (req, res) => {
-
-
+app.post('/candidat/:user_id/:vacancy_id', cors(), upload.single('cv'), async (req, res) => {
   try {
-    // Validate the cvUrl if needed
-    // Your validation logic here
-  const { user_id, vacancy_id } = req.params;
-  const { cvUrl } = req.file;
+    const { user_id, vacancy_id } = req.params;
+    const cvFile = req.file; // Access the uploaded file using req.file
+
     if (!cvFile) {
       return res.status(400).json({ message: 'CV file is missing' });
     }
-    const query =
-      'INSERT INTO candidates (vacancy_id,  user_id, cv, created_at, updated_at) VALUES (?, ?, ?,  NOW(), NOW())';
 
-    const values = [vacancy_id, user_id, cvFile.path];
+    // Your validation logic here
+
+    const query =
+      'INSERT INTO candidates (vacancy_id, user_id, cv, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())';
+
+    const values = [vacancy_id, user_id, cvFile.path]; // Assuming cvFile.path is the file path
 
     // Execute the query (replace with your database execution logic)
     pool.query(query, values, (error, results) => {
