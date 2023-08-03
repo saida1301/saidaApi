@@ -702,7 +702,6 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
      userId
     ];
 
-    // Execute the query (replace with your database execution logic)
     pool.query(query, values, (error, results) => {
       if (error) {
         console.error(error);
