@@ -7,7 +7,7 @@ import bodyParser from "body-parser";
 import mysql from "mysql";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-
+import axios from "axios";
 import crypto from 'crypto';
 import FTP from 'ftp';
 import fs from 'fs';
@@ -2652,9 +2652,11 @@ app.post('/candidates', cors(), async (req, res) => {
 app.post('/candidat/:user_id/:vacancy_id', cors(), async (req, res) => {
   try {
     const { user_id, vacancy_id } = req.params;
-    const cvUrl = req.body.cvUrl; // Use the correct field name 'cvUrl'
 
-console.log(cvUrl);
+    // Fetch the CV URL from the external server
+    const cvResponse = await axios.get(`https://movieappi.onrender.com/civ/${user_id}`);
+    const cvUrl = cvResponse.data[0].cv;
+
     if (!cvUrl) {
       return res.status(400).json({ message: 'CV URL is missing' });
     }
