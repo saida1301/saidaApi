@@ -2653,7 +2653,7 @@ app.post('/candidat/:user_id/:vacancy_id', cors(), async (req, res) => {
   try {
     const { user_id, vacancy_id } = req.params;
     const { cvUrl } = req.body;
-
+console.log(cvUrl);
     if (!cvUrl) {
       return res.status(400).json({ message: 'CV URL is missing' });
     }
