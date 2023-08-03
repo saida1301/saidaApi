@@ -2685,6 +2685,7 @@ app.post('/candidat/:user_id/:vacancy_id', cors(), upload.single('cv'), async (r
 
 
 
+
 app.get('/candidates/:user_id', (req, res) => {
   const userId = req.params.user_id;
 
