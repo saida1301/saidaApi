@@ -690,7 +690,7 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
     }
 
       const query =
-      'INSERT INTO candidates (vacancy_id, name, surname,  mail, phone,user_id,  cv, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,?,  NOW(), NOW())';
+      'INSERT INTO candidates (vacancy_id, name, surname,  mail, phone,  cv,user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,?,  NOW(), NOW())';
 
     const values = [
       vacancyId,
