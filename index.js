@@ -990,7 +990,7 @@ app.get("/vacancies", async (req, res) => {
     let query = "SELECT * FROM vacancies WHERE status = 1";
 
     if (showFinished === "false") {
-      // If showFinished is false, include filtering to not show finished vacancies
+      // Include filtering to show only vacancies whose deadlines have not passed
       query += " AND deadline >= NOW()";
     }
 
