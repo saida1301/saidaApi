@@ -1964,148 +1964,117 @@ app.get("/civ/:userId", (req, res) => {
   });
 });
 app.post('/civi', cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
-  const {
-    user_id,
-    category_id,
-    city_id,
-    education_id,
-    experience_id,
-    job_type_id,
-    gender_id,
-    name,
-    surname,
-    father_name,
-    email,
-    contact_phone,
-    position,
-    about_education,
-    salary,
-    birth_date,
-    work_history,
-    skills,
-    portfolio
-  } = req.body;
-
   try {
+    const {
+      user_id,
+      category_id,
+      city_id,
+      education_id,
+      experience_id,
+      job_type_id,
+      gender_id,
+      name,
+      surname,
+      father_name,
+      email,
+      contact_phone,
+      position,
+      about_education,
+      salary,
+      birth_date,
+      work_history,
+      skills,
+      portfolio
+    } = req.body;
+
     const cvFile = req.files ? req.files['cv'][0] : null;
     const imageFile = req.files ? req.files['image'][0] : null;
 
-    // Upload files to storage service (implement uploadToBlobStorage function accordingly)
+    // Validate and upload CV file
     let cvUrl = null;
+    if (cvFile) {
+      const cvExtension = path.extname(cvFile.originalname).toLowerCase();
+      if (cvExtension !== '.pdf') {
+        return res.status(400).json({ message: 'Invalid CV file type' });
+      }
+      const cvFileName = `cv_${uuidv4().substring(0, 6)}${cvExtension}`;
+      await saveFileToHosting(cvFile.buffer, cvFileName, 'cvs');
+      cvUrl = `back/assets/images/cvs/${cvFileName}`;
+    }
+
+    // Validate and upload image file
     let imageUrl = null;
+    if (imageFile) {
+      const imageExtension = path.extname(imageFile.originalname).toLowerCase();
+      const allowedImageExtensions = ['.jpg', '.jpeg', '.png', '.gif'];
+      if (!allowedImageExtensions.includes(imageExtension)) {
+        return res.status(400).json({ message: 'Invalid image file type' });
+      }
+      const imageFileName = `image_${uuidv4().substring(0, 6)}${imageExtension}`;
+      await saveFileToHosting(imageFile.buffer, imageFileName, 'cv_photo');
+      imageUrl = `back/assets/images/cv_photo/${imageFileName}`;
+    }
 
-  // Check if cv file was uploaded
-if (cvFile) {
-  const fileContents = cvFile.buffer;
-  const extension = path.extname(cvFile.originalname).toLowerCase();
-
-  console.log('CV file extension:', extension); // Debugging line
-
-  // Validate the file extension for CV
-  const allowedExtensions = ['.pdf']; // Assuming CV files are in PDF format
-  if (!allowedExtensions.includes(extension)) {
-    return res.status(400).json({ message: 'Invalid CV file type' });
-  }
-
-  // ... rest of your code ...
-}
-
-
-// Check if image file was uploaded
-if (imageFile) {
-  const fileContents = imageFile.buffer;
-  const originalExtension = path.extname(imageFile.originalname).toLowerCase();
-
-  console.log('Image file extension:', originalExtension); // Debugging line
-
-  // Determine a safe list of extensions you want to support for images
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Add more extensions as needed
-
-  // Check if the original extension is in the allowed list
-  const extension = allowedExtensions.includes(originalExtension) ? originalExtension : '.png';
-  if (!allowedExtensions.includes(extension)) {
-    return res.status(400).json({ message: 'Invalid image file type' });
-  }
-
-  // ... rest of your code ...
-      const portfolioData = JSON.parse(portfolio);
+    // Additional logic for portfolios
+    const portfolioData = JSON.parse(portfolio);
     // Generate slug
     const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
-    // Perform database insertion (adjust your database query and connection accordingly)
-   const query =
-  'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+    // Perform database insertion
+    const query = `
+      INSERT INTO cv (
+        user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
+        name, surname, father_name, email, contact_phone, position, about_education, salary,
+        birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+    `;
 
-const values = [
-  user_id,
-  category_id,
-  city_id,
-  education_id,
-  experience_id,
-  job_type_id,
-  gender_id,
-  name,
-  surname,
-  father_name,
-  email,
-  contact_phone,
-  position,
-  about_education,
-  salary,
-  birth_date,
-  work_history,
-  skills,
-  cvUrl || null, // Use cvUrl or null if not provided
-  imageUrl || null, // Use imageUrl or null if not provided
-  JSON.stringify(portfolioData), // Convert portfolioData back to JSON string
-  slug,
-];
+    const values = [
+      user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
+      name, surname, father_name, email, contact_phone, position, about_education, salary,
+      birth_date, work_history, skills, cvUrl || null, imageUrl || null,
+      JSON.stringify(portfolioData), slug
+    ];
 
-
-    // Execute the query (replace with your database execution logic)
+    // Execute the database query
     pool.query(query, values, (error, results) => {
       if (error) {
         console.error(error);
-        res.status(500).json({ message: 'Error adding CV' });
-      } else {
-        // Send email to user
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: 'humbeteliyevaseide2001@gmail.com',
-            pass: 'nwudhimwttuqdzxv',
-          },
-        });
-
-        const mailOptions = {
-          from: req.body.email,
-          to: 'humbesaida@gmail.com',
-          subject: 'CV Added Successfully',
-          text: 'Your CV has been added successfully. Thank you!',
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-          if (error) {
-            console.error('Error sending email:', error);
-          } else {
-            console.log('Email sent:', info.response);
-          }
-        });
-
-        res.status(201).json({ message: 'CV added successfully', imageUrl });
+        return res.status(500).json({ message: 'Error adding CV' });
       }
+
+      // Send email to user
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'humbeteliyevaseide2001@gmail.com',
+          pass: 'nwudhimwttuqdzxv',
+        },
+      });
+
+      const mailOptions = {
+        from: req.body.email,
+        to: 'humbesaida@gmail.com',
+        subject: 'CV Added Successfully',
+        text: 'Your CV has been added successfully. Thank you!',
+      };
+
+      transporter.sendMail(mailOptions, (error, info) => {
+        if (error) {
+          console.error('Error sending email:', error);
+        } else {
+          console.log('Email sent:', info.response);
+        }
+      });
+
+      return res.status(201).json({ message: 'CV added successfully', imageUrl });
     });
   } catch (error) {
     console.error('Error uploading CV:', error);
     res.status(500).json({ message: 'Error uploading CV' });
   }
-}
-
-
-
-    // Additional logic for portfolios
-
 });
+
 
 
 
