@@ -2028,43 +2028,39 @@ if (imageFile) {
   }
 
   // ... rest of your code ...
-}
-
-
-
-    // Additional logic for portfolios
-    const portfolioData = JSON.parse(portfolio);
+      const portfolioData = JSON.parse(portfolio);
     // Generate slug
     const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
     // Perform database insertion (adjust your database query and connection accordingly)
-    const query =
-      'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+   const query =
+  'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
-    const values = [
-      user_id,
-      category_id,
-      city_id,
-      education_id,
-      experience_id,
-      job_type_id,
-      gender_id,
-      name,
-      surname,
-      father_name,
-      email,
-      contact_phone,
-      position,
-      about_education,
-      salary,
-      birth_date,
-      work_history,
-      skills,
-      cvUrl,
-      imageUrl,
-      JSON.stringify(portfolioData), // Convert portfolioData back to JSON string
-      slug,
-    ];
+const values = [
+  user_id,
+  category_id,
+  city_id,
+  education_id,
+  experience_id,
+  job_type_id,
+  gender_id,
+  name,
+  surname,
+  father_name,
+  email,
+  contact_phone,
+  position,
+  about_education,
+  salary,
+  birth_date,
+  work_history,
+  skills,
+  cvUrl || null, // Use cvUrl or null if not provided
+  imageUrl || null, // Use imageUrl or null if not provided
+  JSON.stringify(portfolioData), // Convert portfolioData back to JSON string
+  slug,
+];
+
 
     // Execute the query (replace with your database execution logic)
     pool.query(query, values, (error, results) => {
@@ -2103,6 +2099,12 @@ if (imageFile) {
     console.error('Error uploading CV:', error);
     res.status(500).json({ message: 'Error uploading CV' });
   }
+}
+
+
+
+    // Additional logic for portfolios
+
 });
 
 
