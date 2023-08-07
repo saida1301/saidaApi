@@ -786,6 +786,7 @@ app.post('/change-password', async (req, res) => {
 });
 
 
+
 const weeklyVacancyJob = schedule.scheduleJob('0 0 * * 0', fetchWeeklyVacancies);
 
 
