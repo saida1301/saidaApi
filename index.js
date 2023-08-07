@@ -755,15 +755,19 @@ app.post('/change-password', async (req, res) => {
   try {
     const { user_id, oldPassword, newPassword } = req.body;
 
+    if (!user_id) {
+      console.log('User ID is missing');
+      res.status(400).send('User ID is missing');
+      return;
+    }
+
     console.log('Received change password request for user_id:', user_id);
 
     // Retrieve user from the database using user_id
     const getUserQuery = 'SELECT * FROM users WHERE id = ?'; // Assuming id is the user_id in the database
     const [userRows] = await pool.query(getUserQuery, [user_id]);
 
-    console.log('Retrieved user data:', userRows);
-
-    if (userRows.length === 0) {
+    if (!userRows || userRows.length === 0) {
       console.log('User not found');
       res.status(401).send('User not found');
       return;
