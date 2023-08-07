@@ -387,6 +387,7 @@ app.post('/changePassword', (req, res) => {
 
       const storedPassword = results[0].password;
 
+      // Compare the passwords securely
       if (storedPassword !== oldPassword) {
         return res.status(401).json({ message: 'Old password is incorrect' });
       }
@@ -405,6 +406,7 @@ app.post('/changePassword', (req, res) => {
     }
   );
 });
+
 app.get("/categories-with-count", async (req, res) => {
   try {
     const { page, pageSize } = req.query;
