@@ -756,7 +756,7 @@ app.post('/change-password', authenticateToken, async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
     // Retrieve user from the database using email
-    const getUserQuery = 'SELECT * FROM users WHERE email = ?';
+    const getUserQuery = 'SELECT * FROM users';
     const [userRows] = await pool.query(getUserQuery, [req.user.email]);
 
     if (userRows.length === 0) {
