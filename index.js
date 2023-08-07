@@ -1869,7 +1869,7 @@ app.post('/training', cors(), upload.single('image'), async (req, res) => {
       // Your validation logic here
 
       const fileContents = req.file.buffer;
-      const extension = '.png'; // Change the extension based on your file type validation
+      const extension = ['.jpg', '.jpeg', '.png', '.gif']; // Change the extension based on your file type validation
 
       const fileName = `training_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
 
