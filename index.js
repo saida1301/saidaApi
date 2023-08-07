@@ -752,41 +752,37 @@ app.get("/stories", async (req, res) => {
   }
 });
 app.post('/change-password', async (req, res) => {
-  const { email, oldPassword, newPassword } = req.body;
+  try {
+    const { oldPassword, newPassword } = req.body;
 
-  const getUserQuery = `SELECT * FROM users WHERE email = ?`;
-  pool.query(getUserQuery, [email], async (error, results) => {
-    if (error) {
-      console.error(error);
-      res.status(500).send('Error querying database');
-      return;
-    }
+    // Retrieve user from the database using email
+    const getUserQuery = 'SELECT * FROM users WHERE email = ?';
+    const [userRows] = await pool.query(getUserQuery, [req.user.email]);
 
-    if (results.length === 0) {
+    if (userRows.length === 0) {
       res.status(401).send('User not found');
       return;
     }
 
-    const user = results[0];
+    const user = userRows[0];
 
+    // Compare old password with stored hashed password
     const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
     if (!isOldPasswordCorrect) {
       res.status(401).send('Incorrect old password');
       return;
     }
 
+    // Hash and update new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    const updatePasswordQuery = `UPDATE users SET password = ? WHERE email = ?`;
-    pool.query(updatePasswordQuery, [hashedNewPassword, email], (error, results) => {
-      if (error) {
-        console.error(error);
-        res.status(500).send('Error updating password');
-        return;
-      }
+    const updatePasswordQuery = 'UPDATE users SET password = ? WHERE email = ?';
+    await pool.query(updatePasswordQuery, [hashedNewPassword, user.email]);
 
-      res.status(200).send('Password updated successfully');
-    });
-  });
+    res.status(200).send('Password updated successfully');
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error changing password');
+  }
 });
 
 const weeklyVacancyJob = schedule.scheduleJob('0 0 * * 0', fetchWeeklyVacancies);
