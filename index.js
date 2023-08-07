@@ -2011,25 +2011,24 @@ if (cvFile) {
   const fileContents = cvFile.buffer;
   const extension = path.extname(cvFile.originalname).toLowerCase();
 
+  console.log('CV file extension:', extension); // Debugging line
+
   // Validate the file extension for CV
-  const allowedExtensions = '.pdf'; // Assuming CV files are in PDF format
+  const allowedExtensions = ['.pdf']; // Assuming CV files are in PDF format
   if (!allowedExtensions.includes(extension)) {
     return res.status(400).json({ message: 'Invalid CV file type' });
   }
 
-  const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
-
-  console.log('CV dosyası yüklemesi başlıyor...');
-  await saveFileToHosting(fileContents, fileName, 'cvs');
-  console.log('CV dosyası yükleme tamamlandı!');
-
-  cvUrl = `back/assets/images/cvs/${fileName}`;
+  // ... rest of your code ...
 }
+
 
 // Check if image file was uploaded
 if (imageFile) {
   const fileContents = imageFile.buffer;
   const originalExtension = path.extname(imageFile.originalname).toLowerCase();
+
+  console.log('Image file extension:', originalExtension); // Debugging line
 
   // Determine a safe list of extensions you want to support for images
   const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Add more extensions as needed
@@ -2040,14 +2039,9 @@ if (imageFile) {
     return res.status(400).json({ message: 'Invalid image file type' });
   }
 
-  const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
-
-  console.log('Dosya yüklemesi başlıyor...');
-  await saveFileToHosting(fileContents, fileName, 'cv_photo');
-  console.log('Dosya yükleme tamamlandı!');
-
-  imageUrl = `back/assets/images/cv_photo/${fileName}`;
+  // ... rest of your code ...
 }
+
 
 
     // Additional logic for portfolios
