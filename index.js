@@ -759,7 +759,7 @@ app.post('/change-password', async (req, res) => {
 
     // Retrieve user from the database using user_id
     const getUserQuery = 'SELECT * FROM users WHERE id = ?'; // Assuming id is the user_id in the database
-    const userRows = await pool.query(getUserQuery, [user_id]);
+    const [userRows] = await pool.query(getUserQuery, [user_id]);
 
     console.log('Retrieved user data:', userRows);
 
@@ -770,6 +770,12 @@ app.post('/change-password', async (req, res) => {
     }
 
     const user = userRows[0];
+
+    if (!user.password) {
+      console.log('User password not found');
+      res.status(401).send('User password not found');
+      return;
+    }
 
     // Compare old password with stored hashed password
     const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
