@@ -38,19 +38,7 @@ pool.getConnection((err, connection) => {
 
 
 const storage = multer.memoryStorage();
-const upload = multer({
-  storage: storage,
-  fileFilter: (req, file, cb) => {
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Add more extensions as needed
-    const fileExtension = path.extname(file.originalname).toLowerCase();
-
-    if (allowedExtensions.includes(fileExtension)) {
-      cb(null, true); // Allow the file
-    } else {
-      cb(new Error('Invalid file type'));
-    }
-  }
-});
+const upload = multer({ storage });
 
 // FTP'ye dosya yükleme
 async function uploadFileToFtp(fileContents, remotePath) {
