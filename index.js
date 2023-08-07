@@ -755,11 +755,16 @@ app.post('/change-password', async (req, res) => {
   try {
     const { user_id, oldPassword, newPassword } = req.body;
 
+    console.log('Received change password request for user_id:', user_id);
+
     // Retrieve user from the database using user_id
     const getUserQuery = 'SELECT * FROM users WHERE id = ?'; // Assuming id is the user_id in the database
-    const [userRows] = await pool.query(getUserQuery, [user_id]);
+    const userRows = await pool.query(getUserQuery, [user_id]);
+
+    console.log('Retrieved user data:', userRows);
 
     if (userRows.length === 0) {
+      console.log('User not found');
       res.status(401).send('User not found');
       return;
     }
@@ -769,6 +774,7 @@ app.post('/change-password', async (req, res) => {
     // Compare old password with stored hashed password
     const isOldPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
     if (!isOldPasswordCorrect) {
+      console.log('Incorrect old password');
       res.status(401).send('Incorrect old password');
       return;
     }
@@ -778,12 +784,15 @@ app.post('/change-password', async (req, res) => {
     const updatePasswordQuery = 'UPDATE users SET password = ? WHERE id = ?'; // Assuming id is the user_id in the database
     await pool.query(updatePasswordQuery, [hashedNewPassword, user.id]);
 
+    console.log('Password updated successfully');
     res.status(200).send('Password updated successfully');
   } catch (error) {
-    console.error(error);
+    console.error('Error changing password:', error);
     res.status(500).send('Error changing password');
   }
 });
+
+
 
 
 
