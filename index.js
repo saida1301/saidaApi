@@ -366,7 +366,45 @@ app.post(
     );
   }
 );
+app.post('/changePassword', (req, res) => {
+  const { userId, oldPassword, newPassword, newPasswordAgain } = req.body;
 
+  if (newPassword !== newPasswordAgain) {
+    return res.status(400).json({ message: 'New passwords do not match' });
+  }
+
+  pool.query(
+    'SELECT password FROM users WHERE id = ?',
+    [userId],
+    (error, results) => {
+      if (error) {
+        return res.status(500).json({ message: 'Database error' });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const storedPassword = results[0].password;
+
+      if (storedPassword !== oldPassword) {
+        return res.status(401).json({ message: 'Old password is incorrect' });
+      }
+
+      pool.query(
+        'UPDATE users SET password = ? WHERE id = ?',
+        [newPassword, userId],
+        (error) => {
+          if (error) {
+            return res.status(500).json({ message: 'Database error' });
+          }
+
+          return res.status(200).json({ message: 'Password changed successfully' });
+        }
+      );
+    }
+  );
+});
 app.get("/categories-with-count", async (req, res) => {
   try {
     const { page, pageSize } = req.query;
