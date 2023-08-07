@@ -2022,21 +2022,28 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
       cvUrl = `back/assets/images/cvs/${fileName}`;
     }
     // Check if file was uploaded
-    if (imageFile) {
-      // Validate the image file (e.g., check file size, type)
-      // Your validation logic here
-    
-      const fileContents = req.files['image'][0].buffer;
-      const extension = '.png'; // Change the extension based on your file type validation
-    
-      const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
-    
-      console.log('Dosya yüklemesi başlıyor...');
-      await saveFileToHosting(fileContents, fileName, 'cv_photo');
-      console.log('Dosya yükleme tamamlandı!');
-    
-      imageUrl = `back/assets/images/cv_photo/${fileName}`;
-    }
+  if (imageFile) {
+  // Validate the image file (e.g., check file size, type)
+  // Your validation logic here
+
+  const fileContents = req.file.buffer;
+  const originalExtension = path.extname(req.file.originalname).toLowerCase();
+  
+  // Determine a safe list of extensions you want to support
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Add more extensions as needed
+
+  // Check if the original extension is in the allowed list, if not, default to '.png'
+  const extension = allowedExtensions.includes(originalExtension) ? originalExtension : '.png';
+
+  const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+  console.log('Dosya yüklemesi başlıyor...');
+  await saveFileToHosting(fileContents, fileName, 'trainings');
+  console.log('Dosya yükleme tamamlandı!');
+
+  imageUrl = `back/assets/images/cv_photo/${fileName}`;
+}
+
 
     // Additional logic for portfolios
    const portfolioData = JSON.parse(portfolio);
