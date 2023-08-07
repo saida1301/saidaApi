@@ -2012,7 +2012,7 @@ if (cvFile) {
   const extension = path.extname(cvFile.originalname).toLowerCase();
 
   // Validate the file extension for CV
-  const allowedExtensions = ['.pdf']; // Assuming CV files are in PDF format
+  const allowedExtensions = '.pdf'; // Assuming CV files are in PDF format
   if (!allowedExtensions.includes(extension)) {
     return res.status(400).json({ message: 'Invalid CV file type' });
   }
