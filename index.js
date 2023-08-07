@@ -1877,18 +1877,28 @@ app.post('/training', cors(), upload.single('image'), async (req, res) => {
     let imageUrl = null;
 
     // Check if file was uploaded
-   if (req.file) {
-      const fileContents = req.file.buffer;
-      const extension = path.extname(req.file.originalname).toLowerCase();
+if (req.file) {
+  // Validate the image file (e.g., check file size, type)
+  // Your validation logic here
 
-      const fileName = `training_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+  const fileContents = req.file.buffer;
+  const originalExtension = path.extname(req.file.originalname).toLowerCase();
+  
+  // Determine a safe list of extensions you want to support
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Add more extensions as needed
 
-      console.log('Dosya yüklemesi başlıyor...');
-      await saveFileToHosting(fileContents, fileName, 'trainings');
-      console.log('Dosya yükleme tamamlandı!');
+  // Check if the original extension is in the allowed list, if not, default to '.png'
+  const extension = allowedExtensions.includes(originalExtension) ? originalExtension : '.png';
 
-      imageUrl = `back/assets/images/trainings/${fileName}`;
-    }
+  const fileName = `training_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+  console.log('Dosya yüklemesi başlıyor...');
+  await saveFileToHosting(fileContents, fileName, 'trainings');
+  console.log('Dosya yükleme tamamlandı!');
+
+  imageUrl = `back/assets/images/trainings/${fileName}`;
+}
+
 
     const query = `INSERT INTO trainings (user_id, company_id, title, slug, about, payment_type, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
     const values = [user_id, company_id, title, slug, about, payment_type, price, redirect_link, imageUrl, deadline];
