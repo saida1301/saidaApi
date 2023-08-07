@@ -751,13 +751,13 @@ app.get("/stories", async (req, res) => {
     res.sendStatus(500);
   }
 });
-app.post('/change-password', authenticateToken, async (req, res) => {
+app.post('/change-password', async (req, res) => {
   try {
-    const { oldPassword, newPassword } = req.body;
+    const { user_id, oldPassword, newPassword } = req.body;
 
-    // Retrieve user from the database using email
-    const getUserQuery = 'SELECT * FROM users';
-    const [userRows] = await pool.query(getUserQuery, [req.user.email]);
+    // Retrieve user from the database using user_id
+    const getUserQuery = 'SELECT * FROM users WHERE id = ?'; // Assuming id is the user_id in the database
+    const [userRows] = await pool.query(getUserQuery, [user_id]);
 
     if (userRows.length === 0) {
       res.status(401).send('User not found');
@@ -775,8 +775,8 @@ app.post('/change-password', authenticateToken, async (req, res) => {
 
     // Hash and update new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    const updatePasswordQuery = 'UPDATE users SET password = ? WHERE email = ?';
-    await pool.query(updatePasswordQuery, [hashedNewPassword, user.email]);
+    const updatePasswordQuery = 'UPDATE users SET password = ? WHERE id = ?'; // Assuming id is the user_id in the database
+    await pool.query(updatePasswordQuery, [hashedNewPassword, user.id]);
 
     res.status(200).send('Password updated successfully');
   } catch (error) {
@@ -784,23 +784,6 @@ app.post('/change-password', authenticateToken, async (req, res) => {
     res.status(500).send('Error changing password');
   }
 });
-
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (token == null) {
-    return res.sendStatus(401);
-  }
-
-  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-    if (err) {
-      return res.sendStatus(403);
-    }
-    req.user = user; // Set the decoded user object to req.user
-    next();
-  });
-}
 
 
 const weeklyVacancyJob = schedule.scheduleJob('0 0 * * 0', fetchWeeklyVacancies);
