@@ -366,45 +366,53 @@ app.post(
     );
   }
 );
-app.post('/changePassword', (req, res) => {
-  const { userId, oldPassword, newPassword, newPasswordAgain } = req.body;
+app.post('/changePassword', async (req, res) => {
+  try {
+    const { userId, oldPassword, newPassword, newPasswordAgain } = req.body;
 
-  if (newPassword !== newPasswordAgain) {
-    return res.status(400).json({ message: 'New passwords do not match' });
-  }
-
-  pool.query(
-    'SELECT password FROM users WHERE id = ?',
-    [userId],
-    (error, results) => {
-      if (error) {
-        return res.status(500).json({ message: 'Database error' });
-      }
-
-      if (results.length === 0) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      const storedPassword = results[0].password;
-
-      // Compare the passwords securely
-      if (storedPassword !== oldPassword) {
-        return res.status(401).json({ message: 'Old password is incorrect' });
-      }
-
-      pool.query(
-        'UPDATE users SET password = ? WHERE id = ?',
-        [newPassword, userId],
-        (error) => {
-          if (error) {
-            return res.status(500).json({ message: 'Database error' });
-          }
-
-          return res.status(200).json({ message: 'Password changed successfully' });
-        }
-      );
+    if (newPassword !== newPasswordAgain) {
+      return res.status(400).json({ message: 'New passwords do not match' });
     }
-  );
+
+    pool.query(
+      'SELECT password FROM users WHERE id = ?',
+      [userId],
+      async (error, results) => {
+        if (error) {
+          return res.status(500).json({ message: 'Database error' });
+        }
+
+        if (results.length === 0) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+        const storedPassword = results[0].password;
+
+        // Compare the passwords securely using bcrypt
+        const isOldPasswordCorrect = await bcrypt.compare(oldPassword, storedPassword);
+        if (!isOldPasswordCorrect) {
+          return res.status(401).json({ message: 'Old password is incorrect' });
+        }
+
+        // Hash and update new password
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        pool.query(
+          'UPDATE users SET password = ? WHERE id = ?',
+          [hashedNewPassword, userId],
+          (error) => {
+            if (error) {
+              return res.status(500).json({ message: 'Database error' });
+            }
+
+            return res.status(200).json({ message: 'Password changed successfully' });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    console.error('Error changing password:', error);
+    res.status(500).json({ message: 'An error occurred' });
+  }
 });
 
 app.get("/categories-with-count", async (req, res) => {
