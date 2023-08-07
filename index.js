@@ -15,6 +15,7 @@ import cors from "cors";
 import nodemailer from "nodemailer";
 import schedule from 'node-schedule';
 import { body, validationResult, param  } from 'express-validator';
+import path from "path";
 const app = express();
 
 const pool = mysql.createPool({
@@ -37,7 +38,19 @@ pool.getConnection((err, connection) => {
 
 
 const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Add more extensions as needed
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+
+    if (allowedExtensions.includes(fileExtension)) {
+      cb(null, true); // Allow the file
+    } else {
+      cb(new Error('Invalid file type'));
+    }
+  }
+});
 
 // FTP'ye dosya yükleme
 async function uploadFileToFtp(fileContents, remotePath) {
@@ -1864,12 +1877,9 @@ app.post('/training', cors(), upload.single('image'), async (req, res) => {
     let imageUrl = null;
 
     // Check if file was uploaded
-    if (req.file) {
-      // Validate the image file (e.g., check file size, type)
-      // Your validation logic here
-
+   if (req.file) {
       const fileContents = req.file.buffer;
-      const extension = ['.jpg', '.jpeg', '.png', '.gif']; // Change the extension based on your file type validation
+      const extension = path.extname(req.file.originalname).toLowerCase();
 
       const fileName = `training_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
 
