@@ -1975,7 +1975,7 @@ app.get("/civ/:userId", (req, res) => {
     return res.json(results);
   });
 });
-app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
+app.post('/civi', cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
   const {
     user_id,
     category_id,
@@ -2005,13 +2005,19 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
     // Upload files to storage service (implement uploadToBlobStorage function accordingly)
     let cvUrl = null;
     let imageUrl = null;
-    
+
     if (cvFile) {
       // Validate the CV file (e.g., check file size, type)
       // Your validation logic here
 
       const fileContents = cvFile.buffer;
-      const extension = '.pdf'; // Assuming CV files are in PDF format
+      const extension = path.extname(cvFile.originalname).toLowerCase();
+
+      // Validate the file extension
+      const allowedExtensions = ['.pdf']; // Assuming CV files are in PDF format
+      if (!allowedExtensions.includes(extension)) {
+        return res.status(400).json({ message: 'Invalid CV file type' });
+      }
 
       const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
 
@@ -2021,38 +2027,41 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
 
       cvUrl = `back/assets/images/cvs/${fileName}`;
     }
-    // Check if file was uploaded
-  if (imageFile) {
-  // Validate the image file (e.g., check file size, type)
-  // Your validation logic here
 
-  const fileContents = req.file.buffer;
-  const originalExtension = path.extname(req.file.originalname).toLowerCase();
-  
-  // Determine a safe list of extensions you want to support
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Add more extensions as needed
+    // Check if image file was uploaded
+    if (imageFile) {
+      // Validate the image file (e.g., check file size, type)
+      // Your validation logic here
 
-  // Check if the original extension is in the allowed list, if not, default to '.png'
-  const extension = allowedExtensions.includes(originalExtension) ? originalExtension : '.png';
+      const fileContents = imageFile.buffer;
+      const originalExtension = path.extname(imageFile.originalname).toLowerCase();
 
-  const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+      // Determine a safe list of extensions you want to support
+      const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Add more extensions as needed
 
-  console.log('Dosya yüklemesi başlıyor...');
-  await saveFileToHosting(fileContents, fileName, 'trainings');
-  console.log('Dosya yükleme tamamlandı!');
+      // Check if the original extension is in the allowed list
+      const extension = allowedExtensions.includes(originalExtension) ? originalExtension : '.png';
+      if (!allowedExtensions.includes(extension)) {
+        return res.status(400).json({ message: 'Invalid image file type' });
+      }
 
-  imageUrl = `back/assets/images/cv_photo/${fileName}`;
-}
+      const fileName = `cv_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
 
+      console.log('Dosya yüklemesi başlıyor...');
+      await saveFileToHosting(fileContents, fileName, 'cv_photo');
+      console.log('Dosya yükleme tamamlandı!');
+
+      imageUrl = `back/assets/images/cv_photo/${fileName}`;
+    }
 
     // Additional logic for portfolios
-   const portfolioData = JSON.parse(portfolio);
+    const portfolioData = JSON.parse(portfolio);
     // Generate slug
     const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
     // Perform database insertion (adjust your database query and connection accordingly)
-      const query =
-      'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+    const query =
+      'INSERT INTO cv (user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id, name, surname, father_name, email, contact_phone, position, about_education, salary, birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
     const values = [
       user_id,
@@ -2117,6 +2126,7 @@ app.post('/civi',cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'im
     res.status(500).json({ message: 'Error uploading CV' });
   }
 });
+
 
 
 
