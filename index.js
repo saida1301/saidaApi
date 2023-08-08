@@ -2045,7 +2045,7 @@ app.get("/cv", async (req, res) => {
 app.get("/cv/view-more-than-50", async (req, res) => {
   try {
     pool.query(
-      "SELECT * FROM cv WHERE status = '1' AND view > 50 ORDER BY created_at DESC",
+      "SELECT * FROM cv WHERE status = '1' AND view < 50 ORDER BY created_at DESC",
       (error, results, fields) => {
         if (error) throw error;
         res.json(results);
