@@ -2656,7 +2656,20 @@ app.get("/favorites/:userId", (req, res) => {
     return res.json(results);
   });
 });
+app.get("/fvrts/:userId", (req, res) => {
+  const { userId } = req.params;
 
+  const sql = `SELECT * FROM cv WHERE id IN (SELECT cv_id FROM favorits WHERE user_id = ?)`;
+
+  pool.query(sql, [userId], (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error retrieving favorites");
+    }
+
+    return res.json(results);
+  });
+});
 
 app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
   const { user_id, vacancy_id } = req.params;
