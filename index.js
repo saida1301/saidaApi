@@ -171,7 +171,7 @@ app.post('/google-signin', (req, res) => {
   const { email, givenName, familyName, photo } = req.body;
 
   // Perform validation
-  const isValid = (email && givenName);
+  const isValid = email && givenName;
   if (!isValid) {
     return res.status(400).json({ message: 'Invalid login. Please provide email and givenName' });
   }
@@ -184,7 +184,19 @@ app.post('/google-signin', (req, res) => {
       console.log(err);
       return res.status(500).json({ message: 'Internal server error' });
     }
-    return res.status(200).json({ message: 'User information stored successfully' });
+
+    const insertedUserId = results.insertId;
+
+    return res.status(200).json({
+      message: 'User information stored successfully',
+      user: {
+        id: insertedUserId,
+        email: email,
+        givenName: givenName,
+        familyName: familyName,
+        photo: photo || DEFAULT_USER_IMAGE,
+      },
+    });
   });
 });
 
