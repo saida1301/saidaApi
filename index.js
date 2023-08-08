@@ -948,7 +948,7 @@ function fetchLatestVacancies(userId, startIndex) {
         console.error('Error retrieving user cat_id:', error);
         reject('Internal server error');
       } else {
-        if (userResults.length > 0) {
+        if (userResults.length > 0 && userResults[0].cat_id) {
           const userCat = JSON.parse(userResults[0].cat_id);
 
           // Construct the SQL query with JOIN, startIndex, and limit
@@ -970,12 +970,29 @@ function fetchLatestVacancies(userId, startIndex) {
             }
           });
         } else {
-          reject('User not found');
+          // If no cat_id is available, fetch all vacancies regardless of category
+          const query = `
+            SELECT *
+            FROM vacancies
+            ORDER BY created_at DESC
+            LIMIT 20 OFFSET ${startIndex}
+          `;
+
+          // Execute the vacancies query
+          pool.query(query, (error, results) => {
+            if (error) {
+              console.error('Error retrieving latest vacancies:', error);
+              reject('Internal server error');
+            } else {
+              resolve(results);
+            }
+          });
         }
       }
     });
   });
 }
+
 
 app.route('/vacancy')
   .get(cors(), (req, res) => {
