@@ -2423,18 +2423,22 @@ app.get("/reviews/:companyId", async (req, res) => {
   try {
     const { companyId } = req.params;
     pool.query(
-      "SELECT review.*, users.image, users.name FROM review INNER JOIN users ON review.user_id = users.id WHERE review.company_id = ? AND status = '1'",
+      "SELECT review.*, users.image, users.name FROM review INNER JOIN users ON review.user_id = users.id WHERE review.company_id = ? AND review.status = '1'",
       [companyId],
       (error, results, fields) => {
-        if (error) throw error;
+        if (error) {
+          console.error(error);
+          return res.sendStatus(500);
+        }
         res.json(results);
       }
     );
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.sendStatus(500);
   }
 });
+
 
 app.get("/average-rating/:company_id", async (req, res) => {
   try {
