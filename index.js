@@ -2705,6 +2705,20 @@ app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
     return res.status(200).send("Item removed from favorites");
   });
 });
+app.delete("/favorites/:user_id/:cv_id", (req, res) => {
+  const { user_id, cv_id } = req.params;
+
+  const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND cv_id = ${cv_id}`;
+
+  pool.query(sql, (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error removing from favorites");
+    }
+
+    return res.status(200).send("Item removed from favorites");
+  });
+});
 app.post('/apply', (req, res) => {
   const { userId, vacancyId, cvId } = req.body;
 
