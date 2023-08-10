@@ -2643,7 +2643,7 @@ app.post("/fav", async (req, res) => {
 
 app.post("/favorite", async (req, res) => {
   try {
-    const { user_id , cv_id } = req.params;
+    const { user_id, cv_id } = req.body; // Use req.body to access the data
 
     const query = "INSERT INTO favorits (user_id, cv_id) VALUES (?, ?)";
     pool.query(query, [user_id, cv_id], (error, results, fields) => {
