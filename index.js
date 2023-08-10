@@ -2423,7 +2423,7 @@ app.get("/reviews/:companyId", async (req, res) => {
   try {
     const { companyId } = req.params;
     pool.query(
-      "SELECT review.*, users.image, users.name FROM review INNER JOIN users ON review.user_id = users.id WHERE review.company_id = ?",
+      "SELECT review.*, users.image, users.name FROM review INNER JOIN users ON review.user_id = users.id WHERE review.company_id = ? AND status = '1'",
       [companyId],
       (error, results, fields) => {
         if (error) throw error;
