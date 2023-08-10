@@ -2368,8 +2368,8 @@ app.post("/reviews", async (req, res) => {
 app.get("/review-users/:companyId", async (req, res) => {
   try {
     const { companyId } = req.params;
-    const getUserCountQuery = "SELECT COUNT(user_id) AS user_count FROM review WHERE company_id = ?";
-    
+    const getUserCountQuery = "SELECT COUNT(user_id) AS user_count FROM review WHERE company_id = ? AND status = '1'";
+
     pool.query(getUserCountQuery, [companyId], (error, results, fields) => {
       if (error) throw error;
       const userCount = results[0].user_count;
@@ -2381,6 +2381,7 @@ app.get("/review-users/:companyId", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 app.get("/ratings/:company_id", async (req, res) => {
   try {
     const { company_id } = req.params;
