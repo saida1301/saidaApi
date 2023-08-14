@@ -92,7 +92,7 @@ async function saveFileToHosting(fileContents, fileName, folderName) {
         reject(error);
       } else {
         console.log('Dosya hosting sunucusuna kaydedildi!');
-        const remotePath = `/domains/1is.az/public_html/1is/public/back/assets/images/${folderName}/${fileName}`; // Yüklenecek dosyanın uzak FTP yolu
+        const remotePath = `/domains/1is.az/public_html/public/back/assets/images/${folderName}/${fileName}`; // Yüklenecek dosyanın uzak FTP yolu
         uploadFileToFtp(fileContents, remotePath)
           .then(() => {
             console.log('Dosya FTP sunucusuna yüklendi!');
