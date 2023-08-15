@@ -356,10 +356,13 @@ app.post(
 
             const catIdsArray = Array.isArray(cat_id) ? cat_id : [cat_id];
             const catIdsJSON = JSON.stringify(catIdsArray);
+            
+            // Generate a random email verification code
+            const verificationCode = Math.floor(1000 + Math.random() * 9000);
 
             pool.query(
-              'INSERT INTO users (name, surname, email, password, cat_id) VALUES (?, ?, ?, ?, ?)',
-              [name, surname, email, hash, catIdsJSON],
+              'INSERT INTO users (name, surname, email, password, cat_id, email_verification_code, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
+              [name, surname, email, hash, catIdsJSON, verificationCode, 1], // Status set to 1
               (err, results) => {
                 if (err) {
                   console.log(err);
