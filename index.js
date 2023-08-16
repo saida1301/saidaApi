@@ -1864,7 +1864,7 @@ app.get("/cv/:cvId", (req, res) => {
 app.get("/company/:userId", (req, res) => {
   const userId = req.params.userId;
 
-  const sql = "SELECT * FROM companies WHERE user_id = ? AND status = '1'"; 
+  const sql = "SELECT * FROM companies WHERE user_id = ?"; 
   const values = [userId];
 
   pool.query(sql, values, (error, results) => {
