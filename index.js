@@ -1430,17 +1430,23 @@ app.post('/vacanc', cors(), async (req, res) => {
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
 
-  const sql = `SELECT * FROM vacancies WHERE category_id IN (SELECT id FROM categories WHERE id = ${categoryId})`;
+  // Add the DESC keyword to order by descending
+  const sql = `
+    SELECT * FROM vacancies
+    WHERE category_id IN (SELECT id FROM categories WHERE id = ${categoryId})
+    ORDER BY created_at DESC
+  `;
 
   pool.query(sql, (error, results) => {
     if (error) {
       console.error(error);
-      return res.status(500).send("Error retrieving favorites");
+      return res.status(500).send("Error retrieving vacancies");
     }
 
     return res.json(results);
   });
 });
+
 app.post('/blogs/:id/view', (req, res) => {
   const blogId = req.params.id;
 
