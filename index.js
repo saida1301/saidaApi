@@ -176,62 +176,27 @@ app.post('/google-signin', (req, res) => {
     return res.status(400).json({ message: 'Invalid login. Please provide email and givenName' });
   }
 
-  const selectQuery = 'SELECT id FROM users WHERE email = ?';
-  const selectValues = [email];
+  const insertQuery = 'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)';
+  const values = [email, givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName)];
 
-  pool.query(selectQuery, selectValues, (selectErr, selectResults) => {
-    if (selectErr) {
-      console.log(selectErr);
+  pool.query(insertQuery, values, (err, results) => {
+    if (err) {
+      console.log(err);
       return res.status(500).json({ message: 'Internal server error' });
     }
 
-    if (selectResults.length > 0) {
-      // User with this email already exists, perform update or return an error
-      // Example: Update user's information
-      const userId = selectResults[0].id;
-      const updateQuery = 'UPDATE users SET name = ?, image = ?, surname = ? WHERE id = ?';
-      const updateValues = [givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName), userId];
-      pool.query(updateQuery, updateValues, (updateErr, updateResults) => {
-        if (updateErr) {
-          console.log(updateErr);
-          return res.status(500).json({ message: 'Internal server error' });
-        }
-        return res.status(200).json({
-          message: 'User information updated successfully',
-          user: {
-            id: userId,
-            email: email,
-            givenName: givenName,
-            familyName: familyName,
-            photo: photo || DEFAULT_USER_IMAGE,
-          },
-        });
-      });
-    } else {
-      // User doesn't exist, proceed with insert
-      const insertQuery = 'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)';
-      const insertValues = [email, givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName)];
+    const insertedUserId = results.insertId;
 
-      pool.query(insertQuery, insertValues, (insertErr, insertResults) => {
-        if (insertErr) {
-          console.log(insertErr);
-          return res.status(500).json({ message: 'Internal server error' });
-        }
-
-        const insertedUserId = insertResults.insertId;
-
-        return res.status(200).json({
-          message: 'User information stored successfully',
-          user: {
-            id: insertedUserId,
-            email: email,
-            givenName: givenName,
-            familyName: familyName,
-            photo: photo || DEFAULT_USER_IMAGE,
-          },
-        });
-      });
-    }
+    return res.status(200).json({
+      message: 'User information stored successfully',
+      user: {
+        id: insertedUserId,
+        email: email,
+        givenName: givenName,
+        familyName: familyName,
+        photo: photo || DEFAULT_USER_IMAGE,
+      },
+    });
   });
 });
 
@@ -1131,9 +1096,6 @@ app.get("/vacancies", async (req, res) => {
       query += " AND city_id = ?";
     }
 
-    // Modify the query to exclude vacancies with deadlines in the year 2021
-    query += " AND YEAR(deadline) >= 2022";
-
     if (sort === "asc") {
       query += " ORDER BY view ASC";
     } else if (sort === "desc") {
@@ -1168,9 +1130,6 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
-
-
 
 
 
@@ -1549,7 +1508,6 @@ app.get("/companies", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
 app.get("/va", async (req, res) => {
   try {
     pool.query("SELECT * FROM vacancies WHERE status='1' ORDER BY created_at DESC", (error, results, fields) => {
@@ -1575,23 +1533,6 @@ app.get("/candidates", async (req, res) => {
 app.use("/companies/:id", async (req, res) => {
   try {
     const { id } = req.params;
-
-    pool.query(
-      "SELECT * FROM companies WHERE id = ?",
-      [id],
-      (error, results, fields) => {
-        if (error) throw error;
-        res.json(results);
-      }
-    );
-  } catch (error) {
-    console.log(error);
-    res.sendStatus(500);
-  }
-});
-app.use("/compan/:companyId", async (req, res) => {
-  try {
-    const { companyId } = req.params;
 
     pool.query(
       "SELECT * FROM companies WHERE id = ?",
