@@ -1139,30 +1139,26 @@ app.get("/vacancies/total", async (req, res) => {
 
     let query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
 
+    const queryParams = [];
+
     if (showFinished === "false") {
       query += " AND deadline >= NOW()";
     }
 
     if (city_id && city_id !== "All") {
       query += " AND city_id = ?";
+      queryParams.push(city_id); // Push city_id into the queryParams array
     }
 
     if (createdAfter) {
       query += " AND created_at >= ?";
-    }
-
-    const queryParams = [];
-    if (city_id && city_id !== "All") {
-      queryParams.push(city_id);
-    }
-    if (createdAfter) {
-      queryParams.push(createdAfter);
+      queryParams.push(createdAfter); // Push createdAfter into the queryParams array
     }
 
     pool.query(query, queryParams, (error, results, fields) => {
       if (error) {
         console.log("Error in SQL query:", error.message);
-        throw error;
+        return res.sendStatus(500); // Return an error response
       }
       res.json(results[0]);
     });
