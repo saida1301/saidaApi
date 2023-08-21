@@ -311,7 +311,26 @@ app.get("/vacancies/company/:company_id", async (req, res) => {
   }
 });
 
+app.get('/get_company_data/:companyId', (req, res) => {
+  const companyId = req.params.companyId;
 
+  const query = 'SELECT * FROM companies WHERE id = ?';
+  
+  // Execute the database query
+  pool.query(query, [companyId], (error, results) => {
+    if (error) {
+      console.error('Error fetching company data:', error);
+      res.status(500).json({ message: 'Error fetching company data' });
+    } else {
+      if (results.length > 0) {
+        const companyData = results[0];
+        res.status(200).json(companyData);
+      } else {
+        res.status(404).json({ message: 'Company not found' });
+      }
+    }
+  });
+});
 app.post(
   '/signup',
   [
