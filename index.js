@@ -1096,6 +1096,9 @@ app.get("/vacancies", async (req, res) => {
       query += " AND city_id = ?";
     }
 
+    // Add a condition to exclude vacancies added more than 1 year ago
+    query += " AND created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
+
     if (sort === "asc") {
       query += " ORDER BY view ASC";
     } else if (sort === "desc") {
@@ -1133,6 +1136,7 @@ app.get("/vacancies", async (req, res) => {
 
 
 
+
 app.get("/vacancies/total", async (req, res) => {
   try {
     const { showFinished, city_id, createdAfter } = req.query;
@@ -1149,6 +1153,9 @@ app.get("/vacancies/total", async (req, res) => {
       query += " AND city_id = ?";
       queryParams.push(city_id); // Push city_id into the queryParams array
     }
+
+    // Add a condition to exclude vacancies added more than 1 year ago
+    query += " AND created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
 
     if (createdAfter) {
       query += " AND created_at >= ?";
@@ -1167,6 +1174,7 @@ app.get("/vacancies/total", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 
