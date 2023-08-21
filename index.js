@@ -1096,9 +1096,6 @@ app.get("/vacancies", async (req, res) => {
       query += " AND city_id = ?";
     }
 
-    // Add a condition to exclude vacancies added more than 1 year ago
-    query += " AND created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
-
     if (sort === "asc") {
       query += " ORDER BY view ASC";
     } else if (sort === "desc") {
@@ -1136,14 +1133,11 @@ app.get("/vacancies", async (req, res) => {
 
 
 
-
 app.get("/vacancies/total", async (req, res) => {
   try {
     const { showFinished, city_id, createdAfter } = req.query;
 
     let query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
-
-    const queryParams = [];
 
     if (showFinished === "false") {
       query += " AND deadline >= NOW()";
@@ -1151,21 +1145,24 @@ app.get("/vacancies/total", async (req, res) => {
 
     if (city_id && city_id !== "All") {
       query += " AND city_id = ?";
-      queryParams.push(city_id); // Push city_id into the queryParams array
     }
-
-    // Add a condition to exclude vacancies added more than 1 year ago
-    query += " AND created_at >= DATE_SUB(NOW(), INTERVAL 1 YEAR)";
 
     if (createdAfter) {
       query += " AND created_at >= ?";
-      queryParams.push(createdAfter); // Push createdAfter into the queryParams array
+    }
+
+    const queryParams = [];
+    if (city_id && city_id !== "All") {
+      queryParams.push(city_id);
+    }
+    if (createdAfter) {
+      queryParams.push(createdAfter);
     }
 
     pool.query(query, queryParams, (error, results, fields) => {
       if (error) {
         console.log("Error in SQL query:", error.message);
-        return res.sendStatus(500); // Return an error response
+        throw error;
       }
       res.json(results[0]);
     });
@@ -1174,7 +1171,6 @@ app.get("/vacancies/total", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
 
 
 
