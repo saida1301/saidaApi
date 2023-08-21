@@ -1173,6 +1173,7 @@ app.get("/vacancies", async (req, res) => {
 
 
 
+
 app.get("/vacancies/total", async (req, res) => {
   try {
     const { showFinished, city_id, createdAfter } = req.query;
