@@ -1543,6 +1543,7 @@ app.get("/companies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 app.get("/va", async (req, res) => {
   try {
     pool.query("SELECT * FROM vacancies WHERE status='1' ORDER BY created_at DESC", (error, results, fields) => {
@@ -1568,6 +1569,23 @@ app.get("/candidates", async (req, res) => {
 app.use("/companies/:id", async (req, res) => {
   try {
     const { id } = req.params;
+
+    pool.query(
+      "SELECT * FROM companies WHERE id = ?",
+      [id],
+      (error, results, fields) => {
+        if (error) throw error;
+        res.json(results);
+      }
+    );
+  } catch (error) {
+    console.log(error);
+    res.sendStatus(500);
+  }
+});
+app.use("/compan/:companyId", async (req, res) => {
+  try {
+    const { companyId } = req.params;
 
     pool.query(
       "SELECT * FROM companies WHERE id = ?",
