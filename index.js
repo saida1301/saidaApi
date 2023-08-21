@@ -1131,6 +1131,9 @@ app.get("/vacancies", async (req, res) => {
       query += " AND city_id = ?";
     }
 
+    // Modify the query to exclude vacancies with deadlines in the year 2021
+    query += " AND YEAR(deadline) >= 2022";
+
     if (sort === "asc") {
       query += " ORDER BY view ASC";
     } else if (sort === "desc") {
@@ -1139,9 +1142,6 @@ app.get("/vacancies", async (req, res) => {
       // Default sorting by created_at in descending order
       query += " ORDER BY created_at DESC";
     }
-
-    // Modify the query to exclude vacancies with deadlines in the year 2021
-    query += " AND YEAR(deadline) >= 2022";
 
     if (pageSize) {
       query += " LIMIT ?, ?";
@@ -1168,6 +1168,7 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 
