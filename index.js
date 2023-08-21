@@ -1140,6 +1140,9 @@ app.get("/vacancies", async (req, res) => {
       query += " ORDER BY created_at DESC";
     }
 
+    // Modify the query to exclude vacancies with deadlines in the year 2021
+    query += " AND YEAR(deadline) >= 2022";
+
     if (pageSize) {
       query += " LIMIT ?, ?";
       const queryParams = city_id && city_id !== "All" ? [city_id, offset, parseInt(pageSize)] : [offset, parseInt(pageSize)];
@@ -1165,6 +1168,7 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 
