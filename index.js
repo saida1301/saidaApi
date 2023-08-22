@@ -1167,20 +1167,19 @@ app.post('/vacancies/:id/view', (req, res) => {
 });
 app.get("/vacancies", async (req, res) => {
   try {
-    const { page, pageSize, city_id, sort } = req.query;
+    const { page, pageSize, showFinished, city_id, sort } = req.query;
     const offset = (page - 1) * pageSize;
 
     let query = "SELECT * FROM vacancies WHERE status = 1";
 
-    // Add a condition to filter vacancies created in 2023 and after
-    query += " AND created_at >= '2023-01-01'";
+    if (showFinished === "false") {
+      // Include filtering to show only vacancies whose deadlines have not passed
+      query += " AND deadline >= NOW()";
+    }
 
     if (city_id && city_id !== "All") {
       query += " AND city_id = ?";
     }
-
-    // Include filtering to show only vacancies whose deadlines have not passed
-    query += " AND deadline >= NOW()";
 
     if (sort === "asc") {
       query += " ORDER BY view ASC";
@@ -1195,16 +1194,11 @@ app.get("/vacancies", async (req, res) => {
       query += " LIMIT ?, ?";
       const queryParams = city_id && city_id !== "All" ? [city_id, offset, parseInt(pageSize)] : [offset, parseInt(pageSize)];
 
-      console.log("Query:", query); // Log the query for debugging
-      console.log("Query Params:", queryParams); // Log the query params for debugging
-
       pool.query(query, queryParams, (error, results, fields) => {
         if (error) {
           console.log("Error in SQL query:", error.message);
           throw error;
         }
-
-        console.log("Number of vacancies retrieved:", results.length); // Log the count of retrieved vacancies
         res.json(results);
       });
     } else {
@@ -1213,8 +1207,6 @@ app.get("/vacancies", async (req, res) => {
           console.log("Error in SQL query:", error.message);
           throw error;
         }
-
-        console.log("Number of vacancies retrieved:", results.length); // Log the count of retrieved vacancies
         res.json(results);
       });
     }
@@ -1225,16 +1217,14 @@ app.get("/vacancies", async (req, res) => {
 });
 
 
+
 app.get("/vacancies/total", async (req, res) => {
   try {
-    const { showFinished, city_id } = req.query;
+    const { showFinished, city_id, createdAfter } = req.query;
 
     let query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
 
     const queryParams = [];
-
-    // Add a condition to filter vacancies created in 2023 and after
-    query += " AND created_at >= '2023-01-01'";
 
     if (showFinished === "false") {
       query += " AND deadline >= NOW()";
@@ -1245,15 +1235,16 @@ app.get("/vacancies/total", async (req, res) => {
       queryParams.push(city_id); // Push city_id into the queryParams array
     }
 
-    console.log("Query:", query); // Log the query for debugging
-    console.log("Query Params:", queryParams); // Log the query params for debugging
+    if (createdAfter) {
+      query += " AND created_at >= ?";
+      queryParams.push(createdAfter); // Push createdAfter into the queryParams array
+    }
 
     pool.query(query, queryParams, (error, results, fields) => {
       if (error) {
         console.log("Error in SQL query:", error.message);
         return res.sendStatus(500); // Return an error response
       }
-      console.log("Query Result:", results); // Log the query result for debugging
       res.json(results[0]);
     });
   } catch (error) {
@@ -1261,8 +1252,6 @@ app.get("/vacancies/total", async (req, res) => {
     res.sendStatus(500);
   }
 });
-
-
 
 
 
