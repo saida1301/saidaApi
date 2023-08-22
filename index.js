@@ -516,9 +516,7 @@ app.get("/categories-with-count", async (req, res) => {
 });
 
 app.post('/update-category', (req, res) => {
-  const { cat_id } = req.body;
-  const userId = req.user.id; // Assuming you have authentication middleware setting req.user
-
+const { cat_id, user_id } = req.body;
   pool.query(
     'UPDATE users SET cat_id = ? WHERE id = ?',
     [cat_id, userId],
