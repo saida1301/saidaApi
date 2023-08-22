@@ -1180,7 +1180,7 @@ app.get("/vacancies", async (req, res) => {
     }
 
     // Include filtering to show only vacancies whose deadlines have not passed
-    query += " AND deadline >= NOW()";
+    query += " AND (deadline >= NOW() OR city_id = ?)";
 
     if (sort === "asc") {
       query += " ORDER BY view ASC";
@@ -1191,9 +1191,17 @@ app.get("/vacancies", async (req, res) => {
       query += " ORDER BY created_at DESC";
     }
 
+    let queryParams = [];
+
+    if (city_id && city_id !== "All") {
+      queryParams.push(city_id);
+    } else {
+      queryParams.push(""); // Empty value for city_id
+    }
+
     if (pageSize) {
       query += " LIMIT ?, ?";
-      const queryParams = city_id && city_id !== "All" ? [city_id, offset, parseInt(pageSize)] : [offset, parseInt(pageSize)];
+      queryParams.push(offset, parseInt(pageSize));
 
       pool.query(query, queryParams, (error, results, fields) => {
         if (error) {
@@ -1205,7 +1213,7 @@ app.get("/vacancies", async (req, res) => {
         res.json(results);
       });
     } else {
-      pool.query(query, (error, results, fields) => {
+      pool.query(query, queryParams, (error, results, fields) => {
         if (error) {
           console.log("Error in SQL query:", error.message);
           throw error;
