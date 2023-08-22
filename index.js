@@ -1200,6 +1200,8 @@ app.get("/vacancies", async (req, res) => {
           console.log("Error in SQL query:", error.message);
           throw error;
         }
+
+        console.log("Number of vacancies retrieved:", results.length); // Log the count of retrieved vacancies
         res.json(results);
       });
     } else {
@@ -1208,6 +1210,8 @@ app.get("/vacancies", async (req, res) => {
           console.log("Error in SQL query:", error.message);
           throw error;
         }
+
+        console.log("Number of vacancies retrieved:", results.length); // Log the count of retrieved vacancies
         res.json(results);
       });
     }
