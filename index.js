@@ -1236,7 +1236,7 @@ app.get("/vacancies/total", async (req, res) => {
     // Add a condition to filter vacancies created in 2023 and after
     query += " AND created_at >= '2023-01-01'";
 
-    if (!showFinished) {
+    if (showFinished === "false") {
       query += " AND deadline >= NOW()";
     }
 
@@ -1261,6 +1261,7 @@ app.get("/vacancies/total", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 
