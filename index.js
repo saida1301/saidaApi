@@ -517,9 +517,16 @@ app.get("/categories-with-count", async (req, res) => {
 
 app.post('/update-category', (req, res) => {
   const { cat_id, user_id } = req.body;
+  
+  // Generate the placeholder string for the cat_id values
+  const placeholders = cat_id.map(() => '?').join(', ');
+
+  // Combine the placeholders with the user_id value
+  const values = [...cat_id, user_id];
+
   pool.query(
-    'UPDATE users SET cat_id = ? WHERE id = ?',
-    [cat_id.map(id => id.toString()), user_id],
+    `UPDATE users SET cat_id = (${placeholders}) WHERE id = ?`,
+    values,
     (err, results) => {
       if (err) {
         console.error('Error updating category:', err);
