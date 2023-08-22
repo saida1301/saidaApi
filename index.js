@@ -1175,18 +1175,12 @@ app.get("/vacancies", async (req, res) => {
     // Add a condition to filter vacancies created in 2023 and after
     query += " AND created_at >= '2023-01-01'";
 
+    if (city_id && city_id !== "All") {
+      query += " AND city_id = ?";
+    }
+
     // Include filtering to show only vacancies whose deadlines have not passed
-    if (city_id && city_id !== "All") {
-      query += " AND (deadline >= NOW() OR city_id = ?)";
-    } else {
-      query += " AND deadline >= NOW()";
-    }
-
-    let queryParams = [];
-
-    if (city_id && city_id !== "All") {
-      queryParams.push(city_id);
-    }
+    query += " AND deadline >= NOW()";
 
     if (sort === "asc") {
       query += " ORDER BY view ASC";
@@ -1199,7 +1193,10 @@ app.get("/vacancies", async (req, res) => {
 
     if (pageSize) {
       query += " LIMIT ?, ?";
-      queryParams.push(offset, parseInt(pageSize));
+      const queryParams = city_id && city_id !== "All" ? [city_id, offset, parseInt(pageSize)] : [offset, parseInt(pageSize)];
+
+      console.log("Query:", query); // Log the query for debugging
+      console.log("Query Params:", queryParams); // Log the query params for debugging
 
       pool.query(query, queryParams, (error, results, fields) => {
         if (error) {
@@ -1211,7 +1208,7 @@ app.get("/vacancies", async (req, res) => {
         res.json(results);
       });
     } else {
-      pool.query(query, queryParams, (error, results, fields) => {
+      pool.query(query, (error, results, fields) => {
         if (error) {
           console.log("Error in SQL query:", error.message);
           throw error;
@@ -1228,10 +1225,6 @@ app.get("/vacancies", async (req, res) => {
 });
 
 
-
-
-
-
 app.get("/vacancies/total", async (req, res) => {
   try {
     const { showFinished, city_id } = req.query;
@@ -1243,7 +1236,7 @@ app.get("/vacancies/total", async (req, res) => {
     // Add a condition to filter vacancies created in 2023 and after
     query += " AND created_at >= '2023-01-01'";
 
-    if (showFinished === "false") {
+    if (!showFinished) {
       query += " AND deadline >= NOW()";
     }
 
