@@ -1172,17 +1172,16 @@ app.get("/vacancies", async (req, res) => {
 
     let query = "SELECT * FROM vacancies WHERE status = 1";
 
-    if (showFinished === "false") {
-      // Include filtering to show only vacancies whose deadlines have not passed
-      query += " AND deadline >= NOW()";
-    }
-
     if (city_id && city_id !== "All") {
       query += " AND city_id = ?";
     }
 
-    // Add a condition to filter vacancies created in 2023
+    // Combine conditions to filter vacancies created in 2023 and whose deadlines have not passed
     query += " AND YEAR(created_at) = 2023";
+
+    if (showFinished === "false") {
+      query += " AND deadline >= NOW()";
+    }
 
     if (sort === "asc") {
       query += " ORDER BY view ASC";
@@ -1218,6 +1217,7 @@ app.get("/vacancies", async (req, res) => {
     res.sendStatus(500);
   }
 });
+
 
 
 
