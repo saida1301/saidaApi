@@ -519,7 +519,7 @@ app.post('/update-category', (req, res) => {
 const { cat_id, user_id } = req.body;
   pool.query(
     'UPDATE users SET cat_id = ? WHERE id = ?',
-    [cat_id, userId],
+    [cat_id, user_id],
     (err, results) => {
       if (err) {
         console.error('Error updating category:', err);
