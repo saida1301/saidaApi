@@ -518,11 +518,14 @@ app.get("/categories-with-count", async (req, res) => {
 app.post('/update-category', (req, res) => {
   const { cat_id, user_id } = req.body;
 
+  // Convert numbers to strings
+  const cat_id_strings = cat_id.map(id => id.toString());
+
   // Build the query string
   let query = 'UPDATE users SET cat_id = ? WHERE id = ?';
 
   // Build the array of values for the placeholders
-  const values = [JSON.stringify(cat_id), user_id];
+  const values = [JSON.stringify(cat_id_strings), user_id];
 
   pool.query(
     query,
@@ -541,6 +544,7 @@ app.post('/update-category', (req, res) => {
     }
   );
 });
+
 
 
 
