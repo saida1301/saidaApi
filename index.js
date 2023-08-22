@@ -515,7 +515,27 @@ app.get("/categories-with-count", async (req, res) => {
   }
 });
 
+app.post('/update-category', (req, res) => {
+  const { cat_id } = req.body;
+  const userId = req.user.id; // Assuming you have authentication middleware setting req.user
 
+  pool.query(
+    'UPDATE users SET cat_id = ? WHERE id = ?',
+    [cat_id, userId],
+    (err, results) => {
+      if (err) {
+        console.error('Error updating category:', err);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+
+      if (results.affectedRows === 0) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      return res.json({ message: 'Category updated successfully' });
+    }
+  );
+});
 
 app.get("/vaca", async (req, res) => {
   try {
