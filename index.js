@@ -522,7 +522,7 @@ app.post('/update-category', (req, res) => {
   let query = 'UPDATE users SET cat_id = ? WHERE id = ?';
 
   // Build the array of values for the placeholders
-  const values = [cat_id.join(','), user_id];
+  const values = [JSON.stringify(cat_id), user_id];
 
   pool.query(
     query,
