@@ -1181,6 +1181,9 @@ app.get("/vacancies", async (req, res) => {
       query += " AND city_id = ?";
     }
 
+    // Add a condition to filter vacancies created in 2023
+    query += " AND YEAR(created_at) = 2023";
+
     if (sort === "asc") {
       query += " ORDER BY view ASC";
     } else if (sort === "desc") {
