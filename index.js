@@ -176,27 +176,62 @@ app.post('/google-signin', (req, res) => {
     return res.status(400).json({ message: 'Invalid login. Please provide email and givenName' });
   }
 
-  const insertQuery = 'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)';
-  const values = [email, givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName)];
+  const selectQuery = 'SELECT id FROM users WHERE email = ?';
+  const selectValues = [email];
 
-  pool.query(insertQuery, values, (err, results) => {
-    if (err) {
-      console.log(err);
+  pool.query(selectQuery, selectValues, (selectErr, selectResults) => {
+    if (selectErr) {
+      console.log(selectErr);
       return res.status(500).json({ message: 'Internal server error' });
     }
 
-    const insertedUserId = results.insertId;
+    if (selectResults.length > 0) {
+      // User with this email already exists, perform update or return an error
+      // Example: Update user's information
+      const userId = selectResults[0].id;
+      const updateQuery = 'UPDATE users SET name = ?, image = ?, surname = ? WHERE id = ?';
+      const updateValues = [givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName), userId];
+      pool.query(updateQuery, updateValues, (updateErr, updateResults) => {
+        if (updateErr) {
+          console.log(updateErr);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
+        return res.status(200).json({
+          message: 'User information updated successfully',
+          user: {
+            id: userId,
+            email: email,
+            givenName: givenName,
+            familyName: familyName,
+            photo: photo || DEFAULT_USER_IMAGE,
+          },
+        });
+      });
+    } else {
+      // User doesn't exist, proceed with insert
+      const insertQuery = 'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)';
+      const insertValues = [email, givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName)];
 
-    return res.status(200).json({
-      message: 'User information stored successfully',
-      user: {
-        id: insertedUserId,
-        email: email,
-        givenName: givenName,
-        familyName: familyName,
-        photo: photo || DEFAULT_USER_IMAGE,
-      },
-    });
+      pool.query(insertQuery, insertValues, (insertErr, insertResults) => {
+        if (insertErr) {
+          console.log(insertErr);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
+
+        const insertedUserId = insertResults.insertId;
+
+        return res.status(200).json({
+          message: 'User information stored successfully',
+          user: {
+            id: insertedUserId,
+            email: email,
+            givenName: givenName,
+            familyName: familyName,
+            photo: photo || DEFAULT_USER_IMAGE,
+          },
+        });
+      });
+    }
   });
 });
 
