@@ -1223,11 +1223,14 @@ app.get("/vacancies", async (req, res) => {
 
 app.get("/vacancies/total", async (req, res) => {
   try {
-    const { showFinished, city_id, createdAfter } = req.query;
+    const { showFinished, city_id } = req.query;
 
     let query = "SELECT COUNT(*) AS count FROM vacancies WHERE status = 1";
 
     const queryParams = [];
+
+    // Add a condition to filter vacancies created in 2023 and after
+    query += " AND created_at >= '2023-01-01'";
 
     if (showFinished === "false") {
       query += " AND deadline >= NOW()";
@@ -1236,11 +1239,6 @@ app.get("/vacancies/total", async (req, res) => {
     if (city_id && city_id !== "All") {
       query += " AND city_id = ?";
       queryParams.push(city_id); // Push city_id into the queryParams array
-    }
-
-    if (createdAfter) {
-      query += " AND created_at >= ?";
-      queryParams.push(createdAfter); // Push createdAfter into the queryParams array
     }
 
     pool.query(query, queryParams, (error, results, fields) => {
