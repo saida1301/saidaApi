@@ -166,13 +166,16 @@ app.post(
   }
 );
 const DEFAULT_USER_IMAGE = 'back/assets/images/users/default-user.png';
-
+function generateRandomText(name) {
+  // Extract the starting alphabet of the givenName
+  const firstLetter = name.charAt(0);
+  return firstLetter;
+}
 app.post('/google-signin', (req, res) => {
   const { email, givenName, familyName, photo } = req.body;
 
   // Perform validation
-  const isValid = email && givenName;
-  if (!isValid) {
+  if (!email || !givenName) {
     return res.status(400).json({ message: 'Invalid login. Please provide email and givenName' });
   }
 
@@ -181,28 +184,29 @@ app.post('/google-signin', (req, res) => {
 
   pool.query(selectQuery, selectValues, (selectErr, selectResults) => {
     if (selectErr) {
-      console.log(selectErr);
+      console.error('Error querying database:', selectErr);
       return res.status(500).json({ message: 'Internal server error' });
     }
 
     if (selectResults.length > 0) {
-      // User with this email already exists, perform update or return an error
-      // Example: Update user's information
+      // User with this email already exists, perform update
       const userId = selectResults[0].id;
       const updateQuery = 'UPDATE users SET name = ?, image = ?, surname = ? WHERE id = ?';
       const updateValues = [givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName), userId];
+
       pool.query(updateQuery, updateValues, (updateErr, updateResults) => {
         if (updateErr) {
-          console.log(updateErr);
+          console.error('Error updating user:', updateErr);
           return res.status(500).json({ message: 'Internal server error' });
         }
+        
         return res.status(200).json({
           message: 'User information updated successfully',
           user: {
             id: userId,
-            email: email,
-            givenName: givenName,
-            familyName: familyName,
+            email,
+            givenName,
+            familyName,
             photo: photo || DEFAULT_USER_IMAGE,
           },
         });
@@ -214,7 +218,7 @@ app.post('/google-signin', (req, res) => {
 
       pool.query(insertQuery, insertValues, (insertErr, insertResults) => {
         if (insertErr) {
-          console.log(insertErr);
+          console.error('Error inserting user:', insertErr);
           return res.status(500).json({ message: 'Internal server error' });
         }
 
@@ -224,9 +228,9 @@ app.post('/google-signin', (req, res) => {
           message: 'User information stored successfully',
           user: {
             id: insertedUserId,
-            email: email,
-            givenName: givenName,
-            familyName: familyName,
+            email,
+            givenName,
+            familyName,
             photo: photo || DEFAULT_USER_IMAGE,
           },
         });
@@ -235,11 +239,8 @@ app.post('/google-signin', (req, res) => {
   });
 });
 
-function generateRandomText(name) {
-  // Extract the starting alphabet of the givenName
-  const firstLetter = name.charAt(0);
-  return firstLetter;
-}
+
+
 
 const performSearch = async (query) => {
   try {
