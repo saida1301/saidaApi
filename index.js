@@ -1518,13 +1518,13 @@ app.get("/vacancie/:categoryId", (req, res) => {
   // Add the DESC keyword to order by descending
   const sql = `
     SELECT * FROM vacancies
-    WHERE category_id IN (SELECT id FROM categories WHERE id = ${categoryId})
+    WHERE category_id IN (SELECT id FROM categories WHERE id = ?)
     ORDER BY created_at DESC
-    LIMIT ${pageSize}
-    OFFSET ${startIndex}
+    LIMIT ?
+    OFFSET ?
   `;
 
-  pool.query(sql, (error, results) => {
+  pool.query(sql, [categoryId, pageSize, startIndex], (error, results) => {
     if (error) {
       console.error(error);
       return res.status(500).send("Error retrieving vacancies");
@@ -1533,6 +1533,7 @@ app.get("/vacancie/:categoryId", (req, res) => {
     return res.json(results);
   });
 });
+
 
 app.post('/blogs/:id/view', (req, res) => {
   const blogId = req.params.id;
