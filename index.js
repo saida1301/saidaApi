@@ -2813,7 +2813,7 @@ app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
     return res.status(200).send("Item removed from favorites");
   });
 });
-app.delete("/favorites/:user_id/:cv_id", (req, res) => {
+app.delete("/fa/:user_id/:cv_id", (req, res) => {
   const { user_id, cv_id } = req.params;
 
   const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND cv_id = ${cv_id}`;
