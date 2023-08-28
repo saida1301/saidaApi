@@ -1509,51 +1509,47 @@ app.post('/vacanc', cors(), async (req, res) => {
 
 
 app.get("/vacancie/:categoryId", (req, res) => {
-const { categoryId } = req.params;
-const page = parseInt(req.query.page) || 1;
-const pageSize = parseInt(req.query.pageSize) || 10;
+  const { categoryId } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = 10;
+  const startIndex = (page - 1) * pageSize;
 
-const startIndex = (page - 1) * pageSize;
-
-// Add the DESC keyword to order by descending
-const sql = `
-  SELECT * FROM vacancies
-  WHERE category_id IN (SELECT id FROM categories WHERE id = ?)
-  ORDER BY created_at DESC
-  LIMIT ?
-  OFFSET ?
-`;
-
-pool.query(sql, [categoryId, pageSize, startIndex], (error, results) => {
-  if (error) {
-    console.error(error);
-    return res.status(500).send("Error retrieving vacancies");
-  }
-
-  // Count total vacancies for the given category
-  const countSql = `
-    SELECT COUNT(*) as total FROM vacancies
-    WHERE category_id IN (SELECT id FROM categories WHERE id = ?)
+  const sqlCount = `
+    SELECT COUNT(*) AS total FROM vacancies
+    WHERE category_id = ${categoryId}
   `;
 
-  pool.query(countSql, [categoryId], (countError, countResults) => {
+  const sqlVacancies = `
+    SELECT * FROM vacancies
+    WHERE category_id = ${categoryId}
+    ORDER BY created_at DESC
+    LIMIT ${pageSize} OFFSET ${startIndex}
+  `;
+
+  pool.query(sqlCount, (countError, countResults) => {
     if (countError) {
       console.error(countError);
-      return res.status(500).send("Error counting vacancies");
+      return res.status(500).send("Error retrieving vacancy count");
     }
 
     const totalVacancies = countResults[0].total;
 
-    return res.json({
-      vacancies: results,
-      currentPage: page,
-      totalPages: Math.ceil(totalVacancies / pageSize),
-      totalItems: totalVacancies
+    pool.query(sqlVacancies, (vacanciesError, vacanciesResults) => {
+      if (vacanciesError) {
+        console.error(vacanciesError);
+        return res.status(500).send("Error retrieving vacancies");
+      }
+
+      return res.json({
+        totalItems: totalVacancies,
+        totalPages: Math.ceil(totalVacancies / pageSize),
+        currentPage: page,
+        vacancies: vacanciesResults,
+      });
     });
   });
 });
 
-});
 
 
 app.post('/blogs/:id/view', (req, res) => {
