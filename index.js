@@ -2770,7 +2770,7 @@ app.post("/favorite", async (req, res) => {
 });
 
 
-app.get("/favorites/:userId", (req, res) => {
+app.get("/favss/:userId", (req, res) => {
   const { userId } = req.params;
 
   const sql = `SELECT * FROM vacancies WHERE id IN (SELECT vacancy_id FROM favorits WHERE user_id = ?)`;
