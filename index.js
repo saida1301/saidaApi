@@ -1510,18 +1510,12 @@ app.post('/vacanc', cors(), async (req, res) => {
 
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
-  const page = parseInt(req.query.page) || 1;
-  const pageSize = parseInt(req.query.pageSize) || 10;
 
-  const startIndex = (page - 1) * pageSize;
-
+  // Add the DESC keyword to order by descending
   const sql = `
     SELECT * FROM vacancies
     WHERE category_id IN (SELECT id FROM categories WHERE id = ${categoryId})
-    AND status = '1'
     ORDER BY created_at DESC
-    LIMIT ${pageSize}
-    OFFSET ${startIndex}
   `;
 
   pool.query(sql, (error, results) => {
@@ -1533,7 +1527,6 @@ app.get("/vacancie/:categoryId", (req, res) => {
     return res.json(results);
   });
 });
-
 
 
 
