@@ -1515,6 +1515,7 @@ app.get("/vacancie/:categoryId", (req, res) => {
   const sql = `
     SELECT * FROM vacancies
     WHERE category_id IN (SELECT id FROM categories WHERE id = ${categoryId})
+    AND status = '1' 
     ORDER BY created_at DESC
   `;
 
@@ -1527,6 +1528,7 @@ app.get("/vacancie/:categoryId", (req, res) => {
     return res.json(results);
   });
 });
+
 
 
 
