@@ -2799,7 +2799,7 @@ app.get("/fvrts/:userId", (req, res) => {
   });
 });
 
-app.delete("/favorites/:user_id/:vacancy_id", (req, res) => {
+app.delete("/favsss/:user_id/:vacancy_id", (req, res) => {
   const { user_id, vacancy_id } = req.params;
 
   const sql = `DELETE FROM favorits WHERE user_id = ${user_id} AND vacancy_id = ${vacancy_id}`;
