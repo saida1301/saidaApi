@@ -1515,24 +1515,45 @@ app.get("/vacancie/:categoryId", (req, res) => {
 
   const startIndex = (page - 1) * pageSize;
 
-  // Add the DESC keyword to order by descending
-  const sql = `
-    SELECT * FROM vacancies
+  // Query to get the total count of vacancies for the category
+  const countSql = `
+    SELECT COUNT(*) AS total FROM vacancies
     WHERE category_id IN (SELECT id FROM categories WHERE id = ?)
-    ORDER BY created_at DESC
-    LIMIT ?
-    OFFSET ?
   `;
 
-  pool.query(sql, [categoryId, pageSize, startIndex], (error, results) => {
+  pool.query(countSql, [categoryId], (error, countResults) => {
     if (error) {
       console.error(error);
-      return res.status(500).send("Error retrieving vacancies");
+      return res.status(500).send("Error retrieving vacancy count");
     }
 
-    return res.json(results);
+    const totalVacancies = countResults[0].total;
+
+    // Query to get paginated vacancies
+    const paginatedSql = `
+      SELECT * FROM vacancies
+      WHERE category_id IN (SELECT id FROM categories WHERE id = ?)
+      ORDER BY created_at DESC
+      LIMIT ?
+      OFFSET ?
+    `;
+
+    pool.query(paginatedSql, [categoryId, pageSize, startIndex], (error, results) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).send("Error retrieving vacancies");
+      }
+
+      return res.json({
+        totalItems: totalVacancies,
+        totalPages: Math.ceil(totalVacancies / pageSize),
+        currentPage: page,
+        vacancies: results
+      });
+    });
   });
 });
+
 
 
 app.post('/blogs/:id/view', (req, res) => {
