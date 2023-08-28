@@ -1509,50 +1509,29 @@ app.post('/vacanc', cors(), async (req, res) => {
 
 
 app.get("/vacancie/:categoryId", (req, res) => {
-const { categoryId } = req.params;
-const page = parseInt(req.query.page) || 1;
-const pageSize = parseInt(req.query.pageSize) || 10;
+  const { categoryId } = req.params;
+  const page = parseInt(req.query.page) || 1;
+  const pageSize = parseInt(req.query.pageSize) || 10;
 
-const startIndex = (page - 1) * pageSize;
+  const startIndex = (page - 1) * pageSize;
 
-// Add the DESC keyword to order by descending
-const sql = `
-  SELECT * FROM vacancies
-  WHERE category_id IN (SELECT id FROM categories WHERE id = ?)
-  ORDER BY created_at DESC
-  LIMIT ?
-  OFFSET ?
-`;
-
-pool.query(sql, [categoryId, pageSize, startIndex], (error, results) => {
-  if (error) {
-    console.error(error);
-    return res.status(500).send("Error retrieving vacancies");
-  }
-
-  // Count total vacancies for the given category
-  const countSql = `
-    SELECT COUNT(*) as total FROM vacancies
+  // Add the DESC keyword to order by descending
+  const sql = `
+    SELECT * FROM vacancies
     WHERE category_id IN (SELECT id FROM categories WHERE id = ?)
+    ORDER BY created_at DESC
+    LIMIT ?
+    OFFSET ?
   `;
 
-  pool.query(countSql, [categoryId], (countError, countResults) => {
-    if (countError) {
-      console.error(countError);
-      return res.status(500).send("Error counting vacancies");
+  pool.query(sql, [categoryId, pageSize, startIndex], (error, results) => {
+    if (error) {
+      console.error(error);
+      return res.status(500).send("Error retrieving vacancies");
     }
 
-    const totalVacancies = countResults[0].total;
-
-    return res.json({
-      vacancies: results,
-      currentPage: page,
-      totalPages: Math.ceil(totalVacancies / pageSize),
-      totalItems: totalVacancies
-    });
+    return res.json(results);
   });
-});
-
 });
 
 
