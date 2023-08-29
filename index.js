@@ -139,15 +139,13 @@ app.post(
     const { email, password } = req.body;
     try {
       const queryResult = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-      console.log(queryResult); // Check the structure of queryResult
-      const rows = queryResult[0]; // Assuming the query result is structured as an array
+      const rows = queryResult[0]; // Get the result rows from the query result
 
-      if (rows.length === 0) {
+      if (!rows || rows.length === 0) {
         return res.status(401).json({ message: 'Email or password is incorrect' });
       }
 
       const user = rows[0]; // Get the first row from the result
-
       const storedHashedPassword = user.password;
 
       const passwordsMatch = await bcrypt.compare(password, storedHashedPassword);
@@ -164,6 +162,7 @@ app.post(
     }
   }
 );
+
 
 
 
