@@ -126,7 +126,7 @@ app.post(
   [
     body('email').isEmail().normalizeEmail(),
     body('password').notEmpty(),
-    body('verificationCode').notEmpty(), // Add verification code check
+    body('verificationCode').notEmpty(),
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -135,6 +135,8 @@ app.post(
     }
 
     const { email, password, verificationCode } = req.body;
+    console.log(`Attempting login for email: ${email}`);
+
     pool.query(
       'SELECT * FROM users WHERE email = ?',
       [email],
@@ -145,6 +147,7 @@ app.post(
         }
 
         if (results.length === 0) {
+          console.log(`No user found for email: ${email}`);
           return res.status(401).json({ message: 'Email or password is incorrect' });
         }
 
@@ -156,15 +159,18 @@ app.post(
           }
 
           if (!isMatch) {
+            console.log(`Password incorrect for email: ${email}`);
             return res.status(401).json({ message: 'Email or password is incorrect' });
           }
 
           if (user.email_verification_code !== verificationCode) {
+            console.log(`Verification code incorrect for email: ${email}`);
             return res.status(401).json({ message: 'Email verification code is incorrect' });
           }
 
+          console.log(`Successful login for email: ${email}`);
           const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '2h' });
-          return res.json({ id: user.id, token }); // Return user ID and token in the response
+          return res.json({ id: user.id, token });
         });
       }
     );
