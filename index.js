@@ -127,6 +127,7 @@ app.post(
     body('email').isEmail().normalizeEmail(),
     body('password').notEmpty(),
   ],
+  cors(),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
