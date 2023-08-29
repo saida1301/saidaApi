@@ -126,6 +126,7 @@ app.post(
   [
     body('email').isEmail().normalizeEmail(),
     body('password').notEmpty(),
+    body('verificationCode').notEmpty(), // Add verification code check
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -133,7 +134,7 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password } = req.body;
+    const { email, password, verificationCode } = req.body;
     pool.query(
       'SELECT * FROM users WHERE email = ?',
       [email],
@@ -158,13 +159,18 @@ app.post(
             return res.status(401).json({ message: 'Email or password is incorrect' });
           }
 
-          const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
+          if (user.email_verification_code !== verificationCode) {
+            return res.status(401).json({ message: 'Email verification code is incorrect' });
+          }
+
+          const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '2h' });
           return res.json({ id: user.id, token }); // Return user ID and token in the response
         });
       }
     );
   }
 );
+
 const DEFAULT_USER_IMAGE = 'back/assets/images/users/default-user.png';
 function generateRandomText(name) {
   // Extract the starting alphabet of the givenName
