@@ -121,52 +121,47 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// ... Your other imports and setup ...
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
 
-app.post(
-  '/login',
-  [
-    body('email').isEmail().normalizeEmail(),
-    body('password').notEmpty(),
-  ],
-  (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+  pool.getConnection((err, connection) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Internal server error' });
     }
 
-    const { email, password } = req.body;
-    pool.query(
+    connection.query(
       'SELECT * FROM users WHERE email = ?',
       [email],
-      (err, results) => {
-        if (err) {
-          console.log(err);
-          return res.status(500).json({ message: 'Internal server error' });
+      async (error, results) => {
+        connection.release();
+
+        if (error) {
+          console.error(error);
+          return res.status(500).json({ error: 'Internal server error' });
         }
 
         if (results.length === 0) {
-          return res.status(401).json({ message: 'Email or password is incorrect' });
+          return res.status(401).json({ error: 'User not found' });
         }
 
         const user = results[0];
-        bcrypt.compare(password, user.password, (err, isMatch) => {
-          if (err) {
-            console.log(err);
-            return res.status(500).json({ message: 'Internal server error' });
-          }
 
-          if (!isMatch) {
-            return res.status(401).json({ message: 'Email or password is incorrect' });
-          }
+        if (user.status !== 1) {
+          return res.status(401).json({ error: 'User is not active' });
+        }
 
-          const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
-          return res.json({ id: user.id, token }); // Return user ID and token in the response
-        });
+        const isPasswordCorrect = await bcrypt.compare(password, user.password.replace(/^\$2y(.+)$/i, '$2a$1'));
+
+        if (isPasswordCorrect) {
+          return res.json({ message: 'Login successful' });
+        } else {
+          return res.status(401).json({ error: 'Invalid password' });
+        }
       }
     );
-  }
-);
+  });
+});
 
 
 
