@@ -123,44 +123,50 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // ... Your other imports and setup ...
 
-app.post('/login', [
-  body('email').isEmail(),
-  body('password').notEmpty(),
-], async (req, res) => {
-  try {
+app.post(
+  '/login',
+  [
+    body('email').isEmail().normalizeEmail(),
+    body('password').notEmpty(),
+  ],
+  (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { email, password } = req.body;
+    pool.query(
+      'SELECT * FROM users WHERE email = ?',
+      [email],
+      (err, results) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json({ message: 'Internal server error' });
+        }
 
-    const queryResult = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    const rows = queryResult[0];
+        if (results.length === 0) {
+          return res.status(401).json({ message: 'Email or password is incorrect' });
+        }
 
-    if (rows.length === 0) {
-      return res.status(401).json({ message: 'Email or password is incorrect' });
-    }
+        const user = results[0];
+        bcrypt.compare(password, user.password, (err, isMatch) => {
+          if (err) {
+            console.log(err);
+            return res.status(500).json({ message: 'Internal server error' });
+          }
 
-    const user = rows[0];
-    const storedHashedPassword = user.password;
+          if (!isMatch) {
+            return res.status(401).json({ message: 'Email or password is incorrect' });
+          }
 
-    // Hash the provided password and compare with stored hashed password
-    const hashedPassword = crypto.pbkdf2Sync(password, user.salt, 10000, 64, 'sha512').toString('hex');
-
-    if (hashedPassword !== storedHashedPassword) {
-      return res.status(401).json({ message: 'Email or password is incorrect' });
-    }
-
-    const token = jwt.sign({ id: user.id }, 'your-secret-key', { expiresIn: '1h' });
-
-    res.json({ id: user.id, token });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal server error' });
+          const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
+          return res.json({ id: user.id, token }); // Return user ID and token in the response
+        });
+      }
+    );
   }
-});
-
+);
 
 
 
