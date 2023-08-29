@@ -148,6 +148,8 @@ app.post(
         }
 
         const user = results[0];
+        
+        // Hash the provided password and compare
         bcrypt.compare(password, user.password, (err, isMatch) => {
           if (err) {
             console.log(err);
@@ -165,6 +167,7 @@ app.post(
     );
   }
 );
+
 const DEFAULT_USER_IMAGE = 'back/assets/images/users/default-user.png';
 function generateRandomText(name) {
   // Extract the starting alphabet of the givenName
@@ -373,7 +376,7 @@ app.post(
     body('name').notEmpty(),
     body('surname').notEmpty(),
     body('email').isEmail().normalizeEmail(),
-    body('password').notEmpty(),
+   body('password').notEmpty().isLength({ min: 8 }), 
     body('cat_id').isArray(),
   ],
   (req, res) => {
