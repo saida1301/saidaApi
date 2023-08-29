@@ -148,9 +148,9 @@ app.post(
         }
 
         const user = results[0];
-        
-        // Hash the provided password and compare
-        bcrypt.compare(password, user.password, (err, isMatch) => {
+        const storedHashedPassword = user.password;
+
+        bcrypt.compare(password, storedHashedPassword, (err, isMatch) => {
           if (err) {
             console.log(err);
             return res.status(500).json({ message: 'Internal server error' });
@@ -167,6 +167,7 @@ app.post(
     );
   }
 );
+
 
 const DEFAULT_USER_IMAGE = 'back/assets/images/users/default-user.png';
 function generateRandomText(name) {
