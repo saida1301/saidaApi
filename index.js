@@ -136,7 +136,8 @@ app.post(
 
     const { email, password } = req.body;
     try {
-      const [user] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+      const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+      const user = rows[0]; // Get the first row from the result
 
       if (!user) {
         return res.status(401).json({ message: 'Email or password is incorrect' });
@@ -144,24 +145,21 @@ app.post(
 
       const storedHashedPassword = user.password;
 
-      // Hash the provided password
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      // Compare the hashed passwords
-      const passwordsMatch = storedHashedPassword === hashedPassword;
+      const passwordsMatch = await bcrypt.compare(password, storedHashedPassword);
 
       if (!passwordsMatch) {
         return res.status(401).json({ message: 'Email or password is incorrect' });
       }
 
       const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
-      return res.json({ id: user.id, token }); // Return user ID and token in the response
+      return res.json({ id: user.id, token });
     } catch (err) {
       console.log(err);
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
 );
+
 
 
 const DEFAULT_USER_IMAGE = 'back/assets/images/users/default-user.png';
