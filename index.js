@@ -130,7 +130,7 @@ app.post('/login', async (req, res) => {
       return res.status(500).json({ error: 'Internal server error' });
     }
 
-    connection.query(
+    pool.query(
       'SELECT * FROM users WHERE email = ?',
       [email],
       async (error, results) => {
