@@ -126,7 +126,7 @@ app.post(
   [
     body('email').isEmail().normalizeEmail(),
     body('password').notEmpty(),
-    body('verificationCode').notEmpty(),
+    body('emailVerificationCode').notEmpty(),
   ],
   (req, res) => {
     const errors = validationResult(req);
@@ -134,7 +134,7 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, password, verificationCode } = req.body;
+    const { email, password, emailVerificationCode } = req.body;
     console.log(`Attempting login for email: ${email}`);
 
     pool.query(
@@ -163,7 +163,7 @@ app.post(
             return res.status(401).json({ message: 'Email or password is incorrect' });
           }
 
-          if (user.email_verification_code !== verificationCode) {
+          if (user.email_verification_code !== emailVerificationCode) {
             console.log(`Verification code incorrect for email: ${email}`);
             return res.status(401).json({ message: 'Email verification code is incorrect' });
           }
