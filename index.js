@@ -121,6 +121,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// ... Your other imports and setup ...
+
 app.post(
   '/login',
   [
@@ -136,12 +138,15 @@ app.post(
 
     const { email, password } = req.body;
     try {
-      const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-      const user = rows[0]; // Get the first row from the result
+      const queryResult = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+      console.log(queryResult); // Check the structure of queryResult
+      const rows = queryResult[0]; // Assuming the query result is structured as an array
 
-      if (!user) {
+      if (rows.length === 0) {
         return res.status(401).json({ message: 'Email or password is incorrect' });
       }
+
+      const user = rows[0]; // Get the first row from the result
 
       const storedHashedPassword = user.password;
 
@@ -159,6 +164,7 @@ app.post(
     }
   }
 );
+
 
 
 
