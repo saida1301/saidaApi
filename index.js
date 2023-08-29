@@ -127,44 +127,38 @@ app.post(
     body('email').isEmail().normalizeEmail(),
     body('password').notEmpty(),
   ],
-  (req, res) => {
+  async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { email, password } = req.body;
-    pool.query(
-      'SELECT * FROM users WHERE email = ?',
-      [email],
-      (err, results) => {
-        if (err) {
-          console.log(err);
-          return res.status(500).json({ message: 'Internal server error' });
-        }
+    try {
+      const [user] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
 
-        if (results.length === 0) {
-          return res.status(401).json({ message: 'Email or password is incorrect' });
-        }
-
-        const user = results[0];
-        const storedHashedPassword = user.password;
-
-        bcrypt.compare(password, storedHashedPassword, (err, isMatch) => {
-          if (err) {
-            console.log(err);
-            return res.status(500).json({ message: 'Internal server error' });
-          }
-
-          if (!isMatch) {
-            return res.status(401).json({ message: 'Email or password is incorrect' });
-          }
-
-          const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
-          return res.json({ id: user.id, token }); // Return user ID and token in the response
-        });
+      if (!user) {
+        return res.status(401).json({ message: 'Email or password is incorrect' });
       }
-    );
+
+      const storedHashedPassword = user.password;
+
+      // Hash the provided password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Compare the hashed passwords
+      const passwordsMatch = storedHashedPassword === hashedPassword;
+
+      if (!passwordsMatch) {
+        return res.status(401).json({ message: 'Email or password is incorrect' });
+      }
+
+      const token = jwt.sign({ id: user.id }, 'secret', { expiresIn: '1h' });
+      return res.json({ id: user.id, token }); // Return user ID and token in the response
+    } catch (err) {
+      console.log(err);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
   }
 );
 
