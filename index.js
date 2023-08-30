@@ -1260,29 +1260,6 @@ app.get('/vacancy/:userId', [
 
   const userId = req.params.userId;
 
-  const sql = "SELECT * FROM cv WHERE user_id = ?"; 
-  const values = [userId];
-
-  pool.query(sql, values, (error, results) => {
-    if (error) {
-      console.error(error);
-      return res.status(500).send("Error retrieving cv");
-    }
-
-    return res.json(results);
-  });
-});
-
-app.get('/vacancy/:userId', [
-  param('userId').isNumeric().withMessage('Invalid userId'),
-], (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const userId = req.params.userId;
-
   const sql = "SELECT * FROM vacancies WHERE user_id = ? AND status = '1'"; 
   const values = [userId];
 
