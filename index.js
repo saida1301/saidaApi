@@ -1260,7 +1260,7 @@ app.get('/vacancy/:userId', [
 
   const userId = req.params.userId;
 
-  const sql = "SELECT * FROM vacancies WHERE user_id = ? AND status = '1'"; 
+  const sql = "SELECT * FROM vacancies WHERE user_id = ?"; 
   const values = [userId];
 
   pool.query(sql, values, (error, results) => {
