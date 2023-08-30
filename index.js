@@ -124,44 +124,36 @@ app.use(express.urlencoded({ extended: true }));
 app.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
-  pool.getConnection((err, connection) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Internal server error' });
-    }
-
-    pool.query(
-      'SELECT * FROM users WHERE email = ?',
-      [email],
-      async (error, results) => {
-        connection.release();
-
-        if (error) {
-          console.error(error);
-          return res.status(500).json({ error: 'Internal server error' });
-        }
-
-        if (results.length === 0) {
-          return res.status(401).json({ error: 'User not found' });
-        }
-
-        const user = results[0];
-
-        if (user.status !== 1) {
-          return res.status(401).json({ error: 'User is not active' });
-        }
-
-        const isPasswordCorrect = await bcrypt.compare(password, user.password.replace(/^\$2y(.+)$/i, '$2a$1'));
-
-        if (isPasswordCorrect) {
-          return res.json({ message: 'Login successful' });
-        } else {
-          return res.status(401).json({ error: 'Invalid password' });
-        }
+  pool.query(
+    'SELECT * FROM users WHERE email = ?',
+    [email],
+    async (error, results) => {
+      if (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Internal server error' });
       }
-    );
-  });
+
+      if (results.length === 0) {
+        return res.status(401).json({ error: 'User not found' });
+      }
+
+      const user = results[0];
+
+      if (user.status !== 1) {
+        return res.status(401).json({ error: 'User is not active' });
+      }
+
+      const isPasswordCorrect = await bcrypt.compare(password, user.password.replace(/^\$2y(.+)$/i, '$2a$1'));
+
+      if (isPasswordCorrect) {
+        return res.json({ message: 'Login successful' });
+      } else {
+        return res.status(401).json({ error: 'Invalid password' });
+      }
+    }
+  );
 });
+
 
 
 
