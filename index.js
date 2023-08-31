@@ -143,16 +143,20 @@ app.post('/login', async (req, res) => {
         return res.status(401).json({ error: 'User is not active' });
       }
 
-      const isPasswordCorrect = await bcrypt.compare(password, user.password.replace(/^\$2y(.+)$/i, '$2a$1'));
+      const isPasswordCorrect = await bcrypt.compare(
+        password,
+        user.password.replace(/^\$2y(.+)$/i, '$2a$1')
+      );
 
       if (isPasswordCorrect) {
-        return res.json({ message: 'Login successful' });
+        return res.json({ message: 'Login successful', id: user.id }); // Include user's ID in the response
       } else {
         return res.status(401).json({ error: 'Invalid password' });
       }
     }
   );
 });
+
 
 
 
