@@ -364,13 +364,15 @@ app.get('/get_company_data/:companyId', (req, res) => {
     }
   });
 });
+// Import necessary modules and middleware
+
 app.post(
   '/signup',
   [
     body('name').notEmpty(),
     body('surname').notEmpty(),
     body('email').isEmail().normalizeEmail(),
-   body('password').notEmpty().isLength({ min: 8 }), 
+    body('password').notEmpty().isLength({ min: 8 }),
     body('cat_id').isArray(),
   ],
   (req, res) => {
@@ -381,6 +383,7 @@ app.post(
 
     const { name, surname, email, password, cat_id } = req.body;
 
+    // Check if the email is already in the database
     pool.query(
       'SELECT * FROM users WHERE email = ?',
       [email],
@@ -391,9 +394,11 @@ app.post(
         }
 
         if (results.length > 0) {
-          return res.status(400).json({ message: 'Email already in use' });
+          // Email is already in use, consider the user as already logged in
+          return res.status(200).json({ message: 'User already logged in' });
         }
 
+        // Continue with user registration
         bcrypt.genSalt(10, (err, salt) => {
           if (err) {
             console.log(err);
@@ -408,7 +413,7 @@ app.post(
 
             const catIdsArray = Array.isArray(cat_id) ? cat_id : [cat_id];
             const catIdsJSON = JSON.stringify(catIdsArray);
-            
+
             // Generate a random email verification code
             const verificationCode = Math.floor(1000 + Math.random() * 9000);
 
@@ -424,7 +429,9 @@ app.post(
                 const token = jwt.sign({ id: results.insertId }, 'secret', {
                   expiresIn: '1h',
                 });
-                return res.json({ token, cat_id: catIdsArray }); // Include cat_id in the response
+
+                // Return a success response with token and category ID
+                return res.json({ token, cat_id: catIdsArray });
               }
             );
           });
@@ -433,6 +440,7 @@ app.post(
     );
   }
 );
+
 app.post('/changePassword', async (req, res) => {
   try {
     const { userId, oldPassword, newPassword, newPasswordAgain } = req.body;
