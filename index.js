@@ -1322,22 +1322,7 @@ app.use("/vacancies/:id", async (req, res) => {
 const vacancyValidationRules = [
   body('user_id').notEmpty().isInt(),
   body('company_id').notEmpty().isInt(),
-  body('city_id').notEmpty().isInt(),
-  body('category_id').notEmpty().isInt(),
-  body('job_type_id').notEmpty().isInt(),
-  body('experience_id').notEmpty().isInt(),
-  body('education_id').notEmpty().isInt(),
   body('position').notEmpty().isString(),
-  body('min_salary').notEmpty().isInt(),
-  body('max_salary').notEmpty().isInt(),
-  body('min_age').notEmpty().isInt(),
-  body('max_age').notEmpty().isInt(),
-  body('requirement').notEmpty().isString(),
-  body('description').notEmpty().isString(),
-  body('contact_name').notEmpty().isString(),
-  body('accept_type').notEmpty().isString(),
-  body('contact_info').notEmpty().isString(),
-  body('deadline').notEmpty().isString(),
 ];
 app.post('/vacanc', cors(), async (req, res) => {
   const {
