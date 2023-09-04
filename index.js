@@ -2144,7 +2144,7 @@ app.get("/civ/:userId", (req, res) => {
     return res.json(results);
   });
 });
-app.post('/civi', cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
+app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', maxCount: 1 }]), async (req, res) => {
   try {
     const {
       user_id,
@@ -2159,6 +2159,7 @@ app.post('/civi', cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'i
       father_name,
       email,
       contact_phone,
+      contact_mail,
       position,
       about_education,
       salary,
@@ -2205,14 +2206,15 @@ app.post('/civi', cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'i
     const query = `
       INSERT INTO cv (
         user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
-        name, surname, father_name, email, contact_phone, position, about_education, salary,
+        name, surname, father_name, email, contact_phone, contact_mail, position, about_education, salary,
         birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
     `;
 
     const values = [
       user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
-      name, surname, father_name, email, contact_phone, position, about_education, salary,
+      name, surname, father_name, email, contact_phone, contact_mail,
+      position, about_education, salary,
       birth_date, work_history, skills, cvUrl || null, imageUrl || null,
       JSON.stringify(portfolioData), slug
     ];
@@ -2234,7 +2236,7 @@ app.post('/civi', cors(), upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'i
       });
 
       const mailOptions = {
-        from: req.body.email,
+        from: contact_mail, // Use contact_mail as the sender
         to: 'humbesaida@gmail.com',
         subject: 'CV Added Successfully',
         text: 'Your CV has been added successfully. Thank you!',
