@@ -343,7 +343,67 @@ app.get("/vacancies/company/:company_id", async (req, res) => {
     res.sendStatus(500);
   }
 });
+const redirectUri = encodeURIComponent('https://movieappi.onrender.com/getGoogleToken');
 
+// Handle Google Login
+app.get('/loginWithGoogle', (req, res) => {
+  const clientId = '529344600834-8itiht8ssr2qvvjr668ssv5jmtgaobe3.apps.googleusercontent.com'; // Replace with your actual Google OAuth client ID
+  const scope = 'email profile';
+  const responseType = 'code';
+
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/auth?client_id=${clientId}&scope=${scope}&response_type=${responseType}&redirect_uri=${redirectUri}`;
+
+  res.redirect(googleAuthUrl);
+});
+
+app.get('/getGoogleToken', async (req, res) => {
+  const code = req.query.code;
+  const clientId = '529344600834-oi13nhfgqigieu7i0f7ivhre3s6b57n5.apps.googleusercontent.com'; // Replace with your actual Google OAuth client ID
+  const clientSecret = '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'; // Replace with your actual Google OAuth client secret
+  const grantType = 'authorization_code';
+
+  const postFields = {
+    code: code,
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uri: redirectUri,
+    grant_type: grantType,
+  };
+
+  try {
+    // Request Google OAuth Token
+    const tokenResponse = await axios.post('https://accounts.google.com/o/oauth2/token', null, {
+      params: postFields,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
+
+    const tokenData = tokenResponse.data;
+    const token = tokenData.access_token;
+    await getGoogleUserInfo(token, res);
+  } catch (error) {
+    console.error('Error getting Google token:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+async function getGoogleUserInfo(token, res) {
+  try {
+    // Request Google User Info
+    const userInfoResponse = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const userInfo = userInfoResponse.data;
+
+    // Now, you can work with userInfo and save it to the MySQL database
+    // Implement your MySQL logic here
+
+    res.send('User information retrieved and processed.');
+  } catch (error) {
+    console.error('Error getting Google user info:', error);
+    res.status(500).send('Internal Server Error');
+  }
+}
 app.get('/get_company_data/:companyId', (req, res) => {
   const companyId = req.params.companyId;
 
