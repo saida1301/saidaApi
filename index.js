@@ -236,6 +236,97 @@ app.post('/google-signin', (req, res) => {
   });
 });
 
+app.post('/google-login', async (req, res) => {
+  const { code, email, givenName, familyName, photo } = req.body;
+
+  if (!code) {
+    return res.status(400).json({ message: 'Invalid Google code. Please provide a valid code' });
+  }
+
+  try {
+    // Exchange the code for an access token
+const tokenResponse = await axios.post('https://accounts.google.com/o/oauth2/token', {
+  code,
+  client_id: '1022157026698-8qkicr443pogcr17e7av2fvv2cbbhld4.apps.googleusercontent.com',
+  redirect_uri: 'https://movieappi.onrender.com/google-login',
+  grant_type: 'authorization_code',
+});
+
+
+    const accessToken = tokenResponse.data.access_token;
+
+    // Get user info using the access token
+    const userInfoResponse = await axios.get(`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${accessToken}`);
+    const userInfo = userInfoResponse.data;
+
+    // Perform validation
+    if (!email || !givenName) {
+      return res.status(400).json({ message: 'Invalid login. Please provide email and givenName' });
+    }
+
+    const selectQuery = 'SELECT id FROM users WHERE email = ?';
+    const selectValues = [email];
+
+    pool.query(selectQuery, selectValues, (selectErr, selectResults) => {
+      if (selectErr) {
+        console.error('Error querying database:', selectErr);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+
+      if (selectResults.length > 0) {
+        // User with this email already exists, perform update
+        const userId = selectResults[0].id;
+        const updateQuery = 'UPDATE users SET name = ?, image = ?, surname = ? WHERE id = ?';
+        const updateValues = [givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName), userId];
+
+        pool.query(updateQuery, updateValues, (updateErr, updateResults) => {
+          if (updateErr) {
+            console.error('Error updating user:', updateErr);
+            return res.status(500).json({ message: 'Internal server error' });
+          }
+
+          return res.status(200).json({
+            message: 'User information updated successfully',
+            user: {
+              id: userId,
+              email,
+              givenName,
+              familyName,
+              photo: photo || DEFAULT_USER_IMAGE,
+            },
+          });
+        });
+      } else {
+        // User doesn't exist, proceed with insert
+        const insertQuery = 'INSERT INTO users (email, name, image, surname) VALUES (?, ?, ?, ?)';
+        const insertValues = [email, givenName, photo || DEFAULT_USER_IMAGE, familyName || generateRandomText(givenName)];
+
+        pool.query(insertQuery, insertValues, (insertErr, insertResults) => {
+          if (insertErr) {
+            console.error('Error inserting user:', insertErr);
+            return res.status(500).json({ message: 'Internal server error' });
+          }
+
+          const insertedUserId = insertResults.insertId;
+
+          return res.status(200).json({
+            message: 'User information stored successfully',
+            user: {
+              id: insertedUserId,
+              email,
+              givenName,
+              familyName,
+              photo: photo || DEFAULT_USER_IMAGE,
+            },
+          });
+        });
+      }
+    });
+  } catch (error) {
+    console.error('Error:', error.message);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
 
 
 
