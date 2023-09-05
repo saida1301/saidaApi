@@ -2063,7 +2063,7 @@ app.put('/compani/:id', cors(), upload.single('image'), async (req, res) => {
 app.get("/cv/:cvId", (req, res) => {
   const cvId = req.params.cvId;
 
-  const sql = "SELECT * FROM cv WHERE id = ? AND status = '1'"; 
+  const sql = "SELECT * FROM cv WHERE id = ?"; 
   const values = [cvId];
 
   pool.query(sql, values, (error, results) => {
@@ -2079,6 +2079,7 @@ app.get("/cv/:cvId", (req, res) => {
     return res.json(results[0]);
   });
 });
+
 
 
 app.get("/company/:userId", (req, res) => {
