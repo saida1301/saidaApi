@@ -1628,10 +1628,6 @@ app.post('/vacanc', cors(), async (req, res) => {
 
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
-  const { page, pageSize } = req.query; // Extract page and pageSize from query parameters
-
-  // Calculate the starting index for pagination
-  const startIndex = (page - 1) * pageSize;
 
   // Add the DESC keyword to order by descending
   const sql = `
@@ -1639,7 +1635,6 @@ app.get("/vacancie/:categoryId", (req, res) => {
     WHERE category_id IN (SELECT id FROM categories WHERE id = ${categoryId})
     AND status = '1' 
     ORDER BY created_at DESC
-    LIMIT ${startIndex}, ${pageSize} ; // Use LIMIT to fetch a specific range of results
   `;
 
   pool.query(sql, (error, results) => {
