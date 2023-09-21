@@ -1510,7 +1510,8 @@ app.post('/vacanc', cors(), async (req, res) => {
     description,
     contact_name,
     accept_type,
-    deadline
+    deadline,
+    defaultLanguage // Added defaultLanguage
   } = req.body;
 
   try {
@@ -1542,8 +1543,8 @@ app.post('/vacanc', cors(), async (req, res) => {
         const slug = `${position.toLowerCase()}`.replace(/\s+/g, '-');
 
         // Perform database insertion (adjust your database query and connection accordingly)
-        const insertVacancyQuery =
-          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary,salary_type, max_salary, min_age, max_age, requirement,  position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
+           const insertVacancyQuery =
+          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary,salary_type, max_salary, min_age, max_age, requirement,  position, description, contact_name, accept_type, deadline, slug, created_at, updated_at, defaultLanguage) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)';
 
         // Adjust min_salary and max_salary values based on salary_type
         let insertVacancyValues;
@@ -1568,6 +1569,7 @@ app.post('/vacanc', cors(), async (req, res) => {
             accept_type,
             deadline,
             slug,
+            defaultLanguage // Added defaultLanguage
           ];
         } else if (salary_type === 0) {
           // When salary_type is 0, set min_salary and max_salary to null
@@ -1591,6 +1593,7 @@ app.post('/vacanc', cors(), async (req, res) => {
             accept_type,
             deadline,
             slug,
+            defaultLanguage // Added defaultLanguage
           ];
         } else {
           res.status(400).json({ message: 'Invalid salary_type' });
@@ -1612,11 +1615,24 @@ app.post('/vacanc', cors(), async (req, res) => {
               },
             });
 
+            let text;
+            switch (defaultLanguage) {
+              case 'az':
+                text = 'Vakansiyanız uğurla əlavə olundu. Təşəkkür edirik!';
+                break;
+              case 'eng':
+                text = 'Your Vacancy has been added successfully. Thank you!';
+                break;
+              // Add cases for other languages as needed
+              default:
+                text = 'Default message for unknown language.';
+            }
+
             const mailOptions = {
               from: req.body.email,
               to: 'info@1is.az',
               subject: 'Vacancy Added Successfully',
-              text: 'Your Vacancy has been added successfully. Thank you!',
+              text: text, // Use the selected text based on the language
             };
 
             transporter.sendMail(mailOptions, (error, info) => {
