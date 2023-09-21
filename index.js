@@ -2318,7 +2318,8 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
       birth_date,
       work_history,
       skills,
-      portfolio
+      portfolio,
+      defaultLanguage
     } = req.body;
 
     const cvFile = req.files ? req.files['cv'][0] : null;
@@ -2359,8 +2360,8 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
       INSERT INTO cv (
         user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
         name, surname, father_name, email, contact_phone, contact_mail, position, about_education, salary,
-        birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+        birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at, defaultLanguage
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, NOW(), NOW(), ?)
     `;
 
     const values = [
@@ -2368,7 +2369,7 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
       name, surname, father_name, email, contact_phone, contact_mail,
       position, about_education, salary,
       birth_date, work_history, skills, cvUrl || null, imageUrl || null,
-      JSON.stringify(portfolioData), slug
+      JSON.stringify(portfolioData), slug, defaultLanguage
     ];
 
     // Execute the database query
@@ -2387,11 +2388,29 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
         },
       });
 
+      let text;
+      switch (defaultLanguage) {
+        case 'az':
+          text = 'CV-niz uğurla yeniləndi. Təşəkkür edirik!';
+          break;
+        case 'eng':
+          text = 'Your CV has been updated successfully. Thank you!';
+          break;
+        case 'tr':
+          text = 'CV\'niz başarıyla güncellendi. Teşekkür ederiz!';
+          break;
+        case 'ru':
+          text = 'Ваше резюме успешно обновлено. Спасибо!';
+          break;
+        default:
+          text = 'Default message for unknown language.';
+      }
+
       const mailOptions = {
         from: contact_mail, // Use contact_mail as the sender
         to: 'info@1is.az',
-        subject: 'CV Added Successfully',
-        text: 'Your CV has been added successfully. Thank you!',
+        subject: 'CV Updated Successfully',
+        text: text, // Use the selected text based on the language
       };
 
       transporter.sendMail(mailOptions, (error, info) => {
