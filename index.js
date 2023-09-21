@@ -776,7 +776,7 @@ app.post('/contact', async (req, res) => {
 
     const mailOptions = {
       from:req.body.email,
-      to: 'humbesaida@gmail.com',
+      to: 'info@1is.az',
       subject: 'New Message from Contact Form',
       text: `Name: ${name}\nSurname: ${surname}\nEmail: ${email}\nPhone: ${phone}\nMessage: ${message}`,
     };
@@ -1024,7 +1024,7 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
 
         const mailOptions = {
           from: req.body.email,
-          to: 'humbesaida@gmail.com',
+          to: 'info@1is.az',
           subject: 'Candidate Added Successfully',
           text: 'Your request has been added successfully. Thank you!',
         };
@@ -1598,7 +1598,7 @@ app.post('/vacanc', cors(), async (req, res) => {
 
             const mailOptions = {
               from: req.body.email,
-              to: 'humbesaida@gmail.com',
+              to: 'info@1is.az',
               subject: 'Vacancy Added Successfully',
               text: 'Your Vacancy has been added successfully. Thank you!',
             };
@@ -2389,7 +2389,7 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
 
       const mailOptions = {
         from: contact_mail, // Use contact_mail as the sender
-        to: 'humbesaida@gmail.com',
+        to: 'info@1is.az',
         subject: 'CV Added Successfully',
         text: 'Your CV has been added successfully. Thank you!',
       };
@@ -2535,7 +2535,7 @@ app.put('/civi/:id', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image'
 
         const mailOptions = {
           from: req.body.email,
-          to: 'humbesaida@gmail.com',
+          to: 'info@1is.az',
           subject: 'CV Updated Successfully',
           text: 'Your CV has been updated successfully. Thank you!',
         };
