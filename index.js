@@ -969,7 +969,7 @@ app.get("/user", async (req, res) => {
   }
 });
 app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), async (req, res) => {
-const { vacancyId, name, email, surname, phone, userId, defaultLanguage } = req.body;
+  const { vacancyId, name, email, surname, phone, userId } = req.body;
 
   try {
     const cvFile = req.files ? req.files['cv'][0] : null;
@@ -995,10 +995,8 @@ const { vacancyId, name, email, surname, phone, userId, defaultLanguage } = req.
       cvUrl = `back/assets/images/cvs/${fileName}`;
     }
 
-      const query = `
-      INSERT INTO candidates (vacancy_id, name, surname,  mail, phone,  cv, user_id, created_at, updated_at, defaultLanguage) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)
-    `;
+      const query =
+      'INSERT INTO candidates (vacancy_id, name, surname,  mail, phone,  cv,user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,?,  NOW(), NOW())';
 
     const values = [
       vacancyId,
@@ -1007,8 +1005,7 @@ const { vacancyId, name, email, surname, phone, userId, defaultLanguage } = req.
       email,
       phone,
       cvUrl,
-      userId,
-      defaultLanguage, // Add defaultLanguage to the values array
+     userId
     ];
 
     pool.query(query, values, (error, results) => {
@@ -1025,24 +1022,11 @@ const { vacancyId, name, email, surname, phone, userId, defaultLanguage } = req.
           },
         });
 
-        let text;
-        switch (defaultLanguage) {
-          case 'az':
-            text = 'Tələbiniz uğurla əlavə olundu. Təşəkkür edirik!';
-            break;
-          case 'eng':
-            text = 'Your request has been added successfully. Thank you!';
-            break;
-          // Add cases for other languages as needed
-          default:
-            text = 'Default message for unknown language.';
-        }
-
         const mailOptions = {
           from: req.body.email,
           to: 'info@1is.az',
           subject: 'Candidate Added Successfully',
-          text: text, // Use the selected text based on the language
+          text: 'Your request has been added successfully. Thank you!',
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -1510,8 +1494,7 @@ app.post('/vacanc', cors(), async (req, res) => {
     description,
     contact_name,
     accept_type,
-    deadline,
-    defaultLanguage // Added defaultLanguage
+    deadline
   } = req.body;
 
   try {
@@ -1543,8 +1526,8 @@ app.post('/vacanc', cors(), async (req, res) => {
         const slug = `${position.toLowerCase()}`.replace(/\s+/g, '-');
 
         // Perform database insertion (adjust your database query and connection accordingly)
-           const insertVacancyQuery =
-          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary,salary_type, max_salary, min_age, max_age, requirement,  position, description, contact_name, accept_type, deadline, slug, created_at, updated_at, defaultLanguage) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)';
+        const insertVacancyQuery =
+          'INSERT INTO vacancies (user_id, company_id, category_id, city_id, education_id, experience_id, job_type_id, min_salary,salary_type, max_salary, min_age, max_age, requirement,  position, description, contact_name, accept_type, deadline, slug, created_at, updated_at) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())';
 
         // Adjust min_salary and max_salary values based on salary_type
         let insertVacancyValues;
@@ -1569,7 +1552,6 @@ app.post('/vacanc', cors(), async (req, res) => {
             accept_type,
             deadline,
             slug,
-            defaultLanguage // Added defaultLanguage
           ];
         } else if (salary_type === 0) {
           // When salary_type is 0, set min_salary and max_salary to null
@@ -1593,7 +1575,6 @@ app.post('/vacanc', cors(), async (req, res) => {
             accept_type,
             deadline,
             slug,
-            defaultLanguage // Added defaultLanguage
           ];
         } else {
           res.status(400).json({ message: 'Invalid salary_type' });
@@ -1615,24 +1596,11 @@ app.post('/vacanc', cors(), async (req, res) => {
               },
             });
 
-            let text;
-            switch (defaultLanguage) {
-              case 'az':
-                text = 'Vakansiyanız uğurla əlavə olundu. Təşəkkür edirik!';
-                break;
-              case 'eng':
-                text = 'Your Vacancy has been added successfully. Thank you!';
-                break;
-              // Add cases for other languages as needed
-              default:
-                text = 'Default message for unknown language.';
-            }
-
             const mailOptions = {
               from: req.body.email,
               to: 'info@1is.az',
               subject: 'Vacancy Added Successfully',
-              text: text, // Use the selected text based on the language
+              text: 'Your Vacancy has been added successfully. Thank you!',
             };
 
             transporter.sendMail(mailOptions, (error, info) => {
@@ -2350,8 +2318,7 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
       birth_date,
       work_history,
       skills,
-      portfolio,
-      defaultLanguage
+      portfolio
     } = req.body;
 
     const cvFile = req.files ? req.files['cv'][0] : null;
@@ -2388,22 +2355,21 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
     const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
     // Perform database insertion
-   const query = `
-  INSERT INTO cv (
-    user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
-    name, surname, father_name, email, contact_phone, contact_mail, position, about_education, salary,
-    birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at, defaultLanguage
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?)
-`;
+    const query = `
+      INSERT INTO cv (
+        user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
+        name, surname, father_name, email, contact_phone, contact_mail, position, about_education, salary,
+        birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+    `;
 
-const values = [
-  user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
-  name, surname, father_name, email, contact_phone, contact_mail,
-  position, about_education, salary,
-  birth_date, work_history, skills, cvUrl || null, imageUrl || null,
-  JSON.stringify(portfolioData), slug, new Date(), new Date(), defaultLanguage
-];
-
+    const values = [
+      user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
+      name, surname, father_name, email, contact_phone, contact_mail,
+      position, about_education, salary,
+      birth_date, work_history, skills, cvUrl || null, imageUrl || null,
+      JSON.stringify(portfolioData), slug
+    ];
 
     // Execute the database query
     pool.query(query, values, (error, results) => {
@@ -2421,29 +2387,11 @@ const values = [
         },
       });
 
-      let text;
-      switch (defaultLanguage) {
-        case 'az':
-          text = 'CV-niz uğurla yeniləndi. Təşəkkür edirik!';
-          break;
-        case 'eng':
-          text = 'Your CV has been updated successfully. Thank you!';
-          break;
-        case 'tr':
-          text = 'CV\'niz başarıyla güncellendi. Teşekkür ederiz!';
-          break;
-        case 'ru':
-          text = 'Ваше резюме успешно обновлено. Спасибо!';
-          break;
-        default:
-          text = 'Default message for unknown language.';
-      }
-
       const mailOptions = {
         from: contact_mail, // Use contact_mail as the sender
         to: 'info@1is.az',
-        subject: 'CV Updated Successfully',
-        text: text, // Use the selected text based on the language
+        subject: 'CV Added Successfully',
+        text: 'Your CV has been added successfully. Thank you!',
       };
 
       transporter.sendMail(mailOptions, (error, info) => {
