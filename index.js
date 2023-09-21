@@ -2356,21 +2356,22 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
     const slug = `${name.toLowerCase()}-${surname.toLowerCase()}`.replace(/\s+/g, '-');
 
     // Perform database insertion
-    const query = `
-      INSERT INTO cv (
-        user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
-        name, surname, father_name, email, contact_phone, contact_mail, position, about_education, salary,
-        birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at, defaultLanguage
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, NOW(), NOW(), ?)
-    `;
+   const query = `
+  INSERT INTO cv (
+    user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
+    name, surname, father_name, email, contact_phone, contact_mail, position, about_education, salary,
+    birth_date, work_history, skills, cv, image, portfolio, slug, created_at, updated_at, defaultLanguage
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?)
+`;
 
-    const values = [
-      user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
-      name, surname, father_name, email, contact_phone, contact_mail,
-      position, about_education, salary,
-      birth_date, work_history, skills, cvUrl || null, imageUrl || null,
-      JSON.stringify(portfolioData), slug, defaultLanguage
-    ];
+const values = [
+  user_id, category_id, city_id, education_id, experience_id, job_type_id, gender_id,
+  name, surname, father_name, email, contact_phone, contact_mail,
+  position, about_education, salary,
+  birth_date, work_history, skills, cvUrl || null, imageUrl || null,
+  JSON.stringify(portfolioData), slug, new Date(), new Date(), defaultLanguage
+];
+
 
     // Execute the database query
     pool.query(query, values, (error, results) => {
