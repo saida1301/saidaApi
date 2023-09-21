@@ -969,7 +969,7 @@ app.get("/user", async (req, res) => {
   }
 });
 app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), async (req, res) => {
-  const { vacancyId, name, email, surname, phone, userId } = req.body;
+const { vacancyId, name, email, surname, phone, userId, defaultLanguage } = req.body;
 
   try {
     const cvFile = req.files ? req.files['cv'][0] : null;
@@ -995,8 +995,10 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
       cvUrl = `back/assets/images/cvs/${fileName}`;
     }
 
-      const query =
-      'INSERT INTO candidates (vacancy_id, name, surname,  mail, phone,  cv,user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?,?,  NOW(), NOW())';
+      const query = `
+      INSERT INTO candidates (vacancy_id, name, surname,  mail, phone,  cv, user_id, created_at, updated_at, defaultLanguage) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW(), ?)
+    `;
 
     const values = [
       vacancyId,
@@ -1005,7 +1007,8 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
       email,
       phone,
       cvUrl,
-     userId
+      userId,
+      defaultLanguage, // Add defaultLanguage to the values array
     ];
 
     pool.query(query, values, (error, results) => {
@@ -1022,11 +1025,24 @@ app.post('/candidate',cors(), upload.fields([{ name: 'cv', maxCount: 1 }]), asyn
           },
         });
 
+        let text;
+        switch (defaultLanguage) {
+          case 'az':
+            text = 'Tələbiniz uğurla əlavə olundu. Təşəkkür edirik!';
+            break;
+          case 'eng':
+            text = 'Your request has been added successfully. Thank you!';
+            break;
+          // Add cases for other languages as needed
+          default:
+            text = 'Default message for unknown language.';
+        }
+
         const mailOptions = {
           from: req.body.email,
           to: 'info@1is.az',
           subject: 'Candidate Added Successfully',
-          text: 'Your request has been added successfully. Thank you!',
+          text: text, // Use the selected text based on the language
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
