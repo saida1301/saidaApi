@@ -750,9 +750,20 @@ app.get("/vaca", async (req, res) => {
 
 
 
-app.post("/logout", (req, res) => {
-  res.clearCookie("token");
-  res.json({ message: "Logout successful" });
+app.post('/logout', (req, res) => {
+  const userId = req.body.userId;
+
+  const query = `UPDATE users SET status = 0 WHERE id = ?`;
+
+  pool.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error('Error executing query: ', err);
+      res.sendStatus(500);
+      return;
+    }
+
+    res.sendStatus(200);
+  });
 });
 
 app.post('/contact', async (req, res) => {
