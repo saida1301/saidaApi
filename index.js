@@ -2,7 +2,7 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import multer, { diskStorage } from "multer";
 import { v4 as uuidv4 } from 'uuid';
 import express from "express";
-import session from "express-session";
+
 import bodyParser from "body-parser";
 import mysql from "mysql";
 import jwt from "jsonwebtoken";
@@ -15,6 +15,8 @@ import cors from "cors";
 import nodemailer from "nodemailer";
 import schedule from 'node-schedule';
 import { body, validationResult, param  } from 'express-validator';
+import session from 'express-session';
+import MySQLStoreLib from 'express-mysql-session';
 import path from "path";
 const app = express();
 
@@ -35,7 +37,17 @@ pool.getConnection((err, connection) => {
   console.log("Connected to database with ID " + connection.threadId);
   connection.release();
 });
-
+const MySQLStore = MySQLStoreLib(session);
+const sessionStore = new MySQLStore({
+  expiration: 10800000, // Session expiration time (in milliseconds), 3 hours in this example
+  createDatabaseTable: true, // Create the sessions table if it doesn't exist
+}, pool);
+app.use(session({
+  secret: 'SaidaHumba', // Replace with a strong secret
+  resave: false,
+  saveUninitialized: false,
+  store: sessionStore,
+}));
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
