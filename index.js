@@ -290,22 +290,28 @@ const sendNotificationToAllUsers = async (message) => {
 
     const registrationTokens = tokens.map((row) => row.token);
 
-    const payload = {
+ const payload = {
       notification: {
-        title: 'Title of the notification',
-        body: 'Body of the notification',
+        title: title,  // <-- Dynamic title
+        body: body,    // <-- Dynamic body
       },
     };
 
     const response = await messaging.sendToDevice(registrationTokens, payload);
     console.log('Successfully sent message:', response);
+
   } catch (error) {
     console.error('Error sending message:', error);
   }
 };
 
 // Call the function with your desired message
-sendNotificationToAllUsers('Hello, this is a test notification!');
+
+app.post('/send-notification', (req, res) => {
+  const { title, body } = req.body;
+  sendNotificationToAllUsers(title, body);
+  res.send('Notification sent successfully');
+});
 app.post('/google-login', async (req, res) => {
   const { code, email, givenName, familyName, photo } = req.body;
 
