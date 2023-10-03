@@ -247,7 +247,34 @@ app.post('/google-signin', (req, res) => {
     }
   });
 });
+app.post('/api/store-token', (req, res) => {
+  const { userId, token } = req.body;
 
+  const query = 'INSERT INTO tokens (userId, token) VALUES (?, ?)';
+  pool.query(query, [userId, token], (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      res.json({ success: true });
+    }
+  });
+});
+
+// API endpoint to retrieve FCM tokens for a user
+app.get('/api/get-tokens/:userId', (req, res) => {
+  const { userId } = req.params;
+
+  const query = 'SELECT * FROM tokens WHERE userId = ?';
+  pool.query(query, [userId], (error, results) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } else {
+      res.json(results);
+    }
+  });
+});
 app.post('/google-login', async (req, res) => {
   const { code, email, givenName, familyName, photo } = req.body;
 
