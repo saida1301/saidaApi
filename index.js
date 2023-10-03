@@ -21,7 +21,8 @@ import path from "path";
 import admin from 'firebase-admin';
 
 // Import your service account key
-import serviceAccount from './serviceAccountKey';
+import serviceAccount from '../serviceAccountKey';
+
 
 const app = express();
 
