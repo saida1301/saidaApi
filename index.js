@@ -21,7 +21,9 @@ import path from "path";
 import admin from 'firebase-admin';
 
 // Import your service account key
-import serviceAccount from '../serviceAccountKey';
+import serviceAccount from './uploads/serviceAccountKey.js';
+
+
 
 
 
@@ -272,7 +274,7 @@ app.post('/api/store-token', (req, res) => {
   });
 });
 
-// API endpoint to retrieve FCM tokens for a user
+// Retrieve FCM tokens for a user
 app.get('/api/get-tokens/:userId', (req, res) => {
   const { userId } = req.params;
 
@@ -286,35 +288,48 @@ app.get('/api/get-tokens/:userId', (req, res) => {
     }
   });
 });
-const sendNotificationToAllUsers = async (message) => {
-  try {
-    const query = 'SELECT token FROM tokens';
-    const tokens = await pool.query(query);
 
-    const registrationTokens = tokens.map((row) => row.token);
+// Send notification to all users
+// Send notification to all users
+app.post('/api/send-notification', (req, res) => {
+  const { title, body } = req.body;
 
- const payload = {
+  const query = 'SELECT token FROM tokens';
+  pool.query(query, (error, rows) => {
+    if (error) {
+      console.error('Error querying tokens:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+
+    if (!Array.isArray(rows)) {
+      console.error('Unexpected result format:', rows);
+      res.status(500).json({ error: 'Internal Server Error' });
+      return;
+    }
+
+    const tokens = rows.map(row => row.token);
+
+    const payload = {
       notification: {
-        title: title,  // <-- Dynamic title
-        body: body,    // <-- Dynamic body
+        title: title,
+        body: body,
       },
     };
 
-    const response = await messaging.sendToDevice(registrationTokens, payload);
-    console.log('Successfully sent message:', response);
-
-  } catch (error) {
-    console.error('Error sending message:', error);
-  }
-};
-
-// Call the function with your desired message
-
-app.post('/send-notification', (req, res) => {
-  const { title, body } = req.body;
-  sendNotificationToAllUsers(title, body);
-  res.send('Notification sent successfully');
+    messaging.sendToDevice(tokens, payload)
+      .then(response => {
+        console.log('Successfully sent message:', response);
+        res.send('Notification sent successfully');
+      })
+      .catch(error => {
+        console.error('Error sending message:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+      });
+  });
 });
+
+
 app.post('/google-login', async (req, res) => {
   const { code, email, givenName, familyName, photo } = req.body;
 
