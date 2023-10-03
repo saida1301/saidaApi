@@ -61,6 +61,32 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 
+// Query all stored tokens
+const query = 'SELECT token FROM tokens';
+pool.query(query, (error, rows) => {
+  if (error) {
+    console.error('Error querying tokens:', error);
+    return;
+  }
+
+  const tokens = rows.map(row => row.token);
+
+  const payload = {
+    notification: {
+      title: 'Your Notification Title',
+      body: 'Your Notification Body',
+    },
+  };
+
+  admin.messaging().sendToDevice(tokens, payload)
+    .then(response => {
+      console.log('Successfully sent message:', response);
+    })
+    .catch(error => {
+      console.error('Error sending message:', error);
+    });
+});
+
 const messaging = admin.messaging();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
