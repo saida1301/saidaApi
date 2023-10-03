@@ -18,6 +18,10 @@ import { body, validationResult, param  } from 'express-validator';
 import session from 'express-session';
 import MySQLStoreLib from 'express-mysql-session';
 import path from "path";
+import admin from 'firebase-admin';
+
+// Import your service account key
+import serviceAccount from './ismobile-99990-firebase-adminsdk-5y77l-472079cf9e.json';
 const app = express();
 
 const pool = mysql.createPool({
@@ -48,7 +52,11 @@ app.use(session({
   saveUninitialized: false,
   store: sessionStore,
 }));
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
 
+const messaging = admin.messaging();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
@@ -275,6 +283,29 @@ app.get('/api/get-tokens/:userId', (req, res) => {
     }
   });
 });
+const sendNotificationToAllUsers = async (message) => {
+  try {
+    const query = 'SELECT token FROM tokens';
+    const tokens = await pool.query(query);
+
+    const registrationTokens = tokens.map((row) => row.token);
+
+    const payload = {
+      notification: {
+        title: 'Title of the notification',
+        body: 'Body of the notification',
+      },
+    };
+
+    const response = await messaging.sendToDevice(registrationTokens, payload);
+    console.log('Successfully sent message:', response);
+  } catch (error) {
+    console.error('Error sending message:', error);
+  }
+};
+
+// Call the function with your desired message
+sendNotificationToAllUsers('Hello, this is a test notification!');
 app.post('/google-login', async (req, res) => {
   const { code, email, givenName, familyName, photo } = req.body;
 
