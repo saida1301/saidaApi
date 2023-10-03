@@ -21,7 +21,8 @@ import path from "path";
 import admin from 'firebase-admin';
 
 // Import your service account key
-import serviceAccount from './ismobile-99990-firebase-adminsdk-5y77l-472079cf9e.json';
+import serviceAccount from './serviceAccountKey';
+
 const app = express();
 
 const pool = mysql.createPool({
