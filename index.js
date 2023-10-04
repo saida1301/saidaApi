@@ -1831,7 +1831,7 @@ app.use("/blogs/:id", async (req, res) => {
 app.post('/compan/:id/view', (req, res) => {
   const companyId = req.params.id;
 
-  pool.query('UPDATE companies SET view = view + 1 WHERE id = ?', [vacancyId], (error, results) => {
+  pool.query('UPDATE companies SET view = view + 1 WHERE id = ?', [companyId], (error, results) => {
     if (error) {
       console.error('Failed to increment view count:', error);
       res.sendStatus(500);
