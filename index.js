@@ -1759,6 +1759,10 @@ app.post('/vacanc', cors(), async (req, res) => {
 
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
+  const page = req.query.page || 1; // Get the page from the query parameter, default to 1 if not provided
+  const pageSize = req.query.pageSize || 10; // Get the page size from the query parameter, default to 10 if not provided
+
+  const offset = (page - 1) * pageSize; // Calculate the offset based on the page and page size
 
   // Add the DESC keyword to order by descending
   const sql = `
@@ -1766,6 +1770,7 @@ app.get("/vacancie/:categoryId", (req, res) => {
     WHERE category_id IN (SELECT id FROM categories WHERE id = ${categoryId})
     AND status = '1' 
     ORDER BY created_at DESC
+    LIMIT ${pageSize} OFFSET ${offset}
   `;
 
   pool.query(sql, (error, results) => {
@@ -1777,6 +1782,7 @@ app.get("/vacancie/:categoryId", (req, res) => {
     return res.json(results);
   });
 });
+
 
 
 
