@@ -19,7 +19,7 @@ import session from 'express-session';
 import MySQLStoreLib from 'express-mysql-session';
 import path from "path";
 import admin from 'firebase-admin';
-
+import { Server } from 'socket.io';
 // Import your service account key
 import serviceAccount from './uploads/serviceAccountKey.js';
 
@@ -791,7 +791,28 @@ app.get("/categories-with-count", async (req, res) => {
     res.sendStatus(500);
   }
 });
+app.post('/api/send-broadcast-notification', (req, res) => {
+  const { title, body } = req.body;
 
+  const payload = {
+    notification: {
+      title: title,
+      body: body,
+    },
+  };
+
+  const topic = 'broadcast'; // Predefined topic subscribed by all users
+
+  admin.messaging().sendToTopic(topic, payload)
+    .then(response => {
+      console.log('Successfully sent message:', response);
+      res.send('Notification sent successfully');
+    })
+    .catch(error => {
+      console.error('Error sending message:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    });
+});
 app.post('/update-category', (req, res) => {
   const { cat_id, user_id } = req.body;
 
@@ -823,7 +844,59 @@ app.post('/update-category', (req, res) => {
 });
 
 
+const io = new Server();
+app.post('/messages/send', (req, res) => {
+  const { sender_id, receiver_id, message } = req.body;
 
+  // Check if both sender and receiver IDs exist in the users table
+  const userCheckQuery = 'SELECT COUNT(*) AS sender_count, (SELECT COUNT(*) FROM users WHERE id = ?) AS receiver_count FROM users WHERE id = ?';
+  const userCheckValues = [sender_id, receiver_id];
+
+  pool.query(userCheckQuery, userCheckValues, (userCheckError, userCheckResults) => {
+    if (userCheckError) {
+      return res.status(500).send(userCheckError.message);
+    }
+
+    const senderCount = userCheckResults[0].sender_count;
+    const receiverCount = userCheckResults[0].receiver_count;
+
+    if (senderCount !== 1 || receiverCount !== 1) {
+      return res.status(400).send('Invalid sender_id or receiver_id');
+    }
+
+    // If both sender and receiver IDs are valid, proceed to save the message
+    const messageInsertQuery = 'INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)';
+    const messageInsertValues = [sender_id, receiver_id, message];
+
+    pool.query(messageInsertQuery, messageInsertValues, (messageInsertError, messageInsertResults) => {
+      if (messageInsertError) {
+        return res.status(500).send(messageInsertError.message);
+      }
+
+      // If the message is saved successfully, emit it to the receiver
+      io.emit(`message:${receiver_id}`, { sender_id, message });
+      res.send('Message sent');
+    });
+  });
+});
+
+// Set up Socket.io event handling
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  // Listen for a message event from the client
+  socket.on('message', (data) => {
+    // Handle the incoming message if needed
+    // Then emit it to the receiver
+    io.emit(`message:${data.receiver_id}`, data);
+    console.log(data);
+  });
+
+  // Handle disconnect event if needed
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
 
 app.get("/vaca", async (req, res) => {
   try {
