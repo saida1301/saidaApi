@@ -2537,14 +2537,18 @@ app.post('/civi', upload.fields([{ name: 'cv', maxCount: 1 }, { name: 'image', m
     // Validate and upload CV file
     let cvUrl = null;
     if (cvFile) {
-      const cvExtension = path.extname(cvFile.originalname).toLowerCase();
-      if (cvExtension !== '.pdf') {
-        return res.status(400).json({ message: 'Invalid CV file type' });
-      }
-      const cvFileName = `cv_${uuidv4().substring(0, 6)}${cvExtension}`;
-      await saveFileToHosting(cvFile.buffer, cvFileName, 'cvs');
-      cvUrl = `back/assets/images/cvs/${cvFileName}`;
-    }
+  const cvExtension = path.extname(cvFile.originalname).toLowerCase();
+  const allowedExtensions = ['.pdf', '.docx', '.doc', '.txt', '.rtf', '.html', '.odt'];
+
+  if (!allowedExtensions.includes(cvExtension)) {
+    return res.status(400).json({ message: 'Invalid CV file type' });
+  }
+
+  const cvFileName = `cv_${uuidv4().substring(0, 6)}${cvExtension}`;
+  await saveFileToHosting(cvFile.buffer, cvFileName, 'cvs');
+  cvUrl = `back/assets/images/cvs/${cvFileName}`;
+}
+
 
     // Validate and upload image file
     let imageUrl = null;
