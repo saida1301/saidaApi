@@ -2496,7 +2496,14 @@ app.get("/cv/view-more-than-50", async (req, res) => {
   }
 });
 
-app.get("/civ/:userId", (req, res) => {
+app.get('/civ/:userId', [
+  param('userId').isNumeric().withMessage('Invalid userId'),
+], (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const userId = req.params.userId;
 
   const sql = "SELECT * FROM cv WHERE user_id = ?"; 
@@ -2505,7 +2512,7 @@ app.get("/civ/:userId", (req, res) => {
   pool.query(sql, values, (error, results) => {
     if (error) {
       console.error(error);
-      return res.status(500).send("Error retrieving trainings");
+      return res.status(500).send("Error retrieving CVs");
     }
 
     return res.json(results);
