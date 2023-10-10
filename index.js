@@ -1362,12 +1362,14 @@ function fetchWeeklyVacancies(userId) {
           const endDate = lastDayOfWeek.toISOString().split('T')[0];
 
           // Construct the SQL query with JOIN and date filter
-          const query = `
-            SELECT *
-            FROM vacancies
-            WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
-            AND created_at >= '${startDate}' AND created_at <= '${endDate}'
-          `;
+    const query = `
+  SELECT *
+  FROM vacancies
+  WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
+  AND created_at >= '${startDate}' AND created_at <= '${endDate}'
+  AND status = 1
+`;
+
 
           // Execute the vacancies query
           pool.query(query, (error, results) => {
