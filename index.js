@@ -1403,13 +1403,15 @@ function fetchLatestVacancies(userId, startIndex) {
           const userCat = JSON.parse(userResults[0].cat_id);
 
           // Construct the SQL query with JOIN, startIndex, and limit
-          const query = `
-            SELECT *
-            FROM vacancies
-            WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
-            ORDER BY created_at DESC
-            LIMIT 20 OFFSET ${startIndex}
-          `;
+      const query = `
+  SELECT *
+  FROM vacancies
+  WHERE vacancies.category_id IN (${userCat.map(value => `'${value}'`).join(',')})
+  AND status = 1
+  ORDER BY created_at DESC
+  LIMIT 20 OFFSET ${startIndex}
+`;
+
 
           // Execute the vacancies query
           pool.query(query, (error, results) => {
