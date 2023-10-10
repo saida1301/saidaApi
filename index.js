@@ -1424,12 +1424,13 @@ function fetchLatestVacancies(userId, startIndex) {
           });
         } else {
           // If no cat_id is available, fetch all vacancies regardless of category
-          const query = `
-            SELECT *
-            FROM vacancies
-            ORDER BY created_at DESC
-            LIMIT 20 OFFSET ${startIndex}
-          `;
+         const query = `
+  SELECT *
+  FROM vacancies
+  WHERE status = 1
+  ORDER BY created_at DESC
+  LIMIT 20 OFFSET ${startIndex}
+`;
 
           // Execute the vacancies query
           pool.query(query, (error, results) => {
