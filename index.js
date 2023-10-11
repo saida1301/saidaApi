@@ -1837,9 +1837,6 @@ app.post('/vacanc', cors(), async (req, res) => {
 
 app.get("/vacancie/:categoryId", (req, res) => {
   const { categoryId } = req.params;
-  const page = req.query.page || 1;
-  const pageSize = req.query.pageSize || 10;
-  const offset = (page - 1) * pageSize;
 
   const sql = `
     SELECT * FROM vacancies
@@ -1848,10 +1845,9 @@ app.get("/vacancie/:categoryId", (req, res) => {
     )
     AND status = '1' 
     ORDER BY created_at DESC
-    LIMIT ? OFFSET ?
   `;
 
-  pool.query(sql, [categoryId, pageSize, offset], (error, results) => {
+  pool.query(sql, [categoryId], (error, results) => {
     if (error) {
       console.error(error);
       return res.status(500).send("Error retrieving vacancies");
@@ -1860,6 +1856,7 @@ app.get("/vacancie/:categoryId", (req, res) => {
     return res.json(results);
   });
 });
+
 
 
 
