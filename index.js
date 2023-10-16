@@ -2365,7 +2365,7 @@ app.use("/trainings/:id", async (req, res) => {
 });
 
 
-app.post('/training', cors(), upload.single('image'), async (req, res) => {
+app.post('/tra', cors(), upload.single('image'), async (req, res) => {
   try {
 
 
@@ -2392,7 +2392,10 @@ if (req.file) {
   const originalExtension = path.extname(req.file.originalname).toLowerCase();
   
   // Determine a safe list of extensions you want to support
-  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Add more extensions as needed
+const allowedExtensions = [
+  '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp', '.tiff', '.ico'
+];
+// Add more extensions as needed
 
   // Check if the original extension is in the allowed list, if not, default to '.png'
   const extension = allowedExtensions.includes(originalExtension) ? originalExtension : '.png';
