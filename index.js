@@ -2431,7 +2431,7 @@ if (req.file) {
 app.get("/training/:userId", (req, res) => {
   const userId = req.params.userId;
 
-  const sql = "SELECT * FROM trainings WHERE user_id = ?"; 
+  const sql = "SELECT * FROM trainings WHERE user_id = ? ORDER BY created_at DESC"; 
   const values = [userId];
 
   pool.query(sql, values, (error, results) => {
@@ -2442,7 +2442,8 @@ app.get("/training/:userId", (req, res) => {
 
     return res.json(results);
   });
-});
+}); 
+
 app.post('/cv/:id/view', (req, res) => {
   const cvId = req.params.id;
 
