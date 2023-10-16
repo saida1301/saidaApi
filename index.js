@@ -2363,22 +2363,11 @@ app.use("/trainings/:id", async (req, res) => {
     res.sendStatus(500);
   }
 });
-const trainingValidationRules = [
-  body('user_id').notEmpty().isInt(),
-  body('company_id').notEmpty().isInt(),
-  body('title').notEmpty().isString(),
-  body('about').notEmpty().isString(),
-  body('price').notEmpty().isFloat(),
-  body('redirect_link').optional().isURL(),
-  body('deadline').notEmpty().isString(),
-];
+
 
 app.post('/training', cors(), upload.single('image'), async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
+
 
     const { user_id, company_id, title, about, payment_type, redirect_link, deadline } = req.body;
 
