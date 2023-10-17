@@ -2429,7 +2429,68 @@ const allowedExtensions = [
 });
 
 
+app.post('/training', cors(), upload.single('image'), async (req, res) => {
+  try {
 
+
+    const { user_id, company_id, title, about, payment_type, redirect_link, deadline } = req.body;
+
+    const slug = title.toLowerCase().replace(/\s+/g, '-');
+    req.body.slug = slug; // Update the slug in the request body
+
+    let price = null;
+
+    // Check if payment_type is 1 (pay)
+    if (payment_type === '1') {
+      price = req.body.price; // Set price if it is pay
+    }
+
+    let imageUrl = null;
+
+    // Check if file was uploaded
+if (req.file) {
+  // Validate the image file (e.g., check file size, type)
+  // Your validation logic here
+
+  const fileContents = req.file.buffer;
+  const originalExtension = path.extname(req.file.originalname).toLowerCase();
+  
+  // Determine a safe list of extensions you want to support
+const allowedExtensions = [
+  '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp', '.tiff', '.ico'
+];
+// Add more extensions as needed
+
+  // Check if the original extension is in the allowed list, if not, default to '.png'
+  const extension = allowedExtensions.includes(originalExtension) ? originalExtension : '.png';
+
+  const fileName = `training_${uuidv4().substring(0, 6)}${extension}`; // Generate a random file name
+
+  console.log('Dosya yüklemesi başlıyor...');
+  await saveFileToHosting(fileContents, fileName, 'trainings');
+  console.log('Dosya yükleme tamamlandı!');
+
+  imageUrl = `back/assets/images/trainings/${fileName}`;
+}
+
+
+    const query = `INSERT INTO trainings (user_id, company_id, title, slug, about, payment_type, price, redirect_link, image, deadline, created_at, updated_at) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`;
+    const values = [user_id, company_id, title, slug, about, payment_type, price, redirect_link, imageUrl, deadline];
+
+    // Execute the database query
+    pool.query(query, values, (error, results) => {
+      if (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error adding training' });
+      } else {
+        res.status(201).json({ message: 'Training added successfully' });
+      }
+    });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ message: 'Error uploading image' });
+  }
+});
 
 app.get("/training/:userId", (req, res) => {
   const userId = req.params.userId;
