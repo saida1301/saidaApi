@@ -118,7 +118,7 @@ async function uploadFileToFtp(fileContents, remotePath) {
     });
 
     client.connect({
-      host: '145.14.156.206', // FTP sunucu adresi
+      host: '185.224.137.201', // FTP sunucu adresi
       user: 'u983993164', // FTP kullanıcı adı
       password: 'Pa$$w0rd!', // FTP şifre
       port: 21, // FTP portu
